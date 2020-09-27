@@ -24,14 +24,19 @@ export function camelCase(input: string) {
     .replace(/\d+([\p{Alpha}\p{N}_]|$)/gu, m => m.toLocaleUpperCase());
 }
 
+const logPrefix = '[vue-formily]'
 export function logWarn(message: string) {
   // eslint-disable-next-line no-console
-  console.warn(`[vue-formily] ${message}`);
+  console.warn(`${logPrefix} ${message}`);
 }
 
-export function logError(message: string) {
-  // eslint-disable-next-line no-console
-  console.error(`[vue-formily] ${message}`);
+export function handleError(message: string, justLog = true) {
+  if (justLog) {
+    // eslint-disable-next-line no-console
+    console.error(`${logPrefix} ${message}`);
+  } else {
+    throw new Error(`${logPrefix} ${message}`))
+  }
 }
 
 export function def(obj: any, key: string, val: any, enumerable?: boolean) {
