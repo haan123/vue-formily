@@ -1,8 +1,7 @@
-import { camelCase, isObject, isPlainObject, readOnlyDef } from './utils';
 import { reactor } from './observer';
-import { toFields, traverseFields } from './FormGroup';
-import { VFField, VFFieldSchema, FormilyOptions } from './types';
-import FormElement from './FormElement';
+import { FormGroupSchema, FormilyFieldSchema, FormilyOptions, FormSchema } from './types';
+import { traverseFields } from './helpers';
+import FormGroup from './FormGroup';
 
 /**
  * Data types:
@@ -23,96 +22,74 @@ import FormElement from './FormElement';
  *  }
  * ]
  */
-function toModels(fields: VFField[]) {
-  const models = fields.reduce((acc, field) => {
-    const model = camelCase(field.name);
+// function toModels(fields: FormilyField[]) {
+//   const models = fields.reduce((acc, field) => {
+//     const model = camelCase(field.formId);
 
-    reactor(acc, model, field, field.value);
+//     reactor(acc, model, field, field.value);
 
-    return acc;
-  }, {});
+//     return acc;
+//   }, {});
 
-  return models;
-}
+//   return models;
+// }
 
-let uid = 0;
+export default class Form extends FormGroup {
+  readonly _schema!: FormGroupSchema;
+  // validations: object;
 
-export default class Form extends FormElement {
-  /**
-   * The ID of the form element. The is is unique within the parent element of the form.
-   */
-  readonly formId!: string;
-  _uid: number;
-  _schema: VFFieldSchema[];
-  name: string;
-  fields: VFField[];
-  models: object;
-  validations: object;
+  constructor(schema: FormSchema, options?: FormilyOptions) {
+    super(schema);
 
-  constructor(form: VFFieldSchema[], options: FormilyOptions = {}) {
-    super(options.name);
-
-    this._uid = uid++;
-    this._schema = form;
-
-    readOnlyDef(this, 'formId', `vf${form._uid}`);
-
-    this.name = options.name || `vf${this._uid}`;
-    this.fields = toFields(this._schema, this);
-    this.models = toModels(this.fields);
-    this.validations = this.toFormValidations(this._schema);
+    // this.validations = this.toFormValidations(this._schema.fields);
   }
 
-  toFormValidations(fields: VFFieldSchema[]) {
-    return fields.reduce((acc: { [key: string]: any }, field) => {
-      const { validations, fields } = field;
-      const fieldName = camelCase(field.name);
+  // toFormValidations(fields: FormilyFieldSchema[]) {
+  //   return fields.reduce((acc: { [key: string]: any }, field) => {
+  //     const { validations, fields } = field;
+  //     const fieldName = camelCase(field.formId);
 
-      if (field.collection) {
-        acc[fieldName] = {
-          $each: this.toFormValidations(fields)
-        };
-      } else if (field.nested) {
-        acc[fieldName] = this.toFormValidations(fields);
-      } else if (validations) {
-        const validators: { [key: string]: any } = {};
+  //     if (field.collection) {
+  //       acc[fieldName] = {
+  //         $each: this.toFormValidations(fields)
+  //       };
+  //     } else if (field.nested) {
+  //       acc[fieldName] = this.toFormValidations(fields);
+  //     } else if (validations) {
+  //       const validators: { [key: string]: any } = {};
 
-        Object.keys(validations).forEach(key => {
-          const validator = validations[key];
+  //       Object.keys(validations).forEach(key => {
+  //         const validator = validations[key];
 
-          if (typeof validator === 'function') {
-            validators[key] = validator;
-          } else {
-            validators[key] = validator.validator;
-          }
-        });
+  //         if (typeof validator === 'function') {
+  //           validators[key] = validator;
+  //         } else {
+  //           validators[key] = validator.validator;
+  //         }
+  //       });
 
-        acc[fieldName] = validators;
-      }
+  //       acc[fieldName] = validators;
+  //     }
 
-      return acc;
-    }, {});
-  }
+  //     return acc;
+  //   }, {});
+  // }
 
-  mergeModels(cb: (parent: any, key: string) => void) {
-    const recurse = (parent: any) => {
-      Object.keys(parent).forEach(key => {
-        if (isPlainObject(parent)) {
-          recurse(parent[key]);
-        }
+  // mergeModels(cb: (parent: any, key: string) => void) {
+  //   const recurse = (parent: any) => {
+  //     Object.keys(parent).forEach(key => {
+  //       if (isPlainObject(parent)) {
+  //         recurse(parent[key]);
+  //       }
 
-        cb(parent, key);
-      });
-    };
+  //       cb(parent, key);
+  //     });
+  //   };
 
-    recurse(this.models);
-  }
+  //   recurse(this.models);
+  // }
 
-  getField(path = [], fields?: VFField[]): VFField {
-    return traverseFields(path, fields || this.fields);
-  }
-
-  getFieldSchema(path = [], fields?: VFFieldSchema[]): VFFieldSchema {
+  getFieldSchema(path: string | string[] = [], fields?: FormilyFieldSchema[]): FormilyFieldSchema | null {
     return traverseFields(path, fields || this._schema);
   }
 

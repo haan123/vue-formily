@@ -1,5 +1,4 @@
-import Formily from './Form';
-import { VFField } from './types';
+import { FormilyField } from './types';
 import { isPlainObject, isObject, hasOwn, def } from './utils';
 
 const methodsToPatch = ['push', 'unshift'];
@@ -28,7 +27,7 @@ methodsToPatch.forEach(function(method) {
     const original = this.__proto__.__proto__[method];
     const result = original.apply(this, args);
 
-    this.__fo__.observeArray(args);
+    this.__vf__.observeArray(args);
 
     return result;
   });
@@ -36,13 +35,13 @@ methodsToPatch.forEach(function(method) {
 
 export class Observer {
   value: any;
-  field: VFField;
+  field: FormilyField;
 
-  constructor(value: any, field: VFField) {
+  constructor(value: any, field: FormilyField) {
     this.value = value;
     this.field = field;
 
-    def(value, '__fo__', this);
+    def(value, '__vf__', this);
 
     if (Array.isArray(value)) {
       // eslint-disable-next-line no-proto
@@ -77,20 +76,20 @@ export class Observer {
   }
 }
 
-export function observe(value: any, field: VFField) {
+export function observe(value: any, field: FormilyField) {
   if (!isObject(value)) {
     return;
   }
   let ob;
-  if (hasOwn(value, '__fo__') && value.__fo__ instanceof Observer) {
-    ob = value.__fo__;
+  if (hasOwn(value, '__vf__') && value.__vf__ instanceof Observer) {
+    ob = value.__vf__;
   } else if ((Array.isArray(value) || isPlainObject(value)) && Object.isExtensible(value)) {
     ob = new Observer(value, field);
   }
   return ob;
 }
 
-export function reactor(obj: object, key: string, field: VFField, val?: any) {
+export function reactor(obj: object, key: string, field: FormilyField, val?: any) {
   const property = Object.getOwnPropertyDescriptor(obj, key);
 
   if (property && property.configurable === false) {
@@ -103,9 +102,9 @@ export function reactor(obj: object, key: string, field: VFField, val?: any) {
     enumerable: true,
     configurable: true,
     get: function reactiveGetter() {
-      if (typeof field.formatter === 'function') {
-        val = field.formatter.call(obj);
-      }
+      // if (typeof field.formatter === 'function') {
+      //   val = field.formatter.call(obj);
+      // }
 
       return val;
     },

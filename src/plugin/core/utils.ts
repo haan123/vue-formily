@@ -24,33 +24,24 @@ export function camelCase(input: string) {
     .replace(/\d+([\p{Alpha}\p{N}_]|$)/gu, m => m.toLocaleUpperCase());
 }
 
-const logPrefix = '[vue-formily]'
+export function vfMessage(message: string) {
+  return `[vue-formily] ${message}`;
+}
+
 export function logWarn(message: string) {
   // eslint-disable-next-line no-console
-  console.warn(`${logPrefix} ${message}`);
+  console.warn(vfMessage(message));
 }
 
-export function handleError(message: string, justLog = true) {
-  if (justLog) {
-    // eslint-disable-next-line no-console
-    console.error(`${logPrefix} ${message}`);
-  } else {
-    throw new Error(`${logPrefix} ${message}`))
-  }
+export function logError(message: string) {
+  console.error(vfMessage(message));
 }
 
-export function def(obj: any, key: string, val: any, enumerable?: boolean) {
+export function def(obj: any, key: string, val: any, writable = true, enumerable = true) {
   Object.defineProperty(obj, key, {
     value: val,
-    enumerable: !!enumerable,
-    writable: true,
-    configurable: true
-  });
-}
-
-export function readOnlyDef(obj: any, key: string, val: any) {
-  Object.defineProperty(obj, key, {
-    value: val,
-    writable: false
+    enumerable,
+    writable,
+    configurable: writable
   });
 }

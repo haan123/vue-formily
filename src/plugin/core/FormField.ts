@@ -1,7 +1,7 @@
-import { FieldSchema, FieldValue, VFField, FormFieldType } from './types';
-import Form from './Form';
-import FormElement, { genId, genInputName } from './FormElement';
-import { readOnlyDef } from './utils';
+import { FormFieldSchema, FormilyField } from './types';
+import FormElement from './FormElement';
+import { def, vfMessage } from './utils';
+import { FormFieldValue, FormFieldType } from './types/FormField';
 
 const FIELDS = ['inputType', 'label', 'hint', 'placeholder', 'options', 'formatter'];
 
@@ -9,32 +9,37 @@ export default class FormField extends FormElement {
   readonly inputType?: string;
   readonly label?: string;
   readonly hint?: string;
+  readonly help?: string;
   readonly placeholder?: string;
   readonly options?: any[];
-  readonly formatter?: () => FieldValue;
-  readonly required!: boolean;
-  /**
-   * The global unique name of the field, which can be used as name in the html form. For radio buttons this name is not unique.
-   */
-  readonly inputName!: string;
+  readonly formatter?: () => FormFieldValue;
+  readonly required?: boolean;
   readonly type!: FormFieldType;
-  value: FieldValue | FieldValue[];
+  value!: FormFieldValue | FormFieldValue[];
 
-  constructor(fieldSchema: FieldSchema, form: Form, parent?: VFField) {
-    super(fieldSchema, parent);
+  constructor(schema: FormFieldSchema, parent?: FormilyField) {
+    super(schema.formId, parent);
 
-    readOnlyDef(this, 'inputName', genInputName(this));
-    readOnlyDef(this, 'id', fieldSchema.id || genId(this));
-    readOnlyDef(this, 'required', !!(fieldSchema.validations && fieldSchema.validations.required));
+    def(this, 'required', !!(schema.validations && schema.validations.required), false);
 
     FIELDS.forEach(propName => {
-      const value = fieldSchema[propName];
+      const value = schema[propName];
 
       if (typeof value !== 'undefined') {
-        readOnlyDef(this, propName, value);
+        def(this, propName, value, false);
       }
     });
 
-    this.value = fieldSchema.value || null;
+    def(this, 'value', this.setValue);
+  }
+
+  setValue(value: any) {
+    const valueType = typeof value;
+
+    if (this.type !== valueType) {
+      throw new Error(vfMessage(`Value has to be a "${this.type}" but got "${valueType}"`));
+    }
+
+    return value;
   }
 }

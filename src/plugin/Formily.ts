@@ -1,5 +1,5 @@
 import { VueConstructor } from 'vue';
-import { VFFieldSchema, FormilyOptions } from './core/types';
+import { FormSchema, FormilyOptions } from './core/types';
 import Form from './core/Form';
 
 export default class Formily {
@@ -7,11 +7,10 @@ export default class Formily {
 
   vm: any;
 
-  add(formSchema: VFFieldSchema[], options?: FormilyOptions) {
-    const form = new Form(formSchema, options);
+  add(schema: FormSchema, options?: FormilyOptions) {
+    const form = new Form(schema, options);
 
-    this.vm.$set(this.vm.forms, form.name, {
-      models: form.models,
+    this.vm.$set(this.vm.forms, form.formId, {
       fields: form.fields
     });
 
