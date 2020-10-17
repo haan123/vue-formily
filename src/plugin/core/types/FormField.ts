@@ -16,7 +16,9 @@ export declare class FormField extends FormElement {
   readonly formatter?: () => FormFieldValue;
   readonly required?: boolean;
   readonly type: FormFieldType;
-  value: FormFieldValue | FormFieldValue[];
+  raw: string;
+  formatted: string;
+  value: FormFieldValue;
 
   setValue(value: any): any;
 }

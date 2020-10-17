@@ -1,8 +1,31 @@
-import { FormElement, FormFieldSchema, FormGroupSchema, FormilyField, FormilyFieldSchema } from './types';
+import {
+  FormElement,
+  FormFieldSchema,
+  FormGroupSchema,
+  FormilyField,
+  FormilyFieldSchema,
+  ValidationRule,
+  ValidationSchema
+} from './types';
 import FormField from './FormField';
 import FormGroups from './FormGroups';
 import FormGroup from './FormGroup';
 import Form from './Form';
+
+export function mergeValidationRules(...args: ValidationRule[]): ValidationRule {
+  return args.reduce((acc: ValidationSchema, rule: ValidationRule) => {
+    if (typeof rule === 'function') {
+      acc.validate = rule;
+    } else {
+      acc = {
+        ...acc,
+        ...rule
+      };
+    }
+
+    return acc;
+  }, {});
+}
 
 export function traverseFields(path: string | string[] = [], fields: any) {
   if (typeof path === 'string') path = path.split('.');
@@ -25,25 +48,13 @@ export function toFields(fields: FormilyFieldSchema[], parent?: FormilyField): F
   return fields.map(schema => {
     switch (schema.type) {
       case 'groups':
-        return new FormGroups(schema as FormGroupSchema, parent);
+        return new FormGroups(schema, parent);
       case 'group':
-        return new FormGroup(schema as FormGroupSchema, parent);
+        return new FormGroup(schema, parent);
       default:
-        return new FormField(schema as FormFieldSchema, parent);
+        return new FormField(schema, parent);
     }
   });
-}
-
-function getNamePath(field: FormilyField, index?: number) {
-  let parent = field.parent;
-  const path = typeof index !== 'undefined' ? [index, field.formId] : [field.formId];
-
-  while (parent) {
-    path.unshift(parent.formId);
-    parent = parent.parent;
-  }
-
-  return path;
 }
 
 function isGroupItem(field: FormilyField): field is FormGroup {

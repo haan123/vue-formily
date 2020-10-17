@@ -11,6 +11,11 @@ export function isPlainObject(obj: any) {
   return _toString.call(obj) === '[object Object]';
 }
 
+const rnumber = /^\d+$/;
+export function isNumber(value: any) {
+  return typeof value === 'number' || rnumber.test(value);
+}
+
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 export function hasOwn(obj: any, key: string) {
   return hasOwnProperty.call(obj, key);
@@ -43,5 +48,22 @@ export function def(obj: any, key: string, val: any, writable = true, enumerable
     enumerable,
     writable,
     configurable: writable
+  });
+}
+
+export function setter(obj: any, key: string, val: any, set?: any) {
+  Object.defineProperty(obj, key, {
+    get() {
+      return val;
+    },
+    set(value) {
+      if (typeof set === 'function') {
+        val = set.call(this, value);
+      } else {
+        val = value;
+      }
+    },
+    configurable: true,
+    enumerable: true
   });
 }

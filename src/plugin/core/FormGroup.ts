@@ -1,9 +1,13 @@
 import FormElement from './FormElement';
 import { toFields, traverseFields } from './helpers';
 import { FormGroupSchema, FormilyField } from './types';
-import { vfMessage } from './utils';
+import { FormGroupType } from './types/FormGroup';
+import { def, vfMessage } from './utils';
 
 export default class FormGroup extends FormElement {
+  static TYPE = 'group';
+
+  readonly type!: FormGroupType;
   fields: FormilyField[];
 
   constructor(schema: FormGroupSchema, parent?: FormilyField, index?: number) {
@@ -12,6 +16,8 @@ export default class FormGroup extends FormElement {
     if (!schema.fields || !schema.fields.length) {
       throw new Error(vfMessage('Missing "fields", please provide a "fields" property for your schema'));
     }
+
+    def(this, 'type', FormGroup.TYPE, false);
 
     // this should not read only because we want nested fields reactivable
     this.fields = toFields(schema.fields, this);

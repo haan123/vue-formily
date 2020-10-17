@@ -1,5 +1,6 @@
 import { FormElement, FormGroupSchema, FormilyField } from '.';
 
+export type FormGroupType = 'group';
 export declare class FormGroup extends FormElement {
   constructor(schema: FormGroupSchema, parent?: FormilyField);
 

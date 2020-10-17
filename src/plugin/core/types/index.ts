@@ -1,9 +1,10 @@
 import { FormElement } from './FormElement';
 import { FormField, FormFieldValue, FormFieldType } from './FormField';
 import { FormGroups, FormGroupsType } from './FormGroups';
-import { FormGroup } from './FormGroup';
+import { FormGroup, FormGroupType } from './FormGroup';
 import { Form } from './Form';
 import { Forms } from './Forms';
+import { Validation } from './Validation';
 
 declare module 'vue/types/vue' {
   interface Vue {
@@ -16,12 +17,35 @@ declare module 'vue/types/vue' {
 
 export type FormElementSchema = {
   readonly formId: string;
-  [key: string]: any;
 };
+
+export type Validations = {
+  [name: string]: Validation;
+};
+
+export type Validator = (value: any) => boolean | Promise<boolean>;
+export interface ValidationSchema {
+  validate?: Validator;
+  data?: Record<string, any>;
+  message?: ValidationMessageTemplate;
+}
+
+export type ValidationRule = Validator | ValidationSchema;
+export interface ValidationMessageGenerator {
+  (field: string, params?: Record<string, any>): string;
+}
+
+export type ValidationMessageTemplate = string | ValidationMessageGenerator;
 
 export type FormFieldSchema = FormElementSchema & {
   readonly inputType?: string;
   readonly label?: string;
+  readonly default?: FormFieldValue;
+  readonly minLength?: number;
+  readonly maxLength?: number;
+  readonly min?: number;
+  readonly max?: number;
+  readonly pattern?: number;
   readonly hint?: string;
   readonly help?: string;
   readonly placeholder?: string;
@@ -31,11 +55,11 @@ export type FormFieldSchema = FormElementSchema & {
   readonly id?: string;
   readonly type: FormFieldType;
   value?: FormFieldValue | FormFieldValue[];
-  validations?: any;
-  [key: string]: any;
+  validations?: Record<string, ValidationRule>;
 };
 
 export type FormGroupSchema = FormElementSchema & {
+  readonly type: FormGroupType;
   fields: FormilyFieldSchema[];
 };
 
@@ -44,7 +68,7 @@ export type FormGroupsSchema = FormElementSchema & {
   fields: FormilyFieldSchema[];
 };
 
-export type FormSchema = FormGroupSchema & {
+export type FormSchema = FormElementSchema & {
   fields: FormilyFieldSchema[];
 };
 

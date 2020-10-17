@@ -1,5 +1,5 @@
 import { genHtmlName } from './helpers';
-import { FormilyField } from './types';
+import { FormilyField, Validations } from './types';
 import { def, vfMessage } from './utils';
 
 let uid = 0;
@@ -22,6 +22,14 @@ export default class FormElement {
    */
   readonly index?: number;
   /**
+   * Identifies if this element and all its children elements are valid.
+   */
+  valid = true;
+  /**
+   * Represents a form element validation result.
+   */
+  validations!: Validations;
+  /**
    * Use for group instance in FormGroups
    */
   readonly _uid!: number;
@@ -39,6 +47,14 @@ export default class FormElement {
     def(this, 'formId', formId, false);
     def(this, 'htmlName', genHtmlName(this), false);
     def(this, '_uid', uid++, false);
+    def(this, 'validations', {});
+  }
+
+  /**
+   * Identifies if this element and all its children elements are valid. A form element is always valid on first initialization
+   */
+  isValid() {
+    return this.valid;
   }
 
   /**
@@ -49,5 +65,7 @@ export default class FormElement {
   /**
    * The method can be called to explicitly invalidate a form element. The error text will be set to the one of two possible preconfigured custom error messages associated with the form definition. The "value-error" message will be used for FormField instances and "form-error" will be used for FormGroup instances.
    */
-  invalidateFormElement() {}
+  invalidate() {
+    this.valid = false;
+  }
 }
