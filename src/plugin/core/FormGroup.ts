@@ -2,7 +2,7 @@ import FormElement from './FormElement';
 import { toFields, traverseFields } from './helpers';
 import { FormGroupSchema, FormilyField } from './types';
 import { FormGroupType } from './types/FormGroup';
-import { def, vfMessage } from './utils';
+import { def, logMessage } from './utils';
 
 export default class FormGroup extends FormElement {
   static TYPE = 'group';
@@ -14,7 +14,7 @@ export default class FormGroup extends FormElement {
     super(schema.formId, parent, index);
 
     if (!schema.fields || !schema.fields.length) {
-      throw new Error(vfMessage('Missing "fields", please provide a "fields" property for your schema'));
+      throw new Error(logMessage('Missing "fields", please provide a "fields" property for your schema'));
     }
 
     def(this, 'type', FormGroup.TYPE, false);

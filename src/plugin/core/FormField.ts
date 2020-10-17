@@ -1,77 +1,76 @@
-import { FormFieldSchema, FormilyField, ValidationRule } from './types';
+import { FormFieldSchema, FormilyField, ValidationSchema, FormFieldValue, FormFieldType } from './types';
 import FormElement from './FormElement';
-import { def, isNumber, logError, setter } from './utils';
-import { FormFieldValue, FormFieldType } from './types/FormField';
+import { def, merge, logError, setter, logWarn, logMessage } from './utils';
+import { maxLength, minLength, min, max } from './validations';
 import Validation from './Validation';
-import { minLength } from './validators';
-import { mergeValidationRules } from './helpers';
+import { cast, validate } from './validate';
 
-function setProp(obj: FormField, propName: string, value: any, rule?: ValidationRule) {
-  if (typeof value !== 'undefined') {
-    def(obj, propName, value, false);
-  }
-
-  if (rule) {
-    obj.validations[propName] = new Validation(rule);
-  }
+function setValue(this: FormField, value: any | null = null) {
+  return value;
 }
 
-function cast(value: any, type: FormFieldType): FormFieldValue {
-  let typedValue: FormFieldValue = null;
+const defaultProps: Map<string, any> = new Map([
+  [
+    'type',
+    function(value: FormFieldType) {
+      if (!value) {
+        throw new Error(
+          logMessage('field type can not be null or undefined', {
+            formId: this.formId
+          })
+        );
+      } else if (!['string', 'number', 'boolean', 'date'].includes(value)) {
+        throw new Error(
+          logMessage(
+            'Unsupported field type, the type must be one of these types ["string", "number", "boolean", "date"]',
+            {
+              formId: this.formId
+            }
+          )
+        );
+      }
 
-  if (type === 'string') {
-    typedValue = '' + value;
-  } else if (type === 'number') {
-    if (!isNumber(value)) {
-      throw new Error(`"${value}" is not a "number"`);
+      return value;
     }
+  ],
+  [
+    'default',
+    function(val: FormFieldValue) {
+      let value = null;
+      try {
+        value = cast(val, this.type);
+      } catch (error) {
+        logError(`${error}`, {
+          formId: this.formId,
+          field: 'default'
+        });
+      }
 
-    typedValue = +value;
-  } else if (type === 'boolean') {
-    typedValue = !!value;
-  } else if (type === 'date') {
-    try {
-      typedValue = new Date(value);
-    } catch (error) {
-      throw new Error(`"${value}" is not a "date" value`);
+      return value;
     }
-  }
+  ],
+  ['inputType', setValue],
+  ['label', setValue],
+  ['hint', setValue],
+  ['placeholder', setValue],
+  ['minLength', setValue],
+  ['maxLength', setValue],
+  ['min', setValue],
+  ['max', setValue]
+]);
 
-  return typedValue;
-}
-
-const fieldProps: Record<string, any> = {
-  default(value: string) {
-    return value;
-  },
-  type(value: FormFieldType) {
-    return value;
-  },
-  required(value?: boolean) {
-    return !!value;
-  },
-  inputType(value?: string) {
-    return !!value;
-  },
-  label(value?: string) {
-    return !!value;
-  },
-  hint(value?: string) {
-    return !!value;
-  },
-  placeholder(value?: string) {
-    return !!value;
-  },
-  minLength(value?: number | ValidationRule) {
-    if (isNumber(value)) {
-      value = mergeValidationRules();
-    }
-
-    return [];
-  }
+const defaultValidations: Record<string, ValidationSchema> = {
+  minLength,
+  maxLength,
+  min,
+  max
 };
-
 export default class FormField extends FormElement {
+  static FIELD_TYPE_STRING = 'string';
+  static FIELD_TYPE_NUMBER = 'number';
+  static FIELD_TYPE_BOOLEAN = 'boolean';
+  static FIELD_TYPE_DATE = 'date';
+
   readonly inputType?: string;
   readonly label?: string;
   readonly hint?: string;
@@ -79,78 +78,68 @@ export default class FormField extends FormElement {
   readonly placeholder?: string;
   readonly options?: any[];
   readonly formatter?: () => FormFieldValue;
-  readonly required!: boolean;
-  readonly minLength!: number | ValidationRule;
-  readonly maxLength!: number | ValidationRule;
-  readonly min!: number | Date | ValidationRule;
-  readonly max!: number | Date | ValidationRule;
-  readonly pattern!: string;
   readonly type!: FormFieldType;
-  raw!: string;
-  formatted!: string;
-  default!: FormFieldValue;
-  value!: FormFieldValue;
+  readonly default!: FormFieldValue;
+  raw: string | null = null;
+  formatted: string | null = null;
+  value: FormFieldValue = null;
 
   constructor(schema: FormFieldSchema, parent?: FormilyField) {
     super(schema.formId, parent);
 
-    const { default: defaultValue, type, ...props } = schema;
-
-    Object.keys(fieldProps).forEach(propName => {
-      setProp(this, propName, fieldProps[propName].call(this, (props as Record<string, any>)[propName]));
+    defaultProps.forEach((valueFn: any, propName: string) => {
+      def(this, propName, valueFn.call(this, schema[propName as keyof FormFieldSchema], schema), false);
     });
 
-    // setProp(this, 'minLength', schema.minLength || 0, minLength);
-    // setProp(this, 'maxLength', schema.maxLength || Number.MAX_VALUE);
-    // setProp(this, 'min', schema.min);
-    // setProp(this, 'max', schema.max);
-    // setProp(this, 'pattern', pattern);
-    // setProp(this, 'options', options);
+    const vSchemas: Record<string, ValidationSchema> = merge({}, schema.validations, defaultValidations);
 
-    setter(this, 'value', defaultValue, (value: any) => {
-      let typedValue = null;
+    Object.keys(vSchemas).forEach((propName: string) => {
+      const vSchema = vSchemas[propName];
+      const { types } = vSchema;
 
-      this.setRaw(value);
+      if (!types) {
+        logWarn(`Missing "types" in validation rule with name "${propName}" at formid "${this.formId}"`);
+      } else if (types.includes(this.type)) {
+        const validation = new Validation(vSchema, (this as Record<string, any>)[propName]);
 
-      try {
-        typedValue = cast(value, type);
-
-        this.validate();
-      } catch (error) {
-        typedValue = null;
-
-        this.invalidate();
-
-        logError(`${error} (error occurred at field with formid is "${this.formId}")`);
+        this.validations[propName] = validation;
       }
-
-      return typedValue;
     });
+
+    setter(this, 'value', (val: any) => {
+      this.raw = val;
+
+      const { value } = this.validate(val);
+
+      return value;
+    });
+
+    this.value = schema.default as any;
   }
-  validate() {
-    let isValid = this.valid;
-    const value = this.value;
-    const keys = Object.keys(this.validations);
+  validate(val: any) {
+    let value = null;
+    let valid = true;
 
-    if (!value) {
-      isValid = false;
-    } else {
-      keys.forEach(key => {
-        const validation = this.validations[key];
-        const valid = validation.validate(this);
+    try {
+      const typedValue = cast(val, this.type);
+      ({ valid } = validate(typedValue, this.validations, this));
 
-        if (isValid && !valid) {
-          isValid = false;
-        }
+      if (valid) {
+        value = typedValue;
+      }
+    } catch (error) {
+      this.invalidate();
+
+      logError(`${error}`, {
+        formId: this.formId
       });
     }
 
-    this.valid = isValid;
-  }
-  setRaw(value: string): void {
-    this.raw = value;
-  }
-  setValue(value: any): void {
-    this.value = value;
+    this.valid = valid;
+
+    return {
+      valid,
+      value
+    };
   }
 }

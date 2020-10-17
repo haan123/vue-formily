@@ -22,8 +22,8 @@ export default class FormGroups extends FormElement {
   addGroup() {
     const schema: FormGroupSchema = {
       ...this._schema,
-      type: 'group'
-    };
+      type: 'group',
+    }
     const group = new FormGroup(schema, this, this.groups.length);
 
     this.groups.push(group);

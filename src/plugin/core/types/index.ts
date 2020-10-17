@@ -23,14 +23,21 @@ export type Validations = {
   [name: string]: Validation;
 };
 
-export type Validator = (value: any) => boolean | Promise<boolean>;
+export type Validator = (this: Validation, value: any, ...args: any[]) => boolean | Promise<boolean>;
+export type ValidationParamSchema = {
+  name: string,
+  default?: FormFieldValue;
+};
 export interface ValidationSchema {
   validate?: Validator;
-  data?: Record<string, any>;
+  params?: ValidationParamSchema[];
+  types?: FormFieldType[];
   message?: ValidationMessageTemplate;
+  cascade?: boolean;
+  inherit?: boolean;
 }
 
-export type ValidationRule = Validator | ValidationSchema;
+export type ValidationRule = Validator | Record<string, ValidationSchema>;
 export interface ValidationMessageGenerator {
   (field: string, params?: Record<string, any>): string;
 }
@@ -41,21 +48,17 @@ export type FormFieldSchema = FormElementSchema & {
   readonly inputType?: string;
   readonly label?: string;
   readonly default?: FormFieldValue;
-  readonly minLength?: number;
-  readonly maxLength?: number;
-  readonly min?: number;
-  readonly max?: number;
-  readonly pattern?: number;
   readonly hint?: string;
   readonly help?: string;
   readonly placeholder?: string;
+  readonly minLength?: number;
+  readonly maxLength?: number;
   readonly options?: any[];
   readonly formatter?: () => FormFieldValue;
-  readonly required?: boolean;
   readonly id?: string;
   readonly type: FormFieldType;
   value?: FormFieldValue | FormFieldValue[];
-  validations?: Record<string, ValidationRule>;
+  validations?: ValidationRule;
 };
 
 export type FormGroupSchema = FormElementSchema & {

@@ -1,31 +1,8 @@
-import {
-  FormElement,
-  FormFieldSchema,
-  FormGroupSchema,
-  FormilyField,
-  FormilyFieldSchema,
-  ValidationRule,
-  ValidationSchema
-} from './types';
+import { FormElement, FormilyField, FormilyFieldSchema } from './types';
 import FormField from './FormField';
 import FormGroups from './FormGroups';
 import FormGroup from './FormGroup';
 import Form from './Form';
-
-export function mergeValidationRules(...args: ValidationRule[]): ValidationRule {
-  return args.reduce((acc: ValidationSchema, rule: ValidationRule) => {
-    if (typeof rule === 'function') {
-      acc.validate = rule;
-    } else {
-      acc = {
-        ...acc,
-        ...rule
-      };
-    }
-
-    return acc;
-  }, {});
-}
 
 export function traverseFields(path: string | string[] = [], fields: any) {
   if (typeof path === 'string') path = path.split('.');

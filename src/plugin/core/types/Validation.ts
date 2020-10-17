@@ -1,11 +1,11 @@
 import { ValidationMessageTemplate, ValidationRule } from '.';
-import { FormField } from './FormField';
 
 export declare class Validation {
+  constructor(rule: ValidationRule);
+
+  readonly params: Map<string, any>;
   message?: ValidationMessageTemplate;
   valid: boolean;
 
-  constructor(rule: ValidationRule);
-
-  validate(field: FormField): boolean;
+  validate(value: any, context: any): boolean;
 }
