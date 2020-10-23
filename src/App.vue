@@ -13,7 +13,7 @@
 import Vue from 'vue';
 import Formily from './plugin';
 import { FormField, FormGroups, FormSchema } from './plugin/core/types';
-import { minLength } from './plugin/core/validations'
+import { minLength } from './plugin/core/validations';
 
 Vue.use(Formily);
 
@@ -25,13 +25,15 @@ const form: FormSchema = {
       label: 'a',
       type: 'number',
       inputType: 'text',
-      minLength: 3,
       default: '12131',
       validations: {
         minLength: {
           ...minLength,
           message: 'aaas'
         }
+      },
+      props: {
+        minLength: 3
       }
     },
     {
@@ -91,7 +93,7 @@ export default Vue.extend({
       const value = e.target.value;
 
       field.setValue(value);
-      console.log(field)
+      console.log(field);
     }
   }
 });

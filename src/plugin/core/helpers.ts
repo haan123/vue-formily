@@ -4,6 +4,10 @@ import FormGroups from './FormGroups';
 import FormGroup from './FormGroup';
 import Form from './Form';
 
+export function translate(template: string) {
+  return template;
+}
+
 export function traverseFields(path: string | string[] = [], fields: any) {
   if (typeof path === 'string') path = path.split('.');
 

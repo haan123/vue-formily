@@ -27,3 +27,7 @@ export function merge(target: any, ...sources: any[]) {
     return acc;
   }, target);
 }
+
+export function each(obj: Record<string, any>, fn: (propValue: any, propName: string, index: number) => void) {
+  Object.keys(obj).forEach((propName, index) => fn(obj[propName], propName, index));
+}

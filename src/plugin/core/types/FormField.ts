@@ -7,18 +7,23 @@ export type FormFieldType = 'string' | 'number' | 'boolean' | 'date';
 export declare class FormField extends FormElement {
   constructor(schema: FormFieldSchema, parent?: FormilyField);
 
-  readonly inputType?: string;
-  readonly label?: string;
-  readonly hint?: string;
-  readonly help?: string;
-  readonly placeholder?: string;
-  readonly options?: any[];
-  readonly formatter?: () => FormFieldValue;
-  readonly required?: boolean;
+  static FIELD_TYPE_STRING: FormFieldType;
+  static FIELD_TYPE_NUMBER: FormFieldType;
+  static FIELD_TYPE_BOOLEAN: FormFieldType;
+  static FIELD_TYPE_DATE: FormFieldType;
+
   readonly type: FormFieldType;
-  raw: string;
-  formatted: string;
+  readonly inputType: string;
+  readonly default: FormFieldValue;
+  label: string | null;
+  hint: string | null;
+  help: string | null;
+  placeholder: string | null;
+  options: any[] | null;
+  readonly formatter?: () => FormFieldValue;
+  raw: string | null;
+  formatted: string | null;
   value: FormFieldValue;
 
-  setValue(value: any): any;
+  // setValue(value: any): any;
 }

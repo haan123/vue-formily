@@ -22,9 +22,8 @@ function _set(value: any) {
   return value;
 }
 
-export function setter(obj: any, key: string, fn?: any) {
+export function setter(obj: any, key: string, fn?: any, reactive = true) {
   const set = isCallable(fn) ? fn : _set;
-  let val: any;
 
   Object.defineProperty(obj, key, {
     get() {
@@ -35,7 +34,7 @@ export function setter(obj: any, key: string, fn?: any) {
 
       return val;
     },
-    configurable: true,
+    configurable: reactive,
     enumerable: true
   });
 }

@@ -8,7 +8,7 @@ export function isNullOrUndefined(value: unknown): value is undefined | null {
   return value === null || value === undefined;
 }
 
-export function isPlainObject(obj: any) {
+export function isPlainObject(obj: any): obj is object {
   return _toString.call(obj) === '[object Object]';
 }
 

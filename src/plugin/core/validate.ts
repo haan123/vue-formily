@@ -1,4 +1,4 @@
-import { FormFieldType, FormFieldValue, Validations } from './types';
+import { FormFieldType, FormFieldValue, ValidationResult, Validations } from './types';
 import { isNumber } from './utils';
 
 export function cast(value: any, type: FormFieldType): FormFieldValue {
@@ -25,20 +25,30 @@ export function cast(value: any, type: FormFieldType): FormFieldValue {
   return typedValue;
 }
 
-export function validate(value: FormFieldValue, validations: Validations, context?: any) {
+interface ValidationOptions {
+  bails?: boolean;
+}
+
+export function validate(
+  value: unknown,
+  validations: Validations,
+  options: ValidationOptions = {}
+): Promise<ValidationResult> {
   const keys = Object.keys(validations);
-  let isValid = true;
+  const errors = [];
+  const failedRules: Record<string, string> = {};
 
-  keys.forEach((key: string) => {
+  keys.forEach(async (key: string) => {
     const validation = validations[key];
-    const valid = validation.validate(value, context);
+    const valid = await validation.validate(value);
 
-    if (isValid && !valid) {
-      isValid = valid;
+    if (!valid) {
+      errors.push();
     }
   });
 
   return {
-    valid: isValid
+    valid: !!errors.length,
+    failedRules
   };
 }
