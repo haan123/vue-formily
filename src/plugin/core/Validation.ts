@@ -1,78 +1,58 @@
-import { ValidationMessageTemplate, ValidationParamSchema, ValidationRule, Validator } from './types';
-import { def, isCallable, isNullOrUndefined, isPlainObject, logMessage, logWarn } from './utils';
+import { RuleSchema, ValidationMessageTemplate, ValidationRule, ValidationRuleSchema, Validator } from './types';
+import { def, each, isCallable, logWarn } from './utils';
 
-export function parameterize(paramsSchema: ValidationParamSchema[], params?: any): Map<string, any> {
-  const hasParams = isNullOrUndefined(params);
-  const isArray = hasParams ? Array.isArray(params) : false;
-  const isObject = isPlainObject(params);
+function normalizeRuleSchema(schema: ValidationRuleSchema): RuleSchema | null {
+  let ruleSchema = null;
 
-  const vParams: [string, any][] = paramsSchema.map((paramSchema: ValidationParamSchema, i: number) => {
-    let param = paramSchema.default;
+  if (isCallable(schema)) {
+    ruleSchema = {
+      validate: schema,
+      cascade: false;
+    };
+  } else if (!schema.types) {
+    logWarn(`Missing "types" in validation rule with name "${propName}"`);
+  } else if (schema.types.includes(this.type)) {
+    const validation = new Validation(schema, (this as Record<string, any>)[propName], {
+      field: this
+    });
 
-    if (hasParams) {
-      if (isArray) {
-        param = params[i];
-      } else if (isObject) {
-        param = params[paramSchema.name];
-      }
+    if (validation) {
+      def(this, 'validation', validation, false);
     }
+  }
 
-    return [paramSchema.name, param];
-  });
-
-  return new Map(vParams);
+  return ruleSchema;
 }
 
 export default class Validation {
-  readonly data!: Map<string, unknown>;
-  readonly params!: Map<string, unknown>;
-  readonly _template!: ValidationMessageTemplate | null;
-  readonly _validator!: Validator;
-  message: string | null = null;
-  valid!: boolean;
+  readonly rules!: Record<string, ValidationRule>;
+  readonly errors!: string[];
 
-  constructor(rule: ValidationRule, params?: unknown, data?: unknown) {
-    def(this, 'valid', true);
+  constructor(schemas: Record<string, ValidationRuleSchema>, data?: unknown) {
+    each(schemas, (schema: ValidationRuleSchema, propName: string) => {
+      const { types } = schema;
 
-    if (isNullOrUndefined(rule)) {
-      throw new Error(logMessage('Missing validation rule when creating validation'));
-    }
+      if (!types) {
+        logWarn(`Missing "types" in validation rule with name "${propName}"`);
+      } else if (types.includes(this.type)) {
+        const validation = new Validation(schema, (this as Record<string, any>)[propName], {
+          field: this
+        });
 
-    let validator = null;
-    let vParams = null;
-    let template = null;
-    let vData = null;
-
-    if (isCallable(rule)) {
-      validator = rule;
-    } else if (isPlainObject(rule)) {
-      validator = rule.validate;
-      vParams = rule.params ? parameterize(rule.params, params) : null;
-      template = isCallable(rule.message) ? rule.message : rule.message || null;
-    }
-
-    if (!validator) {
-      throw new Error(logMessage('Missing "validate(): boolean" method in validation rule'));
-    }
-
-    try {
-      vData = new Map(data as Map<string, unknown>);
-    } catch (error) {
-      if (isPlainObject(data)) {
-        vData = new Map(Object.keys(data).map(key => [key, (data as Record<string, unknown>)[key]]));
-      } else {
-        logWarn('The optional data is no valid, it has to be a "Map", an array of "[key, value]" or a plain "object"');
+        if (validation) {
+          def(this, 'validation', validation, false);
+        }
       }
-    }
+    });
 
-    def(this, 'data', vData, false);
-    def(this, 'params', vParams, false);
-    def(this, '_template', template, false);
-    def(this, '_validator', validator.bind(this), false);
   }
 
-  addData(key: string, value: unknown) {
-    this.data.set(key, value);
+  addRule(key: string, ruleOrSchema: ValidationRule | ValidationRuleSchema) {
+    if (ruleOrSchema instanceof ValidationRule) {
+      this.rules[key] = ruleOrSchema;
+    } else {
+
+    }
   }
 
   async validate(

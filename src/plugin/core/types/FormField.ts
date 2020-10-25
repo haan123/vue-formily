@@ -1,5 +1,4 @@
-import { FormFieldSchema, FormilyField } from '.';
-import { FormElement } from './FormElement';
+import { FormElement, FormFieldSchema, FormilyField, PropValue, Validation } from '.';
 
 export type FormFieldValue = string | number | boolean | Date | null;
 export type FormFieldType = 'string' | 'number' | 'boolean' | 'date';
@@ -15,15 +14,10 @@ export declare class FormField extends FormElement {
   readonly type: FormFieldType;
   readonly inputType: string;
   readonly default: FormFieldValue;
-  label: string | null;
-  hint: string | null;
-  help: string | null;
-  placeholder: string | null;
-  options: any[] | null;
-  readonly formatter?: () => FormFieldValue;
+  readonly props?: Record<string, PropValue>;
+  readonly options?: any[];
+  readonly valiadtion?: Validation;
   raw: string | null;
   formatted: string | null;
   value: FormFieldValue;
-
-  // setValue(value: any): any;
 }

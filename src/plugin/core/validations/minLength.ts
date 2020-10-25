@@ -1,12 +1,18 @@
 import { ValidationSchema } from '../types';
 
-export const validate = (value: string, { minLength }: Record<string, number>) => {
-  return value.length >= minLength;
+export const validate = (value: string, { length }: Record<string, number>) => {
+  return value.length >= length;
 };
 
 const schema: ValidationSchema = {
   validate,
-  types: ['string']
+  types: ['string'],
+  params: [
+    {
+      name: 'length',
+      default: 0
+    }
+  ]
 };
 
 export default schema;

@@ -5,6 +5,7 @@ import { FormGroup, FormGroupType } from './FormGroup';
 import { Form } from './Form';
 import { Forms } from './Forms';
 import { Validation } from './Validation';
+import { ValidationRule } from './ValidationRule';
 
 declare module 'vue/types/vue' {
   interface Vue {
@@ -25,18 +26,24 @@ export type Validations = {
 
 export interface ValidationResult {
   valid: boolean;
+  errors: string[];
 }
 
 export type Validator = (value: any, ...args: any[]) => boolean | Promise<boolean>;
-export interface ValidationSchema {
+export type RuleParamSchema = {
+  name: string;
+  default?: FormFieldValue;
+};
+export interface RuleSchema {
   validate?: Validator;
   types?: FormFieldType[];
+  params?: RuleParamSchema[];
   message?: ValidationMessageTemplate;
   cascade?: boolean;
   inherit?: boolean;
 }
 
-export type ValidationRule = Validator | ValidationSchema;
+export type ValidationRuleSchema = Validator | RuleSchema;
 export interface ValidationMessageGenerator {
   (value: any, params?: Map<string, any>, data?: Map<string, any>): string;
 }
@@ -46,19 +53,19 @@ export type ValidationMessageTemplate = string | ValidationMessageGenerator;
 export type PropValue = FormFieldValue | ((this: FormField, value: any) => FormFieldValue);
 
 export type FormFieldSchema = FormElementSchema & {
-  readonly inputType?: string;
-  readonly label?: string;
-  readonly default?: FormFieldValue;
-  readonly hint?: string;
-  readonly help?: string;
-  readonly placeholder?: string;
-  readonly options?: any[];
-  readonly formatter?: () => FormFieldValue;
-  readonly id?: string;
-  readonly type: FormFieldType;
+  type: FormFieldType;
+  inputType?: string;
+  label?: string;
+  hint?: string;
+  help?: string;
+  placeholder?: string;
+  options?: any[];
+  formatter?: (this: FormField, value: FormFieldValue) => string;
+  id?: string;
+  default?: FormFieldValue;
   value?: FormFieldValue | FormFieldValue[];
   props?: Record<string, PropValue>;
-  validations?: Record<string, ValidationRule>;
+  rules?: Record<string, ValidationRuleSchema>;
 };
 
 export type FormGroupSchema = FormElementSchema & {
@@ -85,6 +92,8 @@ export interface FormilyOptions {
   name?: string;
 }
 
+export { Validation } from './Validation';
+export { ValidationRule } from './ValidationRule';
 export { FormElement } from './FormElement';
 export { FormField, FormFieldValue, FormFieldType } from './FormField';
 export { FormGroup } from './FormGroup';

@@ -1,22 +1,11 @@
-import { ValidationMessageTemplate, ValidationRule, Validator } from '.';
+import { ValidationRule, ValidationRuleSchema } from '.';
 
 export declare class Validation {
   constructor(rule: ValidationRule);
 
-  readonly data: Map<string, unknown>;
-  readonly params: Map<string, unknown> | null;
-  readonly _template: ValidationMessageTemplate | null;
-  readonly _validator: Validator;
-  message: string | null;
-  valid: boolean;
+  rules: Record<string, ValidationRule>;
+  errors: string[];
 
-  /**
-   * Return validation message if provided
-   */
-  getMessage(): string;
-  /**
-   * Adds optional data using for generate validation message and during validation
-   */
-  addData(key: string, value: unknown): void;
   validate(value: any): Promise<{ valid: boolean; message: string }>;
+  addRule(key: string, ruleOrSchema: ValidationRule | ValidationRuleSchema): void;
 }
