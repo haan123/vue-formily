@@ -3,7 +3,7 @@
     <div v-for="(field, i) in forms.form.fields" :key="i">
       <label v-if="field.inputType === 'text'">
         {{ field.label }}
-        <input type="text" :value="field.raw" @input="fieldInput($event, field)" />
+        <input type="text" :model="field.raw" @input="fieldInput($event, field)" />
       </label>
     </div>
   </div>
@@ -11,22 +11,29 @@
 
 <script lang="ts">
 import Vue from 'vue';
+import VueI18n from 'vue-i18n';
+
 import Formily from './plugin';
 import { FormField, FormGroups, FormSchema } from './plugin/core/types';
-import { minLength } from './plugin/core/validations';
+import { minLength } from './plugin/core/rules';
 
-Vue.use(Formily);
+Vue.use(VueI18n);
+
+Vue.use(Formily, {
+  test: 'a'
+});
 
 const form: FormSchema = {
   formId: 'form',
+  type: 'form',
   fields: [
     {
       formId: 'a',
       label: 'a',
-      type: 'number',
+      type: 'string',
       inputType: 'text',
       default: '12131',
-      validations: {
+      rules: {
         minLength: {
           ...minLength,
           message: 'aaas'
@@ -90,9 +97,6 @@ export default Vue.extend({
   },
   methods: {
     fieldInput(e: any, field: FormField) {
-      const value = e.target.value;
-
-      field.setValue(value);
       console.log(field);
     }
   }

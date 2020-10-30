@@ -1,9 +1,7 @@
-import { FormilyField, FormGroupSchema, FormSchema, FormilyOptions, FormGroup } from '.';
+import { FormElement, FormSchema } from '.';
 
-export declare class Form extends FormGroup {
-  private constructor(schema: FormSchema, options?: FormilyOptions);
+export type FormType = 'form';
 
-  readonly _schema: FormGroupSchema;
-  fields: FormilyField[];
-  validations: object;
+export declare class Form extends FormElement {
+  private constructor(schema: FormSchema);
 }

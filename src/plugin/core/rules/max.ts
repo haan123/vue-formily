@@ -1,4 +1,4 @@
-import { ValidationSchema } from '../types';
+import { RuleSchema } from '../types';
 
 export const validate = (value: number | Date, { max }: Record<string, number | Date>) => {
   if (value instanceof Date) {
@@ -8,14 +8,9 @@ export const validate = (value: number | Date, { max }: Record<string, number | 
   return value <= max;
 };
 
-const schema: ValidationSchema = {
+const schema: RuleSchema = {
   validate,
-  types: ['number', 'date'],
-  params: [
-    {
-      name: 'max'
-    }
-  ]
+  types: ['number', 'date']
 };
 
 export default schema;

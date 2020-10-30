@@ -28,6 +28,8 @@ export function merge(target: any, ...sources: any[]) {
   }, target);
 }
 
-export function each(obj: Record<string, any>, fn: (propValue: any, propName: string, index: number) => void) {
-  Object.keys(obj).forEach((propName, index) => fn(obj[propName], propName, index));
+export function each(obj: any, fn: (propValue: any, propName: string, index: number) => void) {
+  if (isPlainObject(obj)) {
+    Object.keys(obj).forEach((propName, index) => fn(obj[propName], propName, index));
+  }
 }

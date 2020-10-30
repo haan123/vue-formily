@@ -1,7 +1,6 @@
 import {
   FormFieldSchema,
   FormilyField,
-  ValidationSchema,
   ValidationRuleSchema,
   FormFieldValue,
   FormFieldType,
@@ -9,58 +8,82 @@ import {
   PropValue
 } from './types';
 import FormElement from './FormElement';
-import { def, each, merge, logError, setter, logWarn, logMessage, isCallable, getter } from './utils';
-import { maxLength, minLength, min, max } from './validations';
+import { def, each, logError, setter, logMessage, isCallable, getter } from './utils';
 import Validation from './Validation';
-import { cast, validate } from './validate';
-
-const defaultRules: Record<string, ValidationSchema> = {
-  minLength,
-  maxLength,
-  min,
-  max
-};
+import { cast } from './validate';
+import { FORM_FIELD_TYPES } from './constants';
+import { genHtmlName, isFormFieldType } from './helpers';
 
 export type FormFieldValidationResult = ValidationResult & {
   value: FormFieldValue;
 };
-export default class FormField extends FormElement {
-  static FIELD_TYPE_STRING = 'string';
-  static FIELD_TYPE_NUMBER = 'number';
-  static FIELD_TYPE_BOOLEAN = 'boolean';
-  static FIELD_TYPE_DATE = 'date';
 
+export default class FormField extends FormElement {
   readonly type!: FormFieldType;
   readonly inputType!: string;
   readonly default!: FormFieldValue;
-  readonly props?: Record<string, PropValue>;
   readonly options?: any[];
-  raw: string | null;
+  props?: Record<string, PropValue>;
+  raw!: string | null;
   formatted!: string | null;
-  value: FormFieldValue;
+  value!: FormFieldValue;
 
   constructor(schema: FormFieldSchema, parent?: FormilyField) {
-    super(schema.formId, parent);
+    super(schema, parent);
 
-    const { type, inputType = 'text' } = schema;
+    const formatter = isCallable(schema.formatter) ? schema.formatter.bind(this) : (value: FormFieldValue) => value;
+
+    let typedValue = this.default;
+    let rawValue = this.default;
+    let formattedValue = formatter(this.default);
+
+    setter(this, 'value', async (val: any) => {
+      rawValue = val;
+
+      const { value } = await this.validate(rawValue);
+
+      typedValue = value;
+      formattedValue = formatter(typedValue);
+
+      return typedValue;
+    });
+
+    setter(
+      this,
+      'raw',
+      (val: any) => {
+        if (val !== undefined) {
+          rawValue = val;
+        }
+
+        this.value = rawValue;
+
+        return rawValue;
+      },
+      { eager: true }
+    );
+
+    getter(this, 'formatted', () => formattedValue);
+  }
+
+  initialize(schema: FormFieldSchema) {
+    const { type, rules, inputType = 'text', props } = schema;
     let defaultValue = null;
 
-    if (!type) {
-      throw new Error(
-        logMessage('field type can not be null or undefined', {
-          formId: this.formId
-        })
-      );
-    } else if (!['string', 'number', 'boolean', 'date'].includes(type)) {
+    if (!isFormFieldType(type)) {
       throw new Error(
         logMessage(
-          'Unsupported field type, the type must be one of these types ["string", "number", "boolean", "date"]',
+          `Unsupported field type, the type must be one of these types ${Object.keys(FORM_FIELD_TYPES).join(', ')}`,
           {
             formId: this.formId
           }
         )
       );
     }
+
+    def(this, 'type', type, false);
+    def(this, 'inputType', inputType, false);
+    def(this, 'htmlName', genHtmlName(this), false);
 
     try {
       defaultValue = cast(schema.default, this.type);
@@ -71,53 +94,72 @@ export default class FormField extends FormElement {
       });
     }
 
-    def(this, 'type', type, false);
     def(this, 'default', defaultValue, false);
-    def(this, 'inputType', inputType, false);
 
-    each(schema.props || {}, (propValue, propName) => {
-      setter(this, propName, (value: any) => {
-        if (value !== undefined) {
-          return value;
-        }
+    if (props) {
+      this.props = {};
 
-        return isCallable(propValue) ? propValue.call(this, this.value) : propValue;
+      each(props, (propValue, propName) => {
+        setter(
+          this.props,
+          propName,
+          (value: any) => {
+            if (value !== undefined) {
+              return value;
+            }
+
+            return isCallable(propValue) ? propValue.call(this, this.value) : propValue;
+          },
+          {
+            eager: true
+          }
+        );
       });
-    });
+    }
 
-    const ruleSchemas: Record<string, ValidationRuleSchema> = merge({}, defaultRules, schema.rules);
+    const validationRules: Record<string, ValidationRuleSchema> = {};
 
-    each(schemas, (schema: ValidationRuleSchema, key: string) => {});
+    if (rules) {
+      const props = this.props;
 
-    const validation = new Validation(ruleSchemas);
+      each(rules, (rule: ValidationRuleSchema, key: string) => {
+        /**
+         * Only apply validation rule to 'function' or 'undefined' or field that has type is included in 'types' property of the rule
+         */
+        if (isCallable(rule)) {
+          validationRules[key] = rule;
+        } else if (!rule.types || rule.types.includes(this.type)) {
+          let _rule: ValidationRuleSchema = rule;
 
-    const formatter = isCallable(schema.formatter) ? schema.formatter.bind(this) : (value: FormFieldValue) => value;
+          if (props && props[key] !== undefined) {
+            _rule = {
+              ...rule,
+              props: {
+                ...rule.props,
+                [key]: props[key]
+              }
+            };
+          }
 
-    let typedValue = this.default;
-    let formattedValue = formatter(this.default);
+          validationRules[key] = _rule;
+        }
+      });
+    }
 
-    setter(this, 'raw', schema.default, async (val: any) => {
-      const { value } = await this.validate(val);
-
-      typedValue = value;
-      formattedValue = formatter(typedValue);
-
-      return val;
-    });
-
-    getter(this, 'value', () => typedValue);
-    getter(this, 'formatted', () => formattedValue);
+    def(this, 'validation', new Validation(validationRules, { field: this }), false);
   }
+
   async validate(val: any): Promise<FormFieldValidationResult> {
     let value: FormFieldValue = null;
     let result: ValidationResult = {
       valid: false,
-      errors: []
+      errors: null
     };
 
     try {
       const typedValue = cast(val, this.type);
-      result = await validate(typedValue, this.validations);
+
+      result = await this.validation.validate(typedValue);
 
       if (result.valid) {
         value = typedValue;

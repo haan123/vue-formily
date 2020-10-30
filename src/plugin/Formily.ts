@@ -1,14 +1,33 @@
 import { VueConstructor } from 'vue';
-import { FormSchema, FormilyOptions } from './core/types';
+import { FormSchema, FormilyOptions, RuleSchema } from './core/types';
 import Form from './core/Form';
+import { merge } from './core/utils';
+import { maxLength, minLength, min, max } from './core/validations';
+
+const defaultRules: Record<string, RuleSchema> = {
+  minLength,
+  maxLength,
+  min,
+  max
+};
 
 export default class Formily {
   static version = '__VERSION__';
 
+  readonly options?: FormilyOptions;
+
   vm: any;
 
+  constructor(options?: FormilyOptions) {
+    this.options = options;
+  }
+
   add(schema: FormSchema, options?: FormilyOptions) {
-    const form = new Form(schema, options);
+    const { rules } = merge({}, this.options, options);
+
+    schema.rules = merge({}, defaultRules, rules);
+
+    const form = new Form(schema);
 
     this.vm.$set(this.vm.forms, form.formId, {
       fields: form.fields
@@ -21,12 +40,12 @@ export default class Formily {
     this.vm = vm;
   }
 
-  static install(Vue: VueConstructor) {
+  static install(Vue: VueConstructor, options?: FormilyOptions) {
     if (Vue.prototype.$formily) {
       return;
     }
 
-    const formily = new Formily();
+    const formily = new Formily(options);
 
     Object.defineProperty(Vue.prototype, '$formily', {
       get() {

@@ -1,53 +1,33 @@
-import { ValidationMessageTemplate, RuleParamSchema, ValidationRuleSchema, Validator } from './types';
-import { def, isCallable, isNullOrUndefined, isPlainObject, logMessage, logWarn } from './utils';
+import { ValidationMessageTemplate, ValidationRuleSchema, Validator } from './types';
+import { def, isCallable, isPlainObject, logMessage, toMap } from './utils';
 
-export function parameterize(paramsSchema: RuleParamSchema[], params?: any): Map<string, any> {
-  const hasParams = isNullOrUndefined(params);
-  const isArray = hasParams ? Array.isArray(params) : false;
-  const isObject = isPlainObject(params);
-
-  const vParams: [string, any][] = paramsSchema.map((paramSchema: RuleParamSchema, i: number) => {
-    let param = paramSchema.default;
-
-    if (hasParams) {
-      if (isArray) {
-        param = params[i];
-      } else if (isObject) {
-        param = params[paramSchema.name];
-      }
-    }
-
-    return [paramSchema.name, param];
-  });
-
-  return new Map(vParams);
-}
+export type ValidationRuleResult = {
+  valid: boolean;
+  message: string | null;
+};
 
 export default class ValidationRule {
-  readonly data!: Map<string, unknown>;
-  readonly params!: Map<string, unknown>;
+  readonly data!: Map<string, any>;
+  readonly props!: Map<string, any>;
   readonly _template!: ValidationMessageTemplate | null;
   readonly _validator!: Validator;
   message: string | null = null;
-  valid!: boolean;
+  valid: boolean;
 
-  constructor(rule: ValidationRuleSchema, params?: unknown, data?: unknown) {
-    def(this, 'valid', true);
-
-    if (isNullOrUndefined(rule)) {
+  constructor(rule: ValidationRule | ValidationRuleSchema, data?: any) {
+    if (!rule) {
       throw new Error(logMessage('Missing validation rule when creating validation'));
     }
 
     let validator = null;
-    let vParams = null;
     let template = null;
-    let vData = null;
+    let vProps = null;
 
     if (isCallable(rule)) {
       validator = rule;
     } else if (isPlainObject(rule)) {
       validator = rule.validate;
-      vParams = rule.params ? parameterize(rule.params, params) : null;
+      vProps = rule.props || null;
       template = isCallable(rule.message) ? rule.message : rule.message || null;
     }
 
@@ -55,37 +35,24 @@ export default class ValidationRule {
       throw new Error(logMessage('Missing "validate(): boolean" method in validation rule'));
     }
 
-    try {
-      vData = new Map(data as Map<string, unknown>);
-    } catch (error) {
-      if (isPlainObject(data)) {
-        vData = new Map(Object.keys(data).map(key => [key, (data as Record<string, unknown>)[key]]));
-      } else {
-        logWarn('The optional data is no valid, it has to be a "Map", an array of "[key, value]" or a plain "object"');
-      }
-    }
+    this.valid = true;
 
-    def(this, 'data', vData, false);
-    def(this, 'params', vParams, false);
+    def(this, 'data', toMap(data), false);
+    def(this, 'props', vProps, false);
     def(this, '_template', template, false);
     def(this, '_validator', validator.bind(this), false);
   }
 
-  addData(key: string, value: unknown) {
+  addData(key: string, value: any) {
     this.data.set(key, value);
   }
 
-  async validate(
-    value: unknown
-  ): Promise<{
-    valid: boolean;
-    message: string | null;
-  }> {
-    const valid = await this._validator(value, this.params, this.data);
+  async validate(value: any): Promise<ValidationRuleResult> {
+    const valid = await this._validator(value, this.props, this.data);
     let message = null;
 
     if (isCallable(this._template)) {
-      message = this._template(value, this.params, this.data);
+      message = this._template(value, this.props, this.data);
     } else if (typeof this._template === 'string') {
       message = this._template;
     }

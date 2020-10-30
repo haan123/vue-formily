@@ -1,11 +1,9 @@
-import { FormElement } from './FormElement';
 import { FormField, FormFieldValue, FormFieldType } from './FormField';
 import { FormGroups, FormGroupsType } from './FormGroups';
 import { FormGroup, FormGroupType } from './FormGroup';
 import { Form } from './Form';
 import { Forms } from './Forms';
 import { Validation } from './Validation';
-import { ValidationRule } from './ValidationRule';
 
 declare module 'vue/types/vue' {
   interface Vue {
@@ -18,26 +16,18 @@ declare module 'vue/types/vue' {
 
 export type FormElementSchema = {
   readonly formId: string;
+  rules?: Record<string, ValidationRuleSchema>;
 };
 
 export type Validations = {
   [name: string]: Validation;
 };
 
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
-}
-
 export type Validator = (value: any, ...args: any[]) => boolean | Promise<boolean>;
-export type RuleParamSchema = {
-  name: string;
-  default?: FormFieldValue;
-};
 export interface RuleSchema {
   validate?: Validator;
   types?: FormFieldType[];
-  params?: RuleParamSchema[];
+  props?: Record<string, PropValue>;
   message?: ValidationMessageTemplate;
   cascade?: boolean;
   inherit?: boolean;
@@ -45,14 +35,14 @@ export interface RuleSchema {
 
 export type ValidationRuleSchema = Validator | RuleSchema;
 export interface ValidationMessageGenerator {
-  (value: any, params?: Map<string, any>, data?: Map<string, any>): string;
+  (value: any, props?: Map<string, any>, data?: Map<string, any>): string;
 }
 
 export type ValidationMessageTemplate = string | ValidationMessageGenerator;
 
 export type PropValue = FormFieldValue | ((this: FormField, value: any) => FormFieldValue);
 
-export type FormFieldSchema = FormElementSchema & {
+export interface FormFieldSchema extends FormElementSchema {
   type: FormFieldType;
   inputType?: string;
   label?: string;
@@ -65,37 +55,38 @@ export type FormFieldSchema = FormElementSchema & {
   default?: FormFieldValue;
   value?: FormFieldValue | FormFieldValue[];
   props?: Record<string, PropValue>;
-  rules?: Record<string, ValidationRuleSchema>;
-};
+}
 
-export type FormGroupSchema = FormElementSchema & {
+export interface FormGroupSchema extends FormElementSchema {
   readonly type: FormGroupType;
   fields: FormilyFieldSchema[];
-};
+}
 
-export type FormGroupsSchema = FormElementSchema & {
+export interface FormSchema extends FormGroupSchema {
+  readonly type: 'form';
+  fields: FormilyFieldSchema[];
+}
+
+export interface FormGroupsSchema extends FormElementSchema {
   readonly type: FormGroupsType;
   fields: FormilyFieldSchema[];
-};
+}
 
-export type FormSchema = FormElementSchema & {
-  fields: FormilyFieldSchema[];
-};
-
-export type FormilyFieldType = FormFieldType | FormGroupsType;
+export type FormilyFieldType = FormFieldType | 'groups' | 'group';
 
 export type FormilyFieldSchema = FormFieldSchema | FormGroupSchema | FormGroupsSchema;
 
-export type FormilyField = FormElement | FormField | FormGroups | FormGroup;
+export type FormilyField = FormField | FormGroup | FormGroups;
 
 export interface FormilyOptions {
   name?: string;
+  rules: Record<string, ValidationRuleSchema>;
 }
 
-export { Validation } from './Validation';
+export { Validation, ValidationResult, ValidationOptions } from './Validation';
 export { ValidationRule } from './ValidationRule';
 export { FormElement } from './FormElement';
 export { FormField, FormFieldValue, FormFieldType } from './FormField';
-export { FormGroup } from './FormGroup';
+export { FormGroup, FormGroupType } from './FormGroup';
 export { FormGroups, FormGroupsType } from './FormGroups';
-export { Form } from './Form';
+export { Form, FormType } from './Form';

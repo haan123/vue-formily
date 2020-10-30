@@ -1,14 +1,13 @@
 import { FormElement, FormGroupSchema, FormilyField } from '.';
+import { FormType } from './Form';
 
-export type FormGroupType = 'group';
+export type FormGroupType = 'group' | FormType;
+
 export declare class FormGroup extends FormElement {
   constructor(schema: FormGroupSchema, parent?: FormilyField);
 
+  readonly type: FormGroupType;
   fields: FormilyField[];
-  /**
-   * Use for group instance in FormGroups
-   */
-  index?: number;
 
   getField(path: string | string[], fields?: FormilyField[]): FormilyField | null;
 }

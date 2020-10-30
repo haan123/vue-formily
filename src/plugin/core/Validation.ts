@@ -1,78 +1,49 @@
-import { RuleSchema, ValidationMessageTemplate, ValidationRule, ValidationRuleSchema, Validator } from './types';
-import { def, each, isCallable, logWarn } from './utils';
-
-function normalizeRuleSchema(schema: ValidationRuleSchema): RuleSchema | null {
-  let ruleSchema = null;
-
-  if (isCallable(schema)) {
-    ruleSchema = {
-      validate: schema,
-      cascade: false;
-    };
-  } else if (!schema.types) {
-    logWarn(`Missing "types" in validation rule with name "${propName}"`);
-  } else if (schema.types.includes(this.type)) {
-    const validation = new Validation(schema, (this as Record<string, any>)[propName], {
-      field: this
-    });
-
-    if (validation) {
-      def(this, 'validation', validation, false);
-    }
-  }
-
-  return ruleSchema;
-}
+import { ValidationResult, ValidationRuleSchema } from './types';
+import { each } from './utils';
+import ValidationRule from './ValidationRule';
 
 export default class Validation {
-  readonly rules!: Record<string, ValidationRule>;
-  readonly errors!: string[];
+  rules: Record<string, ValidationRule>;
+  errors!: string[] | null;
 
-  constructor(schemas: Record<string, ValidationRuleSchema>, data?: unknown) {
-    each(schemas, (schema: ValidationRuleSchema, propName: string) => {
-      const { types } = schema;
+  constructor(rules: Record<string, ValidationRuleSchema>, data?: any) {
+    this.rules = {};
 
-      if (!types) {
-        logWarn(`Missing "types" in validation rule with name "${propName}"`);
-      } else if (types.includes(this.type)) {
-        const validation = new Validation(schema, (this as Record<string, any>)[propName], {
-          field: this
-        });
-
-        if (validation) {
-          def(this, 'validation', validation, false);
-        }
-      }
+    each(rules, (schema: ValidationRuleSchema, key: string) => {
+      this.addRule(key, schema, data);
     });
 
+    this.errors = null;
   }
 
-  addRule(key: string, ruleOrSchema: ValidationRule | ValidationRuleSchema) {
-    if (ruleOrSchema instanceof ValidationRule) {
-      this.rules[key] = ruleOrSchema;
-    } else {
-
-    }
+  addRule(key: string, ruleOrSchema: ValidationRule | ValidationRuleSchema, data?: any) {
+    this.rules[key] = new ValidationRule(ruleOrSchema, data);
   }
 
-  async validate(
-    value: unknown
-  ): Promise<{
-    valid: boolean;
-    message: string | null;
-  }> {
-    const valid = await this._validator(value, this.params, this.data);
-    let message = null;
+  async validate(value: any): Promise<ValidationResult> {
+    let errors: string[] | null = null;
+    let isValid = true;
 
-    if (isCallable(this._template)) {
-      message = this._template(value, this.params, this.data);
-    } else if (typeof this._template === 'string') {
-      message = this._template;
-    }
+    await Promise.all(
+      Object.keys(this.rules).map(async key => {
+        const rule: ValidationRule = this.rules[key];
+        const { valid, message } = await rule.validate(value);
+
+        if (!valid) {
+          isValid = false;
+
+          if (message) {
+            errors = errors ? [...errors] : [message];
+          }
+        }
+      })
+    );
+
+    this.errors = errors;
 
     return {
-      valid,
-      message
+      valid: isValid,
+      errors
     };
   }
 }

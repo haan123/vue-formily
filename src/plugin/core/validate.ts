@@ -25,28 +25,3 @@ export function cast(value: any, type: FormFieldType): FormFieldValue {
 
   return typedValue;
 }
-
-interface ValidationOptions {
-  bails?: boolean;
-}
-
-export async function validate(
-  value: unknown,
-  validations: Validations,
-  options: ValidationOptions = {}
-): Promise<ValidationResult> {
-  const errors: string[] = [];
-
-  each(validations, async (validation: Validation) => {
-    const { valid, message } = await validation.validate(value);
-
-    if (!valid) {
-      errors.push(message);
-    }
-  });
-
-  return {
-    valid: !!errors.length,
-    errors
-  };
-}

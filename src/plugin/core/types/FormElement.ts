@@ -1,11 +1,11 @@
-import { FormilyField, Validations } from '.';
+import { FormilyField, Validation } from '.';
 
 export declare class FormElement {
   constructor(formId: string, parent?: FormilyField);
   /**
    * The parent within the form.
    */
-  readonly parent: FormilyField | null;
+  readonly parent?: FormilyField;
   /**
    * The ID of the form element. The is is unique within the parent element of the form.
    */
@@ -25,7 +25,7 @@ export declare class FormElement {
   /**
    * Represents a form element validation result.
    */
-  validations: Validations;
+  validation: Validation;
   /**
    * Global unique id of the field
    */
