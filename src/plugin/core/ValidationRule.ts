@@ -57,6 +57,8 @@ export default class ValidationRule {
       message = this._template;
     }
 
+    this.valid = valid;
+
     return {
       valid,
       message

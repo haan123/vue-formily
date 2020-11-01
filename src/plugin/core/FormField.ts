@@ -64,10 +64,24 @@ export default class FormField extends FormElement {
     );
 
     getter(this, 'formatted', () => formattedValue);
+
+    if (schema.props) {
+      this.props = {};
+
+      each(schema.props, (propValue, propName) => {
+        getter(this.props, propName, (value: any) => {
+          if (value !== undefined) {
+            return value;
+          }
+
+          return isCallable(propValue) ? propValue.call(this, this.value) : propValue;
+        });
+      });
+    }
   }
 
   initialize(schema: FormFieldSchema) {
-    const { type, rules, inputType = 'text', props } = schema;
+    const { type, rules, inputType = 'text' } = schema;
     let defaultValue = null;
 
     if (!isFormFieldType(type)) {
@@ -95,27 +109,6 @@ export default class FormField extends FormElement {
     }
 
     def(this, 'default', defaultValue, false);
-
-    if (props) {
-      this.props = {};
-
-      each(props, (propValue, propName) => {
-        setter(
-          this.props,
-          propName,
-          (value: any) => {
-            if (value !== undefined) {
-              return value;
-            }
-
-            return isCallable(propValue) ? propValue.call(this, this.value) : propValue;
-          },
-          {
-            eager: true
-          }
-        );
-      });
-    }
 
     const validationRules: Record<string, ValidationRuleSchema> = {};
 

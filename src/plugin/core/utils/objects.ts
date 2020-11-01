@@ -48,8 +48,8 @@ export function setter(
     get() {
       return value;
     },
-    set(val) {
-      value = set.call(this, val);
+    async set(val) {
+      value = await set.call(this, val);
 
       return value;
     },

@@ -2,7 +2,7 @@ import { VueConstructor } from 'vue';
 import { FormSchema, FormilyOptions, RuleSchema } from './core/types';
 import Form from './core/Form';
 import { merge } from './core/utils';
-import { maxLength, minLength, min, max } from './core/validations';
+import { maxLength, minLength, min, max } from './core/rules';
 
 const defaultRules: Record<string, RuleSchema> = {
   minLength,
