@@ -1,11 +1,12 @@
-import { RuleSchema } from '../types';
+import { RuleSchema, ValidationProps } from '../types';
 
-export const validate = (value: number | Date, { min }: Record<string, number | Date>) => {
+export const validate = (value: number | Date, { min }: ValidationProps) => {
   return +value >= +min;
 };
 
 const schema: RuleSchema = {
   validate,
+  cascade: true,
   types: ['number', 'date']
 };
 

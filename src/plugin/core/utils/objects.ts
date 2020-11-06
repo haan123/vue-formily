@@ -1,7 +1,7 @@
 import { isCallable, isPlainObject } from './assertions';
 
-export function toMap(data: any) {
-  if (!data) {
+export function toMap(data?: any) {
+  if (data === undefined) {
     return null;
   }
 
@@ -12,13 +12,22 @@ export function toMap(data: any) {
   return new Map(data as Map<string, any>);
 }
 
-export function def(obj: any, key: string, val: any, writable = true, enumerable = true) {
+export function def(
+  obj: any,
+  key: string,
+  val: any,
+  { initValue, reactive = false, writable = true }: { reactive?: boolean; writable?: boolean; initValue?: any } = {}
+) {
   Object.defineProperty(obj, key, {
     value: val,
-    enumerable,
+    enumerable: true,
     writable,
-    configurable: writable
+    configurable: reactive
   });
+
+  if (writable && initValue !== undefined) {
+    obj[key] = initValue;
+  }
 }
 
 export function getter(obj: any, key: string, val: any, { reactive = true }: { reactive?: boolean } = {}) {

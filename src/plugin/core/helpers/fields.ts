@@ -1,6 +1,21 @@
-import { FormilyFieldSchema, RuleSchema, ValidationRuleSchema } from '../types';
+import { ValidationRuleSchema, FormilyFieldSchema, RuleSchema, PropValue } from '../types';
+import { isNullOrUndefined, each, isCallable, merge, getter } from '../utils';
 
-import { each, isCallable, isNullOrUndefined, merge } from '../utils';
+export function toProps(obj: any, props?: Record<string, PropValue>): Record<string, PropValue> | null {
+  const _props = props ? {} : null;
+
+  each(props, (propValue, propName) => {
+    getter(_props, propName, (value: any) => {
+      if (value !== undefined) {
+        return value;
+      }
+
+      return isCallable(propValue) ? propValue.call(obj, obj.value) : propValue;
+    });
+  });
+
+  return _props;
+}
 
 export function traverseFields(path: string | string[] = [], fields: any) {
   if (typeof path === 'string') path = path.split('.');
@@ -12,7 +27,7 @@ export function traverseFields(path: string | string[] = [], fields: any) {
     return field;
   }
 
-  if ('fields' in field.type) {
+  if ('fields' in field) {
     field = traverseFields(path, field.fields);
   }
 
@@ -34,7 +49,7 @@ export function cascadeRules(
       each(rules, (rule: RuleSchema, key) => {
         const parentRule = parentRules[key];
 
-        if (isCallable(parentRule) || !parentRule.cascade || !rule.inherit) {
+        if (!parentRule || isCallable(parentRule) || !parentRule.cascade || !rule.inherit) {
           return;
         }
 

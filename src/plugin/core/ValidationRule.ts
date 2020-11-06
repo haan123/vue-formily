@@ -1,4 +1,5 @@
-import { ValidationMessageTemplate, ValidationRuleSchema, Validator } from './types';
+import { isEmptyValue } from './helpers';
+import { ValidationMessageTemplate, ValidationRuleSchema, Validator, ValidationProps } from './types';
 import { def, isCallable, isPlainObject, logMessage, toMap } from './utils';
 
 export type ValidationRuleResult = {
@@ -7,11 +8,11 @@ export type ValidationRuleResult = {
 };
 
 export default class ValidationRule {
-  readonly data!: Map<string, any>;
-  readonly props!: Map<string, any>;
+  readonly props!: ValidationProps;
   readonly _template!: ValidationMessageTemplate | null;
   readonly _validator!: Validator;
-  message: string | null = null;
+  data!: Map<string, any>;
+  message!: string | null;
   valid: boolean;
 
   constructor(rule: ValidationRule | ValidationRuleSchema, data?: any) {
@@ -19,15 +20,22 @@ export default class ValidationRule {
       throw new Error(logMessage('Missing validation rule when creating validation'));
     }
 
-    let validator = null;
+    let validator: Validator | null = null;
     let template = null;
-    let vProps = null;
+    let vProps;
 
     if (isCallable(rule)) {
       validator = rule;
     } else if (isPlainObject(rule)) {
-      validator = rule.validate;
-      vProps = rule.props || null;
+      if (!('allowEmpty' in rule)) {
+        validator = (rule.validate as Validator) || null;
+      } else if (!rule.allowEmpty && rule.validate) {
+        validator = (value: any, props: ValidationProps, data: Map<string, any> | null) => {
+          return !isEmptyValue(value) && (rule.validate as Validator).call(this, value, props, data);
+        };
+      }
+
+      vProps = rule.props;
       template = isCallable(rule.message) ? rule.message : rule.message || null;
     }
 
@@ -37,10 +45,10 @@ export default class ValidationRule {
 
     this.valid = true;
 
-    def(this, 'data', toMap(data), false);
-    def(this, 'props', vProps, false);
-    def(this, '_template', template, false);
-    def(this, '_validator', validator.bind(this), false);
+    def(this, 'data', toMap(data || null), { writable: false });
+    def(this, 'props', vProps || {}, { writable: false });
+    def(this, '_template', template, { writable: false });
+    def(this, '_validator', validator.bind(this), { writable: false });
   }
 
   addData(key: string, value: any) {

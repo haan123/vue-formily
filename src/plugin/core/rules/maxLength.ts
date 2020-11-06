@@ -1,11 +1,13 @@
-import { RuleSchema } from '../types';
+import { getLength } from '../helpers';
+import { RuleSchema, Validator, ValidationProps } from '../types';
 
-export const validate = (value: string, { maxLength }: Record<string, number>) => {
-  return value.length <= maxLength;
+export const validate: Validator = (value: string, { maxLength }: ValidationProps) => {
+  return getLength(value) <= maxLength;
 };
 
 const schema: RuleSchema = {
   validate,
+  cascade: true,
   types: ['string'],
   props: {
     maxLength: Number.MAX_VALUE

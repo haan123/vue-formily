@@ -3,11 +3,11 @@ import { FormSchema, FormilyOptions, RuleSchema } from './core/types';
 import Form from './core/Form';
 import { merge } from './core/utils';
 import { maxLength, minLength, min, max } from './core/rules';
+import { registerFormElement } from './core/helpers/groups';
 
 import FormField from './core/FormField';
 import FormGroups from './core/FormGroups';
 import FormGroup from './core/FormGroup';
-import { registerFormElement } from './core/helpers/groups';
 
 const defaultRules: Record<string, RuleSchema> = {
   minLength,

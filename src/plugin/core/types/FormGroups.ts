@@ -7,10 +7,6 @@ export declare class FormGroups extends FormElement {
   static accept(schema: any): schema is FormGroupsSchema;
   static create(schema: any, ...args: any[]): FormGroups;
 
-  initialize(schema: FormGroupsSchema, ...args: any[]): void;
-  genHtmlName(path: string[], ...args: any[]): string;
-  isValid(): boolean;
-
   readonly _schema: FormGroupSchema;
 
   groups: FormGroup[];
@@ -19,4 +15,7 @@ export declare class FormGroups extends FormElement {
   addGroup(): void;
 
   _sync(field: FormilyField): void;
+  initialize(schema: FormGroupsSchema, ...args: any[]): void;
+  genHtmlName(path: string[], ...args: any[]): string;
+  isValid(): boolean;
 }

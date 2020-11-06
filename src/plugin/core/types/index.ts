@@ -3,7 +3,8 @@ import { FormGroups } from './FormGroups';
 import { FormGroup } from './FormGroup';
 import { Form } from './Form';
 import { Forms } from './Forms';
-import { Validation } from './Validation';
+import { Validation, ValidationProps } from './Validation';
+import { ValidationRule } from './ValidationRule';
 
 declare module 'vue/types/vue' {
   interface Vue {
@@ -17,25 +18,32 @@ declare module 'vue/types/vue' {
 export type FormElementSchema = {
   readonly formId: string;
   rules?: Record<string, ValidationRuleSchema>;
+  model?: string;
 };
 
 export type Validations = {
   [name: string]: Validation;
 };
 
-export type Validator = (value: any, ...args: any[]) => boolean | Promise<boolean>;
+export type Validator = (
+  value: any,
+  props: ValidationProps,
+  data: Map<string, any> | null
+) => boolean | Promise<boolean>;
 export interface RuleSchema {
   validate?: Validator;
+  validatable?: (this: ValidationRule, form: Form, vm: Vue) => boolean;
   types?: FormFieldType[];
   props?: Record<string, PropValue>;
   message?: ValidationMessageTemplate;
   cascade?: boolean;
   inherit?: boolean;
+  allowEmpty?: boolean;
 }
 
 export type ValidationRuleSchema = Validator | RuleSchema;
 export interface ValidationMessageGenerator {
-  (value: any, props?: Map<string, any>, data?: Map<string, any>): string;
+  (value: any, props: ValidationProps, data: Map<string, any> | null): string;
 }
 
 export type ValidationMessageTemplate = string | ValidationMessageGenerator;
@@ -46,6 +54,7 @@ export interface FormElementConstructor extends Function {
   accept(schema: any): boolean;
   create(schema: any, ...args: any[]): FormilyField;
 }
+export type Formatter = (this: FormField, value: FormFieldValue) => string;
 
 export interface FormFieldSchema extends FormElementSchema {
   type: FormFieldType;
@@ -55,17 +64,16 @@ export interface FormFieldSchema extends FormElementSchema {
   help?: string;
   placeholder?: string;
   options?: any[];
-  formatter?: (this: FormField, value: FormFieldValue) => string;
+  formatter?: Formatter;
   id?: string;
   default?: string;
   value?: FormFieldValue | FormFieldValue[];
   props?: Record<string, PropValue>;
 }
 
-export type FormContainer = FormGroup | FormGroups;
-
 export interface FormGroupSchema extends FormElementSchema {
   fields: FormilyFieldSchema[];
+  props?: Record<string, PropValue>;
 }
 
 export interface FormSchema extends FormGroupSchema {
@@ -74,20 +82,28 @@ export interface FormSchema extends FormGroupSchema {
 
 export interface FormGroupsSchema extends FormElementSchema {
   group: Omit<FormGroupSchema, 'formId'>;
+  props?: Record<string, PropValue>;
 }
 
-export type FormilyFieldType = FormFieldType | 'groups' | 'group';
+export type FormContainer = FormGroup | FormGroups;
+
+export type FormilyFieldType = FormFieldType;
 
 export type FormilyFieldSchema = FormFieldSchema | FormGroupSchema | FormGroupsSchema;
 
 export type FormilyField = FormField | FormGroup | FormGroups;
+
+export interface FormilyFieldConstructor extends Function {
+  accept(schema: any): boolean;
+  create(schema: any, ...args: any[]): FormilyField;
+}
 
 export interface FormilyOptions {
   name?: string;
   rules: Record<string, ValidationRuleSchema>;
 }
 
-export { Validation, ValidationResult, ValidationOptions } from './Validation';
+export { Validation, ValidationResult, ValidationOptions, ValidationProps } from './Validation';
 export { ValidationRule } from './ValidationRule';
 export { FormElement } from './FormElement';
 export { FormField, FormFieldValue, FormFieldType } from './FormField';

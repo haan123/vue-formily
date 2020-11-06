@@ -2,5 +2,6 @@ import minLength from './minLength';
 import maxLength from './maxLength';
 import min from './min';
 import max from './max';
+import required from './required';
 
-export { minLength, maxLength, min, max };
+export { minLength, maxLength, min, max, required };

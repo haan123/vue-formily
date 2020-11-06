@@ -1,8 +1,8 @@
 import FormElement from './FormElement';
 import { cascadeRules, traverseFields } from './helpers';
 import { toFields } from './helpers/groups';
-import { FormContainer, FormGroupSchema, FormilyField } from './types';
-import { def, each, isPlainObject, logError, logMessage, Ref, setter } from './utils';
+import { FormContainer, FormGroupSchema, FormilyField, PropValue } from './types';
+import { def, isPlainObject, logError, logMessage, Ref, setter } from './utils';
 
 export default class FormGroup extends FormElement {
   static accept(schema: any): schema is FormGroupSchema {
@@ -14,6 +14,8 @@ export default class FormGroup extends FormElement {
   }
 
   readonly index!: number | null;
+  readonly props!: Record<string, PropValue> | null;
+
   fields: FormilyField[];
   value!: Record<string, any> | null;
 
@@ -28,7 +30,6 @@ export default class FormGroup extends FormElement {
       schema.fields = cascadeRules(schema.rules, schema.fields);
     }
 
-    // this should not read only because we want nested fields reactivable
     this.fields = toFields(schema.fields, this);
 
     setter(this, 'value', null, (val: any, refValue: Ref) => {
@@ -55,15 +56,15 @@ export default class FormGroup extends FormElement {
   }
 
   initialize(schema: FormGroupSchema, index: number) {
-    def(this, 'index', index !== undefined ? index : null, false);
+    def(this, 'index', index !== undefined ? index : null);
   }
 
   genHtmlName(path: string[], ...args: any[]) {
     if (!this.parent) {
       return `${this.formId}[${path.join('][')}]`;
-    } else if (this.index !== null) {
-      path.unshift(this.parent.formId, '' + this.index);
     }
+
+    path.unshift(...(this.index !== null ? [this.parent.formId, '' + this.index] : [this.formId]));
 
     return this.parent.genHtmlName(path, ...args);
   }

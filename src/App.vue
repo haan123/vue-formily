@@ -5,6 +5,14 @@
         {{ field.label }}
         <input type="text" v-model="field.raw" @input="fieldInput($event, field)" />
       </label>
+      <div v-if="field.formId === 'g'">
+        <div v-for="(field, ii) in field.fields" :key="ii">
+          <label v-if="field.inputType === 'text'">
+            {{ field.label }}
+            <input type="text" v-model="field.raw" @input="fieldInput($event, field)" :placeholder="field.formId" />
+          </label>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -14,8 +22,8 @@ import Vue from 'vue';
 // import VueI18n from 'vue-i18n';
 
 import Formily from './plugin';
-import { FormField, FormGroup, FormGroups, FormSchema } from './plugin/core/types';
-import { maxLength, minLength } from './plugin/core/rules';
+import { FormField, FormGroups, FormSchema } from './plugin/core/types';
+import { maxLength, minLength, required } from './plugin/core/rules';
 
 // Vue.use(VueI18n);
 
@@ -33,6 +41,7 @@ const form: FormSchema = {
       inputType: 'text',
       default: '11222',
       rules: {
+        required,
         minLength: {
           ...minLength,
           message: 'aaas'
@@ -53,6 +62,9 @@ const form: FormSchema = {
     },
     {
       formId: 'b',
+      rules: {
+        required
+      },
       group: {
         fields: [
           {
@@ -94,6 +106,8 @@ export default Vue.extend({
   created() {
     const f = this.$formily.add(form);
     const b = f.getField('b') as FormGroups;
+
+    console.log('add group');
 
     b.addGroup();
 

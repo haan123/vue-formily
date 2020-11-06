@@ -1,6 +1,6 @@
-import { RuleSchema } from '../types';
+import { RuleSchema, ValidationProps } from '../types';
 
-export const validate = (value: number | Date, { max }: Record<string, number | Date>) => {
+export const validate = (value: number | Date, { max }: ValidationProps) => {
   if (value instanceof Date) {
     return +value <= +max;
   }
@@ -10,6 +10,7 @@ export const validate = (value: number | Date, { max }: Record<string, number | 
 
 const schema: RuleSchema = {
   validate,
+  cascade: true,
   types: ['number', 'date']
 };
 

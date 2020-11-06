@@ -1,25 +1,11 @@
 import { RuleSchema } from '../types';
-import { isNullOrUndefined } from '../utils';
+import { isEmptyValue } from '../helpers';
 
-export const validate = (value: any, { maxLength }: Record<string, number>) => {
-  if (Array.isArray(value)) return !!value.length;
-
-  if (isNullOrUndefined(value)) {
-    return false;
-  }
-
-  if (value === false) {
-    return true;
-  }
-
-  return !!String(value).trim().length;
-};
+export const validate = (value: any) => isEmptyValue(value);
 
 const schema: RuleSchema = {
   validate,
-  props: {
-    maxLength: Number.MAX_VALUE
-  }
+  allowEmpty: false
 };
 
 export default schema;

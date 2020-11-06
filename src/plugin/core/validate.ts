@@ -1,9 +1,12 @@
-import { FormFieldType, FormFieldValue, ValidationResult, Validations } from './types';
-import { Validation } from './types/Validation';
-import { each, isNumber } from './utils';
+import { FormFieldType, FormFieldValue } from './types';
+import { isNumber } from './utils';
 
 export function cast(value: any, type: FormFieldType): FormFieldValue {
   let typedValue: FormFieldValue = null;
+
+  if (value === undefined) {
+    return typedValue;
+  }
 
   if (type === 'string') {
     typedValue = '' + value;

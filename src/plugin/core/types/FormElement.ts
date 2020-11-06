@@ -1,11 +1,13 @@
-import { FormContainer, FormilyField, FormilyFieldSchema, Validation } from '.';
+import { FormContainer, FormilyFieldSchema, Validation } from '.';
 
 export declare abstract class FormElement {
-  constructor(formId: string, parent?: FormilyField);
+  constructor(schema: any, parent?: FormContainer, index?: number);
 
-  abstract initialize(schema: FormilyFieldSchema, ...args: any[]): void;
+  abstract initialize(schema: FormilyFieldSchema, parent?: FormContainer, ...args: any[]): void;
   abstract genHtmlName(path: string[], ...args: any[]): string;
   abstract isValid(): boolean;
+
+  readonly model: string;
   /**
    * The parent within the form.
    */
@@ -14,16 +16,15 @@ export declare abstract class FormElement {
    * The ID of the form element. The is is unique within the parent element of the form.
    */
   readonly formId: string;
-  readonly model: string;
   /**
    * The global unique name of the field, which can be used as name in the html form. For radio buttons this name is not unique.
    */
   readonly htmlName: string;
-  _invalidated: boolean;
   /**
    * Identifies if this element and all its children elements are valid.
    */
   readonly valid: boolean;
+  _invalidated: boolean;
   /**
    * Represents a form element validation result.
    */

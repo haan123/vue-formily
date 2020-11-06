@@ -9,28 +9,29 @@ export default abstract class FormElement {
   readonly model!: string;
   readonly htmlName!: string;
   readonly _uid!: number;
-  valid = true;
-  _invalidated = false;
+  readonly valid!: boolean;
   validation!: Validation;
+  _invalidated = false;
 
   abstract initialize(schema: FormilyFieldSchema, ...args: any[]): void;
   abstract genHtmlName(path: string[], ...args: any[]): string;
   abstract isValid(): boolean;
 
-  constructor(schema: any, parent?: FormContainer, ...args: any[]) {
+  constructor(schema: FormilyFieldSchema, parent?: FormContainer, ...args: any[]) {
     if (!schema.formId) {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
 
-    def(this, 'parent', parent || null, false);
-    def(this, 'formId', schema.formId, false);
-    def(this, '_uid', uid++, false);
-    def(this, 'model', camelCase(this.formId), false);
+    def(this, '_uid', uid++, { writable: false });
+    def(this, 'parent', parent || null, { writable: false });
+    def(this, 'formId', schema.formId, { writable: false });
+    def(this, 'model', schema.model || camelCase(this.formId));
 
     this.initialize(schema, ...args);
 
-    getter(this, 'valid', this.isValid);
-    def(this, 'htmlName', this.genHtmlName([], ...args), false);
+    def(this, 'htmlName', this.genHtmlName([], ...args), { writable: false });
+
+    getter(this, 'valid', () => (this._invalidated ? false : this.isValid()));
   }
 
   // clearFormElement() {}
