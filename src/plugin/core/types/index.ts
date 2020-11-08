@@ -1,6 +1,6 @@
 import { FormField, FormFieldValue, FormFieldType } from './FormField';
-import { FormGroups, FormGroupsType } from './FormGroups';
-import { FormGroup, FormGroupType } from './FormGroup';
+import { FormGroups } from './FormGroups';
+import { FormGroup } from './FormGroup';
 import { Form } from './Form';
 import { Forms } from './Forms';
 import { Validation } from './Validation';
@@ -42,6 +42,11 @@ export type ValidationMessageTemplate = string | ValidationMessageGenerator;
 
 export type PropValue = FormFieldValue | ((this: FormField, value: any) => FormFieldValue);
 
+export interface FormElementConstructor extends Function {
+  accept(schema: any): boolean;
+  create(schema: any, ...args: any[]): FormilyField;
+}
+
 export interface FormFieldSchema extends FormElementSchema {
   type: FormFieldType;
   inputType?: string;
@@ -52,24 +57,23 @@ export interface FormFieldSchema extends FormElementSchema {
   options?: any[];
   formatter?: (this: FormField, value: FormFieldValue) => string;
   id?: string;
-  default?: FormFieldValue;
+  default?: string;
   value?: FormFieldValue | FormFieldValue[];
   props?: Record<string, PropValue>;
 }
 
+export type FormContainer = FormGroup | FormGroups;
+
 export interface FormGroupSchema extends FormElementSchema {
-  readonly type: FormGroupType;
   fields: FormilyFieldSchema[];
 }
 
 export interface FormSchema extends FormGroupSchema {
-  readonly type: 'form';
   fields: FormilyFieldSchema[];
 }
 
 export interface FormGroupsSchema extends FormElementSchema {
-  readonly type: FormGroupsType;
-  fields: FormilyFieldSchema[];
+  group: Omit<FormGroupSchema, 'formId'>;
 }
 
 export type FormilyFieldType = FormFieldType | 'groups' | 'group';
@@ -87,6 +91,6 @@ export { Validation, ValidationResult, ValidationOptions } from './Validation';
 export { ValidationRule } from './ValidationRule';
 export { FormElement } from './FormElement';
 export { FormField, FormFieldValue, FormFieldType } from './FormField';
-export { FormGroup, FormGroupType } from './FormGroup';
-export { FormGroups, FormGroupsType } from './FormGroups';
-export { Form, FormType } from './Form';
+export { FormGroup } from './FormGroup';
+export { FormGroups } from './FormGroups';
+export { Form } from './Form';

@@ -28,8 +28,17 @@ export function merge(target: any, ...sources: any[]) {
   }, target);
 }
 
-export function each(obj: any, fn: (propValue: any, propName: string, index: number) => void) {
+export function each(obj: any, fn: (propValue: any, propName: string, index: number) => void | boolean) {
   if (isPlainObject(obj)) {
-    Object.keys(obj).forEach((propName, index) => fn(obj[propName], propName, index));
+    const keys = Object.keys(obj);
+    const length = keys.length;
+
+    for (let i = 0; i < length; i++) {
+      const key = keys[i];
+
+      if (fn(obj[key], key, i) === false) {
+        break;
+      }
+    }
   }
 }

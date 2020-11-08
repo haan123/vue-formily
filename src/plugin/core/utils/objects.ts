@@ -24,34 +24,36 @@ export function def(obj: any, key: string, val: any, writable = true, enumerable
 export function getter(obj: any, key: string, val: any, { reactive = true }: { reactive?: boolean } = {}) {
   Object.defineProperty(obj, key, {
     get() {
-      return isCallable(val) ? val() : val;
+      return isCallable(val) ? val.call(this) : val;
     },
     configurable: reactive,
     enumerable: true
   });
 }
 
-function _set(value: any) {
-  return value;
+export function ref(value: any): Ref {
+  return {
+    value
+  };
 }
 
-export function setter(
-  obj: any,
-  key: string,
-  fn?: any,
-  { initValue, reactive = true, eager = false }: { reactive?: boolean; eager?: boolean; initValue?: any } = {}
-) {
-  const set = isCallable(fn) ? fn : _set;
-  let value = eager ? set() : initValue;
+export type Ref = {
+  value: any;
+};
+
+export function setter(obj: any, key: string, value: any, set: any, { reactive = true }: { reactive?: boolean } = {}) {
+  const _ref = isPlainObject(value) && value.value ? value : ref(value);
 
   Object.defineProperty(obj, key, {
     get() {
-      return value;
+      return _ref.value;
     },
-    async set(val) {
-      value = await set.call(this, val);
+    set(val) {
+      const value = set.call(this, val, _ref);
 
-      return value;
+      if (value !== undefined && _ref.value !== value) {
+        _ref.value = value;
+      }
     },
     configurable: reactive,
     enumerable: true

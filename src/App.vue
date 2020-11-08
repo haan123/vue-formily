@@ -14,7 +14,7 @@ import Vue from 'vue';
 // import VueI18n from 'vue-i18n';
 
 import Formily from './plugin';
-import { FormField, FormGroups, FormSchema } from './plugin/core/types';
+import { FormField, FormGroup, FormGroups, FormSchema } from './plugin/core/types';
 import { maxLength, minLength } from './plugin/core/rules';
 
 // Vue.use(VueI18n);
@@ -25,7 +25,6 @@ Vue.use(Formily, {
 
 const form: FormSchema = {
   formId: 'form',
-  type: 'form',
   fields: [
     {
       formId: 'a',
@@ -54,31 +53,32 @@ const form: FormSchema = {
     },
     {
       formId: 'b',
-      type: 'groups',
-      fields: [
-        {
-          formId: 'c',
-          type: 'string'
-        },
-        {
-          formId: 'd',
-          type: 'groups',
-          fields: [
-            {
-              formId: 'e',
-              type: 'string'
-            },
-            {
-              formId: 'f',
-              type: 'string'
+      group: {
+        fields: [
+          {
+            formId: 'c',
+            type: 'string'
+          },
+          {
+            formId: 'd',
+            group: {
+              fields: [
+                {
+                  formId: 'e',
+                  type: 'string'
+                },
+                {
+                  formId: 'f',
+                  type: 'string'
+                }
+              ]
             }
-          ]
-        }
-      ]
+          }
+        ]
+      }
     },
     {
       formId: 'g',
-      type: 'group',
       fields: [
         {
           formId: 'h',
@@ -102,7 +102,6 @@ export default Vue.extend({
     d.addGroup();
 
     console.log(f);
-    console.log(this.forms);
   },
   methods: {
     fieldInput(e: any, field: FormField) {

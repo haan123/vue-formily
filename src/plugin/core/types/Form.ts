@@ -1,7 +1,5 @@
-import { FormElement, FormSchema } from '.';
+import { FormGroup, FormSchema } from '.';
 
-export type FormType = 'form';
-
-export declare class Form extends FormElement {
+export declare class Form extends FormGroup {
   private constructor(schema: FormSchema);
 }

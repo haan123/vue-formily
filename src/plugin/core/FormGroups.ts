@@ -1,37 +1,72 @@
-import { FORM_GROUPS_TYPE, FORM_GROUP_TYPE } from './constants';
 import FormElement from './FormElement';
 import FormGroup from './FormGroup';
-import { cascadeRules, genHtmlName } from './helpers';
-import { FormilyField, FormGroupSchema, FormGroupsSchema, FormGroupsType } from './types';
-import { def, isNullOrUndefined, merge } from './utils';
+import { cascadeRules } from './helpers';
+import { FormGroupSchema, FormGroupsSchema, FormContainer } from './types';
+import { def, logMessage } from './utils';
 
 export default class FormGroups extends FormElement {
+  static accept(schema: any): schema is FormGroupsSchema {
+    return 'group' in schema;
+  }
+
+  static create(schema: any, ...args: any[]): FormGroups {
+    return new FormGroups(schema, ...args);
+  }
+
   readonly _schema!: FormGroupSchema;
-  readonly type!: FormGroupsType;
 
   groups: FormGroup[];
 
-  constructor(schema: FormGroupsSchema, parent?: FormilyField) {
+  constructor(schema: FormGroupsSchema, parent?: FormContainer) {
     super(schema, parent);
 
-    def(this, 'type', FORM_GROUPS_TYPE, false);
+    if (!schema.group) {
+      throw new Error(
+        logMessage('Invalid schema, missing "group" property', {
+          formId: this.formId
+        })
+      );
+    }
 
     this.groups = [];
 
-    if (!isNullOrUndefined(schema.rules)) {
-      schema.fields = cascadeRules(schema.rules, schema.fields);
+    if (schema.rules) {
+      schema.group.fields = cascadeRules(schema.rules, schema.group.fields);
     }
 
-    def(this, '_schema', merge({ type: FORM_GROUP_TYPE }, schema), false);
+    def(this, '_schema', schema.group, false);
   }
 
-  initialize() {
-    def(this, 'htmlName', genHtmlName(this), false);
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  initialize() {}
+
+  genHtmlName(path: string[], ...args: any[]): string {
+    if (!this.parent) {
+      return `${this.formId}[${path.join('][')}]`;
+    }
+
+    return this.parent.genHtmlName(path, ...args);
+  }
+
+  isValid(): boolean {
+    return !!this.groups.find(g => !g.valid);
   }
 
   addGroup() {
-    const group = new FormGroup(this._schema, this, this.groups.length);
+    const index = this.groups.length;
+    const group = new FormGroup(
+      {
+        ...this._schema,
+        formId: `${this.formId}${index}`
+      },
+      this,
+      index
+    );
 
     this.groups.push(group);
+  }
+
+  _sync() {
+
   }
 }

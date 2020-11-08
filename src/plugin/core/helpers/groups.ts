@@ -1,21 +1,25 @@
-import FormField from '../FormField';
-import FormGroups from '../FormGroups';
-import FormGroup from '../FormGroup';
-import { FormilyFieldSchema, FormilyField, FormFieldSchema } from '../types';
-import { logMessage } from '../utils';
+import { FormilyFieldSchema, FormilyField, FormElementConstructor } from '../types';
 
-export function toFields(fields: FormilyFieldSchema[], parent?: FormilyField): FormilyField[] {
+const _formElements: FormElementConstructor[] = [];
+
+export function registerFormElement(F: FormElementConstructor) {
+  if (!_formElements.includes(F)) {
+    _formElements.push(F);
+  }
+}
+
+export function toFields(fields: FormilyFieldSchema[], ...args: any[]): FormilyField[] {
   return fields.map(schema => {
-    if (schema.type === 'form') {
-      throw new Error(logMessage('Form can not be nested'));
+    const length = _formElements.length;
+
+    for (let i = 0; i < length; i++) {
+      const F = _formElements[i];
+
+      if (F.accept(schema)) {
+        return F.create(schema, ...args);
+      }
     }
 
-    if (schema.type === 'group') {
-      return new FormGroup(schema, parent);
-    } else if (schema.type === 'groups') {
-      return new FormGroups(schema, parent);
-    } else {
-      return new FormField(schema as FormFieldSchema, parent);
-    }
+    throw new Error('Can not create form Element');
   });
 }

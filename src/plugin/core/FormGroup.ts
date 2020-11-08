@@ -1,21 +1,27 @@
-import { FORM_GROUP_TYPE } from './constants';
 import FormElement from './FormElement';
-import { cascadeRules, genHtmlName, traverseFields } from './helpers';
+import { cascadeRules, traverseFields } from './helpers';
 import { toFields } from './helpers/groups';
-import { FormGroupSchema, FormGroupType, FormilyField } from './types';
-import { def, logMessage } from './utils';
+import { FormContainer, FormGroupSchema, FormilyField } from './types';
+import { def, each, isPlainObject, logError, logMessage, Ref, setter } from './utils';
 
 export default class FormGroup extends FormElement {
-  readonly type!: FormGroupType;
-  fields: FormilyField[];
+  static accept(schema: any): schema is FormGroupSchema {
+    return 'fields' in schema;
+  }
 
-  constructor(schema: FormGroupSchema, parent?: FormilyField, index?: number) {
+  static create(schema: any, ...args: any[]): FormGroup {
+    return new FormGroup(schema, ...args);
+  }
+
+  readonly index!: number | null;
+  fields: FormilyField[];
+  value!: Record<string, any> | null;
+
+  constructor(schema: FormGroupSchema, parent?: FormContainer, index?: number) {
     super(schema, parent, index);
 
-    def(this, 'type', FORM_GROUP_TYPE, false);
-
     if (!schema.fields || !schema.fields.length) {
-      throw new Error(logMessage('Missing "fields", please provide a "fields" property in your schema'));
+      throw new Error(logMessage('Invalida schema, missing "fields" property'));
     }
 
     if (schema.rules) {
@@ -24,13 +30,59 @@ export default class FormGroup extends FormElement {
 
     // this should not read only because we want nested fields reactivable
     this.fields = toFields(schema.fields, this);
+
+    setter(this, 'value', null, (val: any, refValue: Ref) => {
+      if (!isPlainObject(val)) {
+        logError('Invalid group value, "object" is expected');
+      } else {
+        let value: Record<string, any> | null = {};
+
+        this.fields.forEach((field: FormilyField) => {
+          const v = val[field.model];
+
+          if (field.value !== v) {
+            field.value = v;
+          } else if (value && field.valid) {
+            value[field.model] = v;
+          } else {
+            value = null;
+          }
+        });
+
+        refValue.value = value;
+      }
+    });
   }
 
-  initialize() {
-    def(this, 'htmlName', genHtmlName(this), false);
+  initialize(schema: FormGroupSchema, index: number) {
+    def(this, 'index', index !== undefined ? index : null, false);
+  }
+
+  genHtmlName(path: string[], ...args: any[]) {
+    if (!this.parent) {
+      return `${this.formId}[${path.join('][')}]`;
+    } else if (this.index !== null) {
+      path.unshift(this.parent.formId, '' + this.index);
+    }
+
+    return this.parent.genHtmlName(path, ...args);
+  }
+
+  isValid(): boolean {
+    return !this._invalidated || !!this.fields.find(f => !f.valid);
   }
 
   getField(path: string | string[] = [], fields?: FormilyField[]): FormilyField | null {
     return traverseFields(path, fields || this.fields);
+  }
+
+  _sync(field: FormGroup) {
+    if (!field.valid) {
+      return;
+    }
+
+    this.value = {
+      [field.model]: field.value
+    };
   }
 }
