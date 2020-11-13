@@ -6,7 +6,7 @@ export function camelCase(input: string) {
     .replace(/\d+([\p{Alpha}\p{N}_]|$)/gu, m => m.toLocaleUpperCase());
 }
 
-export function logMessage(message: string, infos?: Record<string, string>) {
+export function logMessage(message?: string, infos?: Record<string, string>) {
   const infosText = infos
     ? `(${Object.keys(infos)
         .map((name: string) => `${name}: "${infos[name]}"`)

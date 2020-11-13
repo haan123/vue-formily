@@ -13,7 +13,6 @@ export default abstract class FormElement {
   validation!: Validation;
   _invalidated = false;
 
-  abstract initialize(schema: FormilyFieldSchema, ...args: any[]): void;
   abstract genHtmlName(path: string[], ...args: any[]): string;
   abstract isValid(): boolean;
 
@@ -26,8 +25,6 @@ export default abstract class FormElement {
     def(this, 'parent', parent || null, { writable: false });
     def(this, 'formId', schema.formId, { writable: false });
     def(this, 'model', schema.model || camelCase(this.formId));
-
-    this.initialize(schema, ...args);
 
     def(this, 'htmlName', this.genHtmlName([], ...args), { writable: false });
 

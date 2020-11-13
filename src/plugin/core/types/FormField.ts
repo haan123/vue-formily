@@ -1,4 +1,4 @@
-import { FormContainer, FormElement, FormFieldSchema, FormilyFieldSchema, PropValue } from '.';
+import { FormContainer, FormElement, FormFieldSchema, PropValue, SchemaValidation } from '.';
 
 export type FormFieldValue = string | number | boolean | Date | null;
 export type FormFieldType = 'string' | 'number' | 'boolean' | 'date';
@@ -6,7 +6,7 @@ export type FormFieldType = 'string' | 'number' | 'boolean' | 'date';
 export declare class FormField extends FormElement {
   constructor(schema: FormFieldSchema, parent?: FormContainer);
 
-  static accept(schema: any): schema is FormFieldSchema;
+  static accept(schema: any): SchemaValidation;
   static create(schema: any, ...args: any[]): FormField;
 
   readonly type: FormFieldType;
@@ -19,7 +19,6 @@ export declare class FormField extends FormElement {
   formatted: string | null;
   value: FormFieldValue;
 
-  initialize(schema: FormilyFieldSchema, ...args: any[]): void;
   genHtmlName(path: string[], ...args: any[]): string;
   isValid(): boolean;
 }

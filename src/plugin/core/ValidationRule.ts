@@ -8,10 +8,10 @@ export type ValidationRuleResult = {
 };
 
 export default class ValidationRule {
+  readonly data!: Map<string, any>;
   readonly props!: ValidationProps;
   readonly _template!: ValidationMessageTemplate | null;
   readonly _validator!: Validator;
-  data!: Map<string, any>;
   message!: string | null;
   valid: boolean;
 
@@ -27,11 +27,13 @@ export default class ValidationRule {
     if (isCallable(rule)) {
       validator = rule;
     } else if (isPlainObject(rule)) {
-      if (!('allowEmpty' in rule)) {
+      if (!('allowEmpty' in rule) || rule.allowEmpty) {
         validator = (rule.validate as Validator) || null;
-      } else if (!rule.allowEmpty && rule.validate) {
+      } else if (!rule.allowEmpty) {
         validator = (value: any, props: ValidationProps, data: Map<string, any> | null) => {
-          return !isEmptyValue(value) && (rule.validate as Validator).call(this, value, props, data);
+          return (
+            !isEmptyValue(value) && (!rule.validate || (rule.validate as Validator).call(this, value, props, data))
+          );
         };
       }
 

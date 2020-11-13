@@ -8,7 +8,7 @@ export const validate: Validator = (value: string, { maxLength }: ValidationProp
 const schema: RuleSchema = {
   validate,
   cascade: true,
-  types: ['string'],
+  types: ['string', 'group', 'groups'],
   props: {
     maxLength: Number.MAX_VALUE
   }

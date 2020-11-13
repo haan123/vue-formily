@@ -1,12 +1,46 @@
+import { FORM_GROUPS_TYPE, FORM_GROUP_TYPE } from './constants';
 import FormElement from './FormElement';
 import FormGroup from './FormGroup';
-import { cascadeRules, toProps } from './helpers';
-import { FormilyField, FormGroupSchema, FormGroupsSchema, PropValue, FormFieldValue, FormContainer } from './types';
+import { cascadeRules, genProps, indentifySchema, invalidateSchemaValidation } from './helpers';
+import {
+  FormilyField,
+  FormGroupSchema,
+  FormGroupsSchema,
+  PropValue,
+  FormFieldValue,
+  FormContainer,
+  SchemaValidation
+} from './types';
 import { def, logMessage } from './utils';
 
+function normalizeGroupSchema(group: any) {
+  return {
+    type: FORM_GROUP_TYPE,
+    ...group
+  };
+}
+
 export default class FormGroups extends FormElement {
-  static accept(schema: any): schema is FormGroupsSchema {
-    return 'group' in schema && FormGroup.accept(schema.group);
+  static accept(schema: any): SchemaValidation {
+    const { identified, sv } = indentifySchema(schema, FORM_GROUPS_TYPE);
+
+    if (!identified) {
+      if (schema.type !== FORM_GROUPS_TYPE) {
+        invalidateSchemaValidation(sv, `"type" value must be ${FORM_GROUPS_TYPE}`);
+      } else {
+        const accepted = FormGroup.accept(normalizeGroupSchema(schema.group));
+
+        if (!accepted.valid) {
+          invalidateSchemaValidation(sv, `invalid group schema, ${accepted.reason}`);
+        }
+      }
+
+      if (sv.valid) {
+        schema.__is__ = FORM_GROUPS_TYPE;
+      }
+    }
+
+    return sv;
   }
 
   static create(schema: any, ...args: any[]): FormGroups {
@@ -15,17 +49,22 @@ export default class FormGroups extends FormElement {
 
   readonly _schema!: FormGroupSchema;
   readonly props!: Record<string, PropValue> | null;
+  readonly type!: 'groups';
 
   groups: FormGroup[] | null;
 
-  value!: Record<string, FormFieldValue>[] | null;
+  value: Record<string, any>[] | null;
 
   constructor(schema: FormGroupsSchema, parent?: FormContainer) {
     super(schema, parent);
 
-    if (!FormGroups.accept(schema)) {
-      throw new Error(logMessage('Invalid form groups schema', { formId: this.formId }));
+    const accepted = FormGroups.accept(schema);
+
+    if (!accepted.valid) {
+      throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, { formId: this.formId }));
     }
+
+    def(this, 'type', FORM_GROUPS_TYPE, { writable: false });
 
     this.groups = null;
 
@@ -33,9 +72,9 @@ export default class FormGroups extends FormElement {
       schema.group.fields = cascadeRules(schema.rules, schema.group.fields);
     }
 
-    def(this, '_schema', schema.group, { writable: false });
+    def(this, '_schema', normalizeGroupSchema(schema.group), { writable: false });
 
-    this.props = toProps(this, schema.props);
+    this.props = genProps([schema.props], this);
 
     let _value: Record<string, FormFieldValue>[] | null = null;
 
@@ -64,11 +103,8 @@ export default class FormGroups extends FormElement {
       return `${this.parent.formId}[${this.formId}][${path.join('][')}]`;
     }
 
-    return this.parent.genHtmlName([...path, this.formId], ...args);
+    return this.parent.genHtmlName([this.formId, ...path], ...args);
   }
-
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
-  initialize() {}
 
   isValid(): boolean {
     return !!(this.groups && this.groups.find(g => !g.valid));

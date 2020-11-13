@@ -1,4 +1,41 @@
-import { isNullOrUndefined, isPlainObject } from '../utils';
+import { genProps } from '.';
+import {
+  FormFieldType,
+  FormFieldValue,
+  PropValue,
+  RuleSchemaTypes,
+  SchemaValidation,
+  ValidationRuleSchema
+} from '../types';
+import { each, isCallable, isNullOrUndefined, isNumber, isPlainObject } from '../utils';
+
+export function cast(value: any, type: FormFieldType): FormFieldValue {
+  let typedValue: FormFieldValue = null;
+
+  if (value === undefined) {
+    return typedValue;
+  }
+
+  if (type === 'string') {
+    typedValue = value ? '' + value : '';
+  } else if (type === 'number') {
+    if (!isNumber(value)) {
+      throw new Error(`"${value}" is not a "number"`);
+    }
+
+    typedValue = +value;
+  } else if (type === 'boolean') {
+    typedValue = !!value;
+  } else if (type === 'date') {
+    try {
+      typedValue = new Date(value);
+    } catch (error) {
+      throw new Error(`"${value}" is not a "date" value`);
+    }
+  }
+
+  return typedValue;
+}
 
 export function getLength(value: any): number {
   if (Array.isArray(value)) {
@@ -13,7 +50,7 @@ export function getLength(value: any): number {
     return value.length;
   }
 
-  return -1;
+  return 0;
 }
 
 const _cache = {
@@ -28,20 +65,70 @@ export function isEmptyValue(value: any): boolean {
     return _cache.isEmpty;
   }
 
-  if (Array.isArray(value)) {
-    isEmpty = !!value.length;
-  } else if (isNullOrUndefined(value)) {
+  if (isNullOrUndefined(value)) {
     isEmpty = false;
-  } else if (value === false) {
+  } else if (value === false || !getLength(value)) {
     isEmpty = true;
-  } else if (isPlainObject(value)) {
-    isEmpty = !!Object.keys(value).length;
-  } else {
-    isEmpty = !!String(value).trim().length;
   }
 
   _cache.value = value;
   _cache.isEmpty = isEmpty;
 
   return isEmpty;
+}
+
+export function genValidationRules(
+  rules?: Record<string, ValidationRuleSchema>,
+  props: Record<string, PropValue> | null = null,
+  type: RuleSchemaTypes | null = null,
+  ...args: any[]
+): Record<string, ValidationRuleSchema> {
+  const validationRules: Record<string, ValidationRuleSchema> = {};
+
+  each(rules, (rule: ValidationRuleSchema, key: string) => {
+    /**
+     * Only apply validation rule to 'function' or 'undefined' or field that has type is included in 'types' property of the rule
+     */
+    if (isCallable(rule)) {
+      validationRules[key] = rule;
+    } else if (!rule.types || (type && rule.types.includes(type))) {
+      const _rule: ValidationRuleSchema | null = rule;
+
+      if (props && key in props) {
+        const _props = genProps([rule.props, [key, props]], ...args);
+
+        if (_props) {
+          _rule.props = _props;
+        }
+      }
+
+      validationRules[key] = _rule;
+    }
+  });
+
+  return validationRules;
+}
+
+export function invalidateSchemaValidation(sv: SchemaValidation, reason?: string) {
+  sv.valid = false;
+  sv.reason = reason;
+}
+
+export function indentifySchema(schema: any, type: string) {
+  const i = {
+    identified: false,
+    sv: { valid: false }
+  };
+
+  if ('__is__' in schema) {
+    i.identified = true;
+
+    if (schema.__is__ === type) {
+      i.sv.valid = true;
+    }
+  } else {
+    i.sv.valid = true;
+  }
+
+  return i;
 }

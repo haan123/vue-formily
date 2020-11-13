@@ -1,7 +1,8 @@
 import { ValidationMessageTemplate, ValidationProps, ValidationRuleSchema, Validator } from '.';
+import { ValidationRuleResult } from '../ValidationRule';
 
 export declare class ValidationRule {
-  constructor(rule: ValidationRuleSchema);
+  constructor(rule: ValidationRule | ValidationRuleSchema, data?: any);
 
   readonly data: Map<string, any>;
   readonly props: ValidationProps;
@@ -10,13 +11,6 @@ export declare class ValidationRule {
   message: string | null;
   valid: boolean;
 
-  /**
-   * Return validation message if provided
-   */
-  getMessage(): string;
-  /**
-   * Adds optional data using for generate validation message and during validation
-   */
   addData(key: string, value: any): void;
-  validate(value: any): Promise<{ valid: boolean; message: string }>;
+  validate(value: any): Promise<ValidationRuleResult>;
 }

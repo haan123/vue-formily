@@ -1,49 +1,59 @@
+import { isEmptyValue } from './helpers';
 import { ValidationResult, ValidationRuleSchema } from './types';
-import { each } from './utils';
+import { each, isPlainObject } from './utils';
 import ValidationRule from './ValidationRule';
 
 export default class Validation {
-  rules: Record<string, ValidationRule>;
-  errors!: string[] | null;
+  rules: Record<string, ValidationRule> | null = null;
+  errors: string[] | null = null;
+  valid = true;
 
   constructor(rules: Record<string, ValidationRuleSchema>, data?: any) {
-    this.rules = {};
-
     each(rules, (schema: ValidationRuleSchema, key: string) => {
       this.addRule(key, schema, data);
     });
-
-    this.errors = null;
   }
 
   addRule(key: string, ruleOrSchema: ValidationRule | ValidationRuleSchema, data?: any) {
+    if (!this.rules) {
+      this.rules = {};
+    }
+
     this.rules[key] = new ValidationRule(ruleOrSchema, data);
   }
 
   async validate(value: any): Promise<ValidationResult> {
-    let errors: string[] | null = null;
+    const rules = this.rules;
+    const errors: string[] = [];
+    const invalidRules: Record<string, ValidationRule> = {};
     let isValid = true;
 
-    await Promise.all(
-      Object.keys(this.rules).map(async key => {
-        const rule: ValidationRule = this.rules[key];
-        const { valid, message } = await rule.validate(value);
+    if (rules) {
+      await Promise.all(
+        Object.keys(rules).map(async key => {
+          const rule: ValidationRule = rules[key];
+          const { valid, message } = await rule.validate(value);
 
-        if (!valid) {
-          isValid = false;
+          if (!valid) {
+            isValid = false;
 
-          if (message) {
-            errors = errors ? [...errors] : [message];
+            invalidRules[key] = rule;
+
+            if (message) {
+              errors.push(message);
+            }
           }
-        }
-      })
-    );
+        })
+      );
+    }
 
-    this.errors = errors;
+    this.errors = !isEmptyValue(errors) ? errors : null;
+    this.valid = isValid;
 
     return {
-      valid: isValid,
-      errors
+      valid: this.valid,
+      errors: this.errors,
+      invalidRules: !isEmptyValue(invalidRules) ? invalidRules : null
     };
   }
 }

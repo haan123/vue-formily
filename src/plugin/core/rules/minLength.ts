@@ -8,7 +8,7 @@ export const validate = (value: string, { minLength }: ValidationProps) => {
 const schema: RuleSchema = {
   validate,
   cascade: true,
-  types: ['string'],
+  types: ['string', 'group', 'groups'],
   props: {
     minLength: 0
   }

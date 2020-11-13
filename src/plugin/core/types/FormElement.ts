@@ -3,7 +3,6 @@ import { FormContainer, FormilyFieldSchema, Validation } from '.';
 export declare abstract class FormElement {
   constructor(schema: any, parent?: FormContainer, index?: number);
 
-  abstract initialize(schema: FormilyFieldSchema, parent?: FormContainer, ...args: any[]): void;
   abstract genHtmlName(path: string[], ...args: any[]): string;
   abstract isValid(): boolean;
 

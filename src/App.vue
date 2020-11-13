@@ -33,6 +33,7 @@ Vue.use(Formily, {
 
 const form: FormSchema = {
   formId: 'form',
+  type: 'group',
   fields: [
     {
       formId: 'a',
@@ -55,13 +56,14 @@ const form: FormSchema = {
       },
       props: {
         minLength: 3,
-        maxLength(value) {
-          return value.length + 10;
+        maxLength() {
+          return Date.now();
         }
       }
     },
     {
       formId: 'b',
+      type: 'groups',
       rules: {
         required
       },
@@ -73,6 +75,7 @@ const form: FormSchema = {
           },
           {
             formId: 'd',
+            type: 'groups',
             group: {
               fields: [
                 {
@@ -91,9 +94,17 @@ const form: FormSchema = {
     },
     {
       formId: 'g',
+      type: 'group',
       fields: [
         {
           formId: 'h',
+          type: 'string',
+          rules: {
+            required
+          }
+        },
+        {
+          formId: 'i',
           type: 'string'
         }
       ]

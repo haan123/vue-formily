@@ -46,12 +46,16 @@ export function ref(value: any): Ref {
   };
 }
 
+export function isRefValue(value: any): value is Ref {
+  return isPlainObject(value) && 'value' in value;
+}
+
 export type Ref = {
   value: any;
 };
 
 export function setter(obj: any, key: string, value: any, set: any, { reactive = true }: { reactive?: boolean } = {}) {
-  const _ref = isPlainObject(value) && value.value ? value : ref(value);
+  const _ref = isRefValue(value) ? value : ref(value);
 
   Object.defineProperty(obj, key, {
     get() {

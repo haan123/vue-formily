@@ -1,20 +1,59 @@
 import { ValidationRuleSchema, FormilyFieldSchema, RuleSchema, PropValue } from '../types';
-import { isNullOrUndefined, each, isCallable, merge, getter } from '../utils';
+import { isNullOrUndefined, each, isCallable, merge, getter, isPlainObject } from '../utils';
+import { isEmptyValue } from './validations';
 
-export function toProps(obj: any, props?: Record<string, PropValue>): Record<string, PropValue> | null {
-  const _props = props ? {} : null;
+function genProp(obj: any, props: Record<string, PropValue>, key: string, context?: any, ...args: any[]) {
+  const property = Object.getOwnPropertyDescriptor(props, key);
+  const _getter = property && property.get;
 
-  each(props, (propValue, propName) => {
-    getter(_props, propName, (value: any) => {
-      if (value !== undefined) {
-        return value;
+  getter(
+    obj,
+    key,
+    _getter
+      ? _getter
+      : (val: any) => {
+          if (val !== undefined) {
+            return val;
+          }
+          const value = props[key];
+
+          return isCallable(value) ? value.call(context, ...args) : value;
+        }
+  );
+}
+
+export function genProps(
+  properties?: (Record<string, PropValue> | any[] | undefined)[],
+  context?: any,
+  ...args: any[]
+): Record<string, PropValue> | null {
+  if (!properties || !properties.length) {
+    return null;
+  }
+
+  const _props: Record<string, PropValue> = {};
+
+  properties.forEach(props => {
+    if (Array.isArray(props)) {
+      if (props.length === 2 && typeof props[0] === 'string') {
+        genProp(_props, props[1], props[0], context, ...args);
+      } else {
+        props.forEach(p => {
+          if (!Array.isArray(p)) {
+            genProps(p, context, ...args);
+          }
+        });
       }
+    } else if (isPlainObject(props)) {
+      const keys = Object.keys(props);
 
-      return isCallable(propValue) ? propValue.call(obj, obj.value) : propValue;
-    });
+      keys.forEach(key => {
+        genProp(_props, props, key, context, ...args);
+      });
+    }
   });
 
-  return _props;
+  return !isEmptyValue(_props) ? _props : null;
 }
 
 export function traverseFields(path: string | string[] = [], fields: any) {
@@ -43,19 +82,19 @@ export function cascadeRules(
   }
 
   return fields.map((fieldSchema: FormilyFieldSchema) => {
-    const { rules } = fieldSchema;
+    const { rules = {} } = fieldSchema;
 
-    if (rules) {
-      each(rules, (rule: RuleSchema, key) => {
-        const parentRule = parentRules[key];
+    each(parentRules, (parentRule: RuleSchema, key) => {
+      const rule = rules[key];
 
-        if (!parentRule || isCallable(parentRule) || !parentRule.cascade || !rule.inherit) {
-          return;
-        }
+      if (isCallable(parentRule) || !parentRule.cascade || (rule && 'inherit' in rule && rule.inherit === false)) {
+        return;
+      }
 
-        rules[key] = merge({}, parentRules[key], rule);
-      });
-    }
+      rules[key] = merge({}, parentRule, rule);
+    });
+
+    fieldSchema.rules = rules;
 
     return fieldSchema;
   });
