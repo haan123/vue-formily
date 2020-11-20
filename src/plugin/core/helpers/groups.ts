@@ -1,4 +1,4 @@
-import { FormilyFieldSchema, FormilyField, FormElementConstructor } from '../types';
+import { FormilySchemas, FormilyElements, FormElementConstructor } from '../types';
 import { logMessage } from '../utils';
 
 const _formElements: FormElementConstructor[] = [];
@@ -9,7 +9,7 @@ export function registerFormElement(F: FormElementConstructor) {
   }
 }
 
-export function genFields(fields: FormilyFieldSchema[], ...args: any[]): FormilyField[] {
+export function genFields(fields: FormilySchemas[], ...args: any[]): FormilyElements[] {
   const length = _formElements.length;
 
   return fields.map(schema => {
@@ -22,10 +22,6 @@ export function genFields(fields: FormilyFieldSchema[], ...args: any[]): Formily
       }
     }
 
-    throw new Error(
-      logMessage('Failed to create form elmenent', {
-        formId: schema.formId
-      })
-    );
+    throw new Error(logMessage('Failed to create form elmenent'));
   });
 }

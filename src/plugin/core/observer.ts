@@ -1,4 +1,4 @@
-import { FormilyField } from './types';
+import { FormilyElements } from './types';
 import { isPlainObject, isObject, hasOwn, def } from './utils';
 
 const methodsToPatch = ['push', 'unshift'];
@@ -35,9 +35,9 @@ methodsToPatch.forEach(function(method) {
 
 export class Observer {
   value: any;
-  field: FormilyField;
+  field: FormilyElements;
 
-  constructor(value: any, field: FormilyField) {
+  constructor(value: any, field: FormilyElements) {
     this.value = value;
     this.field = field;
 
@@ -76,7 +76,7 @@ export class Observer {
   }
 }
 
-export function observe(value: any, field: FormilyField) {
+export function observe(value: any, field: FormilyElements) {
   if (!isObject(value)) {
     return;
   }
@@ -89,7 +89,7 @@ export function observe(value: any, field: FormilyField) {
   return ob;
 }
 
-export function reactor(obj: object, key: string, field: FormilyField, val?: any) {
+export function reactor(obj: object, key: string, field: FormilyElements, val?: any) {
   const property = Object.getOwnPropertyDescriptor(obj, key);
 
   if (property && property.configurable === false) {

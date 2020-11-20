@@ -1,21 +1,41 @@
 import {
   FormFieldSchema,
-  FormFieldValue,
-  FormFieldType,
   ValidationResult,
-  PropValue,
   FormContainer,
-  SchemaValidation
+  SchemaValidation,
+  FormElementData,
+  FormFieldValidationResult,
+  FormilyElements
 } from './types';
 import FormElement from './FormElement';
 import { def, logError, logMessage, isCallable, getter, setter, ref, Ref } from './utils';
 import Validation from './Validation';
-import { FORM_FIELD_TYPES } from './constants';
-import { cast, genValidationRules, genProps, indentifySchema, invalidateSchemaValidation } from './helpers';
+import { FORM_FIELD_TYPES, FORM_TYPE_FIELD } from './constants';
+import {
+  cast,
+  genValidationRules,
+  genProps,
+  indentifySchema,
+  invalidateSchemaValidation,
+  registerHtmlNameGenerator,
+  getHtmlNameGenerator
+} from './helpers';
 
-export type FormFieldValidationResult = ValidationResult & {
-  value: FormFieldValue;
-};
+registerHtmlNameGenerator({
+  formType: FORM_TYPE_FIELD,
+  template(this: FormField, keysPath: string[]) {
+    const [root, ...rest] = keysPath;
+    console.log(keysPath)
+    if (!rest) {
+      return `${root}`;
+    }
+
+    return `${root}[${rest.join('][')}]`;
+  }
+});
+
+type FormFieldData = FormElementData;
+const _privateData = new WeakMap<FormField, FormFieldData>();
 
 export default class FormField extends FormElement {
   static accept(schema: any): SchemaValidation {
@@ -23,8 +43,12 @@ export default class FormField extends FormElement {
     const { identified, sv } = indentifySchema(schema, type);
 
     if (!identified) {
-      if (!type) {
-        invalidateSchemaValidation(sv, `type "${schema.type}" is not supported for form field element`);
+      if (schema.formType !== 'field') {
+        invalidateSchemaValidation(sv, `'formType' value must be 'field'`, { formId: schema.formId });
+      } else if (!type) {
+        invalidateSchemaValidation(sv, `type '${schema.type}' is not supported for form field element`, {
+          formId: schema.formId
+        });
       }
 
       if (sv.valid) {
@@ -39,28 +63,30 @@ export default class FormField extends FormElement {
     return new FormField(schema, ...args);
   }
 
-  readonly type!: FormFieldType;
+  readonly formType!: 'field';
+  readonly type!: 'string' | 'number' | 'boolean' | 'date';
   readonly inputType!: string;
-  readonly default!: FormFieldValue;
-  readonly props: Record<string, PropValue> | null;
+  readonly default!: FormField['value'];
+  readonly props: Record<string, any> | null;
   readonly formatted!: string | null;
   pending = false;
-  raw!: string;
-  value!: FormFieldValue;
+  raw!: string | null;
+  value!: string | number | boolean | Date | null;
 
   constructor(schema: FormFieldSchema, parent?: FormContainer) {
-    super(schema, parent, FormField);
+    super(schema, parent);
 
     const accepted = FormField.accept(schema);
 
     if (!accepted.valid) {
-      throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, { formId: this.formId }));
+      throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, accepted.infos));
     }
 
     const { type, rules, inputType = 'text' } = schema;
 
     let defaultValue = null;
 
+    def(this, 'formType', schema.formType, { writable: false });
     def(this, 'type', type, { writable: false });
     def(this, 'inputType', inputType, { writable: false });
 
@@ -81,9 +107,7 @@ export default class FormField extends FormElement {
 
     def(this, 'validation', new Validation(validationRules, { field: this }), { writable: false });
 
-    const formatter = isCallable(schema.formatter)
-      ? schema.formatter.bind(this)
-      : (value: FormFieldValue) => value as string;
+    const formatter = isCallable(schema.formatter) ? schema.formatter.bind(this) : (value: any): string => value;
 
     let formattedValue = formatter(this.default);
 
@@ -96,9 +120,7 @@ export default class FormField extends FormElement {
         typedValue.value = value;
         formattedValue = formatter(typedValue.value);
 
-        if (this.parent && isCallable(this.parent._sync)) {
-          this.parent._sync(this);
-        }
+        this.parent && this.parent.sync(this);
       });
     });
 
@@ -114,19 +136,29 @@ export default class FormField extends FormElement {
   }
 
   isValid() {
-    return !this._invalidated && this.validation.valid;
+    return !this.invalidated() && this.validation.valid;
   }
 
-  genHtmlName(path: string[], ...args: any[]): string {
-    if (!this.parent) {
-      return this.formId;
-    }
-
-    return this.parent.genHtmlName([this.formId], ...args);
+  initialize(schema: FormFieldSchema, parent: FormContainer | null, data: FormFieldData) {
+    _privateData.set(this, data);
   }
+
+  getHtmlName(): string {
+    const gen = getHtmlNameGenerator(FORM_TYPE_FIELD);
+
+    return gen.genName(this, (_privateData.get(this) as FormFieldData).ancestors);
+  }
+
+  // genHtmlName(path: string[], ...args: any[]): string {
+  //   if (!this.parent) {
+  //     return this.formId;
+  //   }
+
+  //   return this.parent.genHtmlName([this.formId], ...args);
+  // }
 
   async validate(val: any): Promise<FormFieldValidationResult> {
-    let value: FormFieldValue = null;
+    let value: FormField['value'] = null;
     let result: ValidationResult = {
       valid: false,
       errors: null,

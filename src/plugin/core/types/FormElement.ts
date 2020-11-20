@@ -1,44 +1,36 @@
-import { FormContainer, FormilyFieldSchema, Validation } from '.';
+import { FormContainer, FormilyElements, FormilySchemas, Validation, ValidationRuleSchema } from '.';
+
+export type FormElementData = {
+  ancestors: FormilyElements[] | null;
+  invalidated: boolean;
+};
+
+export type FormElementSchema = {
+  readonly formId: string;
+  rules?: Record<string, ValidationRuleSchema>;
+  model?: string;
+};
 
 export declare abstract class FormElement {
-  constructor(schema: any, parent?: FormContainer, index?: number);
+  constructor(schema: FormilySchemas, parent: FormContainer | null, ...args: any[]);
 
-  abstract genHtmlName(path: string[], ...args: any[]): string;
+  abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
+  abstract initialize(
+    schema: FormilySchemas,
+    parent: FormContainer | null,
+    data: FormElementData,
+    ...args: any[]
+  ): void;
 
-  readonly model: string;
-  /**
-   * The parent within the form.
-   */
-  readonly parent: FormContainer | null;
-  /**
-   * The ID of the form element. The is is unique within the parent element of the form.
-   */
-  readonly formId: string;
-  /**
-   * The global unique name of the field, which can be used as name in the html form. For radio buttons this name is not unique.
-   */
-  readonly htmlName: string;
-  /**
-   * Identifies if this element and all its children elements are valid.
-   */
-  readonly valid: boolean;
-  _invalidated: boolean;
-  /**
-   * Represents a form element validation result.
-   */
-  validation: Validation;
-  /**
-   * Global unique id of the field
-   */
   readonly _uid: number;
-  /**
-   * This method clears the whole form. After clearing a form it contains no value or the default value, is not bound to any business object and has the status of being valid.
-   */
-  // clearFormElement(): void;
-  /**
-   * The method can be called to explicitly invalidate a form element. The error text will be set to the one of two possible preconfigured custom error messages associated with the form definition. The "value-error" message will be used for FormField instances and "form-error" will be used for FormGroup instances.
-   */
-  invalidate(): void;
-  invalidate(error: string): void;
+  readonly model: string;
+  readonly parent: FormContainer | null;
+  readonly formId: string;
+  readonly htmlName: string;
+  readonly valid: boolean;
+  validation: Validation;
+
+  invalidated(): boolean;
+  invalidate(error?: string): void;
 }

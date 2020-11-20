@@ -1,6 +1,6 @@
 import { isEmptyValue } from './helpers';
 import { ValidationResult, ValidationRuleSchema } from './types';
-import { each, isPlainObject } from './utils';
+import { each } from './utils';
 import ValidationRule from './ValidationRule';
 
 export default class Validation {

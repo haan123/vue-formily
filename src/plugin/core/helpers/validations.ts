@@ -1,16 +1,9 @@
 import { genProps } from '.';
-import {
-  FormFieldType,
-  FormFieldValue,
-  PropValue,
-  RuleSchemaTypes,
-  SchemaValidation,
-  ValidationRuleSchema
-} from '../types';
+import { FormField, SchemaValidation, ValidationRuleSchema } from '../types';
 import { each, isCallable, isNullOrUndefined, isNumber, isPlainObject } from '../utils';
 
-export function cast(value: any, type: FormFieldType): FormFieldValue {
-  let typedValue: FormFieldValue = null;
+export function cast(value: any, type: FormField['type']): FormField['value'] {
+  let typedValue: FormField['value'] = null;
 
   if (value === undefined) {
     return typedValue;
@@ -79,8 +72,8 @@ export function isEmptyValue(value: any): boolean {
 
 export function genValidationRules(
   rules?: Record<string, ValidationRuleSchema>,
-  props: Record<string, PropValue> | null = null,
-  type: RuleSchemaTypes | null = null,
+  props: Record<string, any> | null = null,
+  type: string | null = null,
   ...args: any[]
 ): Record<string, ValidationRuleSchema> {
   const validationRules: Record<string, ValidationRuleSchema> = {};
@@ -109,9 +102,10 @@ export function genValidationRules(
   return validationRules;
 }
 
-export function invalidateSchemaValidation(sv: SchemaValidation, reason?: string) {
+export function invalidateSchemaValidation(sv: SchemaValidation, reason?: string, infos?: Record<string, string>) {
   sv.valid = false;
   sv.reason = reason;
+  sv.infos = infos;
 }
 
 export function indentifySchema(schema: any, type: string) {

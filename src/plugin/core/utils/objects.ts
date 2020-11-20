@@ -30,16 +30,6 @@ export function def(
   }
 }
 
-export function getter(obj: any, key: string, val: any, { reactive = true }: { reactive?: boolean } = {}) {
-  Object.defineProperty(obj, key, {
-    get() {
-      return isCallable(val) ? val.call(this) : val;
-    },
-    configurable: reactive,
-    enumerable: true
-  });
-}
-
 export function ref(value: any): Ref {
   return {
     value
@@ -53,6 +43,26 @@ export function isRefValue(value: any): value is Ref {
 export type Ref = {
   value: any;
 };
+
+export function getter(obj: any, key: string, value: any, { reactive = true }: { reactive?: boolean } = {}) {
+  let _ref: Ref;
+  let get = (r: Ref) => r.value;
+
+  if (isCallable(value)) {
+    _ref = ref(null);
+    get = value;
+  } else {
+    _ref = isRefValue(value) ? value : ref(value);
+  }
+
+  Object.defineProperty(obj, key, {
+    get() {
+      return get.call(this, _ref);
+    },
+    configurable: reactive,
+    enumerable: true
+  });
+}
 
 export function setter(obj: any, key: string, value: any, set: any, { reactive = true }: { reactive?: boolean } = {}) {
   const _ref = isRefValue(value) ? value : ref(value);

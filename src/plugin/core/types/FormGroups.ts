@@ -1,7 +1,20 @@
-import { FormGroupSchema, FormilyField, FormGroup, FormContainer, PropValue, SchemaValidation } from '.';
-import { FormElement } from './FormElement';
+import {
+  FormGroupSchema,
+  FormGroup,
+  FormContainer,
+  SchemaValidation,
+  FormElementSchema,
+  FormElement,
+  FormGroupsItem,
+  FormElementData,
+  FormilySchemas
+} from '.';
 
-export type FormGroupsType = 'groups';
+export interface FormGroupsSchema extends FormElementSchema {
+  formType: Pick<FormGroups, 'formType'>;
+  group: Omit<FormGroupSchema, 'formId' | 'formType'>;
+  props?: Record<string, any>;
+}
 
 export declare class FormGroups extends FormElement {
   private constructor(schema: FormGroupSchema, parent?: FormContainer);
@@ -10,15 +23,16 @@ export declare class FormGroups extends FormElement {
   static create(schema: any, ...args: any[]): FormGroups;
 
   readonly _schema: FormGroupSchema;
-  readonly type: FormGroupsType;
-  readonly props: Record<string, PropValue> | null;
+  readonly formType: 'groups';
+  readonly props: Record<string, any> | null;
 
-  groups: FormGroup[] | null;
-  value: Record<string, any>[] | null;
+  groups: FormGroupsItem[] | null;
+  value: Exclude<FormGroup['value'], null>[] | null;
+
+  getHtmlName(): string | null;
+  isValid(): boolean;
+  initialize(schema: FormilySchemas, parent: FormContainer | null, data: FormElementData, ...args: any[]): void;
 
   addGroup(): void;
 
-  _sync(field: FormilyField): void;
-  genHtmlName(path: string[], ...args: any[]): string;
-  isValid(): boolean;
 }

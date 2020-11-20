@@ -14,6 +14,12 @@
         </div>
       </div>
     </div>
+
+    {{index.index}}
+
+    {{b}}
+
+    <button @click="add">aaa</button>
   </div>
 </template>
 
@@ -33,10 +39,11 @@ Vue.use(Formily, {
 
 const form: FormSchema = {
   formId: 'form',
-  type: 'group',
+  formType: 'group',
   fields: [
     {
       formId: 'a',
+      formType: 'field',
       label: 'a',
       type: 'string',
       inputType: 'text',
@@ -63,26 +70,29 @@ const form: FormSchema = {
     },
     {
       formId: 'b',
-      type: 'groups',
+      formType: 'groups',
       rules: {
         required
       },
       group: {
         fields: [
           {
+            formType: 'field',
             formId: 'c',
             type: 'string'
           },
           {
             formId: 'd',
-            type: 'groups',
+            formType: 'groups',
             group: {
               fields: [
                 {
+                  formType: 'field',
                   formId: 'e',
                   type: 'string'
                 },
                 {
+                  formType: 'field',
                   formId: 'f',
                   type: 'string'
                 }
@@ -94,9 +104,10 @@ const form: FormSchema = {
     },
     {
       formId: 'g',
-      type: 'group',
+      formType: 'group',
       fields: [
         {
+          formType: 'field',
           formId: 'h',
           type: 'string',
           rules: {
@@ -104,6 +115,7 @@ const form: FormSchema = {
           }
         },
         {
+          formType: 'field',
           formId: 'i',
           type: 'string'
         }
@@ -114,6 +126,20 @@ const form: FormSchema = {
 
 export default Vue.extend({
   name: 'App',
+  data() {
+    const a = Object.defineProperty({}, 'index', {
+      get: () => {
+        console.log('aaaa')
+        return this.a && this.a.length;
+      }
+    })
+
+    return {
+      a: [],
+      b: 'aa',
+      index: a
+    }
+  },
   created() {
     const f = this.$formily.add(form);
     const b = f.getField('b') as FormGroups;
@@ -129,6 +155,10 @@ export default Vue.extend({
     console.log(f);
   },
   methods: {
+    add() {
+      // this.a.push('a');
+      this.b = Date.now()
+    },
     fieldInput(e: any, field: FormField) {
       console.log(field);
     }
