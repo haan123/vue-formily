@@ -1,48 +1,28 @@
-import { FORM_TYPE_GROUPS, FORM_TYPE_GROUP } from './constants';
 import FormElement from './FormElement';
 import FormGroup from './FormGroup';
 import FormGroupsItem from './FormGroupsItem';
-import {
-  cascadeRules,
-  genProps,
-  getHtmlNameGenerator,
-  indentifySchema,
-  invalidateSchemaValidation,
-  registerHtmlNameGenerator
-} from './helpers';
-import { FormGroupSchema, FormGroupsSchema, FormContainer, SchemaValidation, FormElementData } from './types';
-import { def, isPlainObject, logMessage, Ref, setter } from './utils';
+import { cascadeRules, genHtmlName, genProps, indentifySchema, invalidateSchemaValidation } from './helpers';
+import { FormGroupSchema, FormGroupsSchema, SchemaValidation, FormElementData } from './types';
+import { def, isPlainObject, logError, logMessage, Ref, setter } from './utils';
 
 function normalizeGroupSchema(group: any) {
   return {
-    formType: FORM_TYPE_GROUP,
+    formType: FormGroup.FORM_TYPE,
     ...group
   };
 }
-
-registerHtmlNameGenerator({
-  formType: FORM_TYPE_GROUPS,
-  template(this: FormGroups, keysPath: string[]) {
-    const [root, ...rest] = keysPath;
-
-    if (!rest) {
-      return `${root}[]`;
-    }
-
-    return `${root}[${rest.join('][')}]`;
-  }
-});
 
 type FormGroupsData = FormElementData;
 const _privateData = new WeakMap<FormGroups, FormGroupsData>();
 
 export default class FormGroups extends FormElement {
+  static FORM_TYPE = 'groups';
   static accept(schema: any): SchemaValidation {
-    const { identified, sv } = indentifySchema(schema, FORM_TYPE_GROUPS);
+    const { identified, sv } = indentifySchema(schema, FormGroups.FORM_TYPE);
 
     if (!identified) {
-      if (schema.formType !== FORM_TYPE_GROUPS) {
-        invalidateSchemaValidation(sv, `"type" value must be ${FORM_TYPE_GROUPS}`, { formId: schema.formId });
+      if (schema.formType !== FormGroups.FORM_TYPE) {
+        invalidateSchemaValidation(sv, `"type" value must be ${FormGroups.FORM_TYPE}`, { formId: schema.formId });
       } else {
         const accepted = FormGroup.accept(normalizeGroupSchema(schema.group));
 
@@ -52,7 +32,7 @@ export default class FormGroups extends FormElement {
       }
 
       if (sv.valid) {
-        schema.__is__ = FORM_TYPE_GROUPS;
+        schema.__is__ = FormGroups.FORM_TYPE;
       }
     }
 
@@ -66,12 +46,13 @@ export default class FormGroups extends FormElement {
   readonly _schema!: FormGroupSchema;
   readonly props!: Record<string, any> | null;
   readonly formType!: 'groups';
+  readonly type!: 'set';
 
   groups: FormGroupsItem[] | null;
   value!: Exclude<FormGroup['value'], null>[] | null;
 
-  constructor(schema: FormGroupsSchema, parent?: FormContainer) {
-    super(schema, parent);
+  constructor(schema: FormGroupsSchema, ...args: any[]) {
+    super(schema, ...args);
 
     const accepted = FormGroups.accept(schema);
 
@@ -79,7 +60,8 @@ export default class FormGroups extends FormElement {
       throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, accepted.infos));
     }
 
-    def(this, 'formType', FORM_TYPE_GROUPS, { writable: false });
+    def(this, 'formType', FormGroups.FORM_TYPE, { writable: false });
+    def(this, 'type', 'set', { writable: false });
 
     this.groups = null;
 
@@ -91,16 +73,37 @@ export default class FormGroups extends FormElement {
 
     this.props = genProps([schema.props], this);
 
+    const isEnum = this._schema.fields.length > 1;
+
     setter(this, 'value', null, (val: any, refValue: Ref) => {
       let value: FormGroups['value'] = null;
 
       if (Array.isArray(val)) {
+        value = [];
+
+        this.addGroup();
+
+        for (let i = 0; i < length; i++) {
+          const field = this.fields[i];
+          const v = val[field.model] !== undefined ? val[field.model] : field.value;
+
+          if (!field.valid) {
+            value = null;
+            break;
+          } else if (field.value !== v) {
+            field.value = v;
+            break;
+          } else {
+            value[field.model] = v;
+          }
+        }
         value = val;
-      } else if (isPlainObject(val)) {
+      } else if (value && value.length && isPlainObject(val)) {
         value.push(val);
       } else {
         value = [val];
       }
+
 
       refValue.value = value;
 
@@ -108,41 +111,45 @@ export default class FormGroups extends FormElement {
     });
   }
 
-  initialize(schema: FormGroupsSchema, parent: FormContainer | null, data: FormGroupsData) {
+  initialize(schema: FormGroupsSchema, parent: any, data: FormGroupsData) {
     _privateData.set(this, data);
   }
 
-  sync(group: FormGroupsItem) {
-    if (!group.valid) {
-      this.value && this.value.splice(group.index, 1);
+  sync(groupItem: FormGroupsItem) {
+    if (!groupItem.valid) {
+      this.value = null;
+    } else if (this.groups) {
+      this.value = this.groups.map(groupItem => groupItem.value as Exclude<FormGroupsItem, null>);
     }
   }
 
   getHtmlName(): string {
-    const gen = getHtmlNameGenerator(FORM_TYPE_GROUPS);
-
-    return gen.genName(this, (_privateData.get(this) as FormGroupsData).ancestors);
+    return genHtmlName(this, (_privateData.get(this) as FormGroupsData).ancestors);
   }
 
   isValid(): boolean {
     return !!(this.groups && this.groups.find(g => !g.valid));
   }
 
-  addGroup() {
+  addGroup(value?: any): number {
     if (!this.groups) {
       this.groups = [];
     }
 
-    const index = this.groups.length;
-    const group = new FormGroupsItem(
+    const groupItem = new FormGroupsItem(
       {
         ...this._schema,
-        formId: `${this.formId}${index}`
+        formId(this: FormGroupsItem) {
+          return `${(this.parent as FormGroups).formId}${this.index}`;
+        }
       },
-      this,
-      index
+      this
     );
 
-    this.groups.push(group);
+    if (value !== undefined) {
+      groupItem.value = value;
+    }
+
+    return this.groups.push(groupItem);
   }
 }

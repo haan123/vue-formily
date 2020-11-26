@@ -1,4 +1,4 @@
-import { FormContainer, FormElementData, FormilyElements, FormilySchemas, Validation } from './types';
+import { FormElementData, FormilyElements, FormilySchemas, Validation } from './types';
 import { camelCase, def, getter, logMessage } from './utils';
 
 let uid = 0;
@@ -19,7 +19,7 @@ function genFormElementAncestors(formElement: any): FormilyElements[] | null {
 }
 
 export default abstract class FormElement {
-  readonly parent!: FormContainer | null;
+  readonly parent!: any;
   readonly formId!: string;
   readonly model!: string;
   readonly htmlName!: string;
@@ -29,21 +29,16 @@ export default abstract class FormElement {
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
-  abstract initialize(
-    schema: FormilySchemas,
-    parent: FormContainer | null,
-    data: FormElementData,
-    ...args: any[]
-  ): void;
+  abstract initialize(schema: FormilySchemas, parent: any, data: FormElementData, ...args: any[]): void;
 
-  constructor(schema: FormilySchemas, parent: FormContainer | null = null, ...args: any[]) {
+  constructor(schema: FormilySchemas, parent: any = null, ...args: any[]) {
     if (!schema.formId) {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
 
     def(this, '_uid', uid++, { writable: false });
     def(this, 'parent', parent, { writable: false });
-    def(this, 'formId', schema.formId, { writable: false });
+    getter(this, 'formId', schema.formId, { reactive: false });
     def(this, 'model', schema.model || camelCase(this.formId));
 
     const data = {

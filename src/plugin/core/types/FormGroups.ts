@@ -1,7 +1,6 @@
 import {
   FormGroupSchema,
   FormGroup,
-  FormContainer,
   SchemaValidation,
   FormElementSchema,
   FormElement,
@@ -11,19 +10,20 @@ import {
 } from '.';
 
 export interface FormGroupsSchema extends FormElementSchema {
-  formType: Pick<FormGroups, 'formType'>;
+  formType: FormGroups['formType'];
   group: Omit<FormGroupSchema, 'formId' | 'formType'>;
   props?: Record<string, any>;
 }
 
 export declare class FormGroups extends FormElement {
-  private constructor(schema: FormGroupSchema, parent?: FormContainer);
+  private constructor(schema: FormGroupSchema, parent: any);
 
   static accept(schema: any): SchemaValidation;
   static create(schema: any, ...args: any[]): FormGroups;
 
   readonly _schema: FormGroupSchema;
   readonly formType: 'groups';
+  readonly type: 'set';
   readonly props: Record<string, any> | null;
 
   groups: FormGroupsItem[] | null;
@@ -31,8 +31,8 @@ export declare class FormGroups extends FormElement {
 
   getHtmlName(): string | null;
   isValid(): boolean;
-  initialize(schema: FormilySchemas, parent: FormContainer | null, data: FormElementData, ...args: any[]): void;
+  initialize(schema: FormilySchemas, parent: any, data: FormElementData, ...args: any[]): void;
 
   addGroup(): void;
-
+  sync(group: FormGroup): void;
 }

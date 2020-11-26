@@ -1,52 +1,49 @@
 import {
   FormFieldSchema,
   ValidationResult,
-  FormContainer,
   SchemaValidation,
   FormElementData,
-  FormFieldValidationResult,
-  FormilyElements
+  FormFieldValidationResult
 } from './types';
 import FormElement from './FormElement';
 import { def, logError, logMessage, isCallable, getter, setter, ref, Ref } from './utils';
 import Validation from './Validation';
-import { FORM_FIELD_TYPES, FORM_TYPE_FIELD } from './constants';
 import {
   cast,
   genValidationRules,
   genProps,
   indentifySchema,
   invalidateSchemaValidation,
-  registerHtmlNameGenerator,
-  getHtmlNameGenerator
+  genHtmlName
 } from './helpers';
-
-registerHtmlNameGenerator({
-  formType: FORM_TYPE_FIELD,
-  template(this: FormField, keysPath: string[]) {
-    const [root, ...rest] = keysPath;
-    console.log(keysPath)
-    if (!rest) {
-      return `${root}`;
-    }
-
-    return `${root}[${rest.join('][')}]`;
-  }
-});
 
 type FormFieldData = FormElementData;
 const _privateData = new WeakMap<FormField, FormFieldData>();
 
+const FIELD_TYPES: Record<string, FormField['type']> = {
+  STRING: 'string',
+  NUMBER: 'number',
+  BOOLEAN: 'boolean',
+  DATE: 'date'
+};
+
 export default class FormField extends FormElement {
+  static FORM_TYPE = 'field';
+
+  static FIELD_TYPE_STRING = FIELD_TYPES.STRING;
+  static FIELD_TYPE_NUMBER = FIELD_TYPES.NUMBER;
+  static FIELD_TYPE_BOOLEAN = FIELD_TYPES.BOOLEAN;
+  static FIELD_TYPE_DATE = FIELD_TYPES.DATE;
+
   static accept(schema: any): SchemaValidation {
-    const type = FORM_FIELD_TYPES[schema.type];
+    const type = FIELD_TYPES[schema.type && schema.type.toUpperCase()];
     const { identified, sv } = indentifySchema(schema, type);
 
     if (!identified) {
       if (schema.formType !== 'field') {
         invalidateSchemaValidation(sv, `'formType' value must be 'field'`, { formId: schema.formId });
       } else if (!type) {
-        invalidateSchemaValidation(sv, `type '${schema.type}' is not supported for form field element`, {
+        invalidateSchemaValidation(sv, `type '${schema.type}' is not supported for FormField`, {
           formId: schema.formId
         });
       }
@@ -73,7 +70,7 @@ export default class FormField extends FormElement {
   raw!: string | null;
   value!: string | number | boolean | Date | null;
 
-  constructor(schema: FormFieldSchema, parent?: FormContainer) {
+  constructor(schema: FormFieldSchema, parent?: any) {
     super(schema, parent);
 
     const accepted = FormField.accept(schema);
@@ -139,23 +136,13 @@ export default class FormField extends FormElement {
     return !this.invalidated() && this.validation.valid;
   }
 
-  initialize(schema: FormFieldSchema, parent: FormContainer | null, data: FormFieldData) {
+  initialize(schema: FormFieldSchema, parent: any, data: FormFieldData) {
     _privateData.set(this, data);
   }
 
   getHtmlName(): string {
-    const gen = getHtmlNameGenerator(FORM_TYPE_FIELD);
-
-    return gen.genName(this, (_privateData.get(this) as FormFieldData).ancestors);
+    return genHtmlName(this, (_privateData.get(this) as FormFieldData).ancestors);
   }
-
-  // genHtmlName(path: string[], ...args: any[]): string {
-  //   if (!this.parent) {
-  //     return this.formId;
-  //   }
-
-  //   return this.parent.genHtmlName([this.formId], ...args);
-  // }
 
   async validate(val: any): Promise<FormFieldValidationResult> {
     let value: FormField['value'] = null;

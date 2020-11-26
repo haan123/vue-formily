@@ -1,4 +1,4 @@
-import { FormContainer, FormilyElements, FormilySchemas, Validation, ValidationRuleSchema } from '.';
+import { FormilyElements, FormilySchemas, Prop, Validation, ValidationRuleSchema } from '.';
 
 export type FormElementData = {
   ancestors: FormilyElements[] | null;
@@ -6,26 +6,21 @@ export type FormElementData = {
 };
 
 export type FormElementSchema = {
-  readonly formId: string;
+  readonly formId: Prop<string>;
   rules?: Record<string, ValidationRuleSchema>;
   model?: string;
 };
 
 export declare abstract class FormElement {
-  constructor(schema: FormilySchemas, parent: FormContainer | null, ...args: any[]);
+  constructor(schema: FormilySchemas, parent: any, ...args: any[]);
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
-  abstract initialize(
-    schema: FormilySchemas,
-    parent: FormContainer | null,
-    data: FormElementData,
-    ...args: any[]
-  ): void;
+  abstract initialize(schema: FormilySchemas, parent: any, data: FormElementData, ...args: any[]): void;
 
   readonly _uid: number;
   readonly model: string;
-  readonly parent: FormContainer | null;
+  readonly parent: any;
   readonly formId: string;
   readonly htmlName: string;
   readonly valid: boolean;

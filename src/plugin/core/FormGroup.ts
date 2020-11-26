@@ -1,18 +1,15 @@
-import { FORM_TYPE_GROUP } from './constants';
 import FormElement from './FormElement';
 import {
   cascadeRules,
+  genHtmlName,
   genProps,
   genValidationRules,
-  getHtmlNameGenerator,
   indentifySchema,
   invalidateSchemaValidation,
-  registerHtmlNameGenerator,
   traverseFields
 } from './helpers';
 import { genFields } from './helpers/groups';
 import {
-  FormContainer,
   FormElementData,
   FormGroupSchema,
   FormGroupValue,
@@ -23,36 +20,23 @@ import {
 import { def, isPlainObject, logError, logMessage, Ref, setter } from './utils';
 import Validation from './Validation';
 
-registerHtmlNameGenerator({
-  formType: FORM_TYPE_GROUP,
-  template(this: FormGroup, keysPath: string[]) {
-    const [root, ...rest] = keysPath;
-    console.log(keysPath)
-
-    if (!rest) {
-      return `${root}`;
-    }
-
-    return `${root}[${rest.join('][')}]`;
-  }
-});
-
 type FormGroupData = FormElementData;
 const _privateData = new WeakMap<FormGroup, FormGroupData>();
 
 export default class FormGroup extends FormElement {
+  static FORM_TYPE = 'group';
   static accept(schema: any): SchemaValidation {
-    const { identified, sv } = indentifySchema(schema, FORM_TYPE_GROUP);
+    const { identified, sv } = indentifySchema(schema, FormGroup.FORM_TYPE);
 
     if (!identified) {
-      if (schema.formType !== FORM_TYPE_GROUP) {
-        invalidateSchemaValidation(sv, `'formType' must be '${FORM_TYPE_GROUP}'`, { formId: schema.formId });
+      if (schema.formType !== FormGroup.FORM_TYPE) {
+        invalidateSchemaValidation(sv, `'formType' must be '${FormGroup.FORM_TYPE}'`, { formId: schema.formId });
       } else if (!schema.fields || !schema.fields.length) {
         invalidateSchemaValidation(sv, "'fields' is empty or missing", { formId: schema.formId });
       }
 
       if (sv.valid) {
-        schema.__is__ = FORM_TYPE_GROUP;
+        schema.__is__ = FormGroup.FORM_TYPE;
       }
     }
 
@@ -65,12 +49,13 @@ export default class FormGroup extends FormElement {
 
   readonly props!: Record<string, any> | null;
   readonly formType!: 'group';
+  readonly type!: 'enum';
 
   fields: FormilyElements[];
   value!: FormGroupValue;
 
-  constructor(schema: FormGroupSchema, parent: FormContainer | null = null) {
-    super(schema, parent);
+  constructor(schema: FormGroupSchema, parent: any = null, ...args: any[]) {
+    super(schema, parent, ...args);
 
     const accepted = FormGroup.accept(schema);
 
@@ -78,7 +63,8 @@ export default class FormGroup extends FormElement {
       throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, accepted.infos));
     }
 
-    def(this, 'formType', FORM_TYPE_GROUP, { writable: false });
+    def(this, 'formType', FormGroup.FORM_TYPE, { writable: false });
+    def(this, 'type', 'enum', { writable: false });
 
     if (schema.rules) {
       schema.fields = cascadeRules(schema.rules, schema.fields);
@@ -127,25 +113,13 @@ export default class FormGroup extends FormElement {
     });
   }
 
-  initialize(schema: FormGroupSchema, parent: FormContainer | null, data: FormGroupData) {
+  initialize(schema: FormGroupSchema, parent: any, data: FormGroupData) {
     _privateData.set(this, data);
   }
 
   getHtmlName(): string {
-    const gen = getHtmlNameGenerator(FORM_TYPE_GROUP);
-
-    return gen.genName(this, (_privateData.get(this) as FormGroupData).ancestors);
+    return genHtmlName(this, (_privateData.get(this) as FormGroupData).ancestors);
   }
-
-  // genHtmlName(path: string[], ...args: any[]) {
-  //   if (!this.parent) {
-  //     return `${this.formId}[${path.join('][')}]`;
-  //   }
-
-  //   path.unshift(this.formId);
-
-  //   return this.parent.genHtmlName(path, ...args);
-  // }
 
   isValid(): boolean {
     return !this.invalidated() && !this.fields.find(f => !f.valid);

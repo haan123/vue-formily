@@ -1,12 +1,4 @@
-import {
-  FormContainer,
-  FormElement,
-  FormElementData,
-  FormElementSchema,
-  FormilySchemas,
-  SchemaValidation,
-  ValidationResult
-} from '.';
+import { FormElement, FormElementData, FormElementSchema, FormilySchemas, SchemaValidation, ValidationResult } from '.';
 
 export type Formatter = (this: FormField, value: FormField['value']) => string;
 
@@ -31,7 +23,7 @@ export interface FormFieldSchema extends FormElementSchema {
 }
 
 export declare class FormField extends FormElement {
-  constructor(schema: FormFieldSchema, parent?: FormContainer);
+  constructor(schema: FormFieldSchema, parent: any);
 
   static accept(schema: any): SchemaValidation;
   static create(schema: any, ...args: any[]): FormField;
@@ -49,7 +41,7 @@ export declare class FormField extends FormElement {
 
   getHtmlName(): string | null;
   isValid(): boolean;
-  initialize(schema: FormilySchemas, parent: FormContainer | null, data: FormElementData, ...args: any[]): void;
+  initialize(schema: FormilySchemas, parent: any, data: FormElementData, ...args: any[]): void;
 
   validate(val: any): Promise<FormFieldValidationResult>
 }

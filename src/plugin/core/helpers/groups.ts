@@ -11,6 +11,7 @@ export function registerFormElement(F: FormElementConstructor) {
 
 export function genFields(fields: FormilySchemas[], ...args: any[]): FormilyElements[] {
   const length = _formElements.length;
+  let invalidSchema: FormilySchemas;
 
   return fields.map(schema => {
     for (let i = 0; i < length; i++) {
@@ -20,8 +21,17 @@ export function genFields(fields: FormilySchemas[], ...args: any[]): FormilyElem
       if (accepted.valid) {
         return F.create(schema, ...args);
       }
+
+      invalidSchema = schema;
     }
 
-    throw new Error(logMessage('Failed to create form elmenent'));
+    throw new Error(
+      logMessage(
+        `Failed to create form elmenent, caused by schema:\n ${JSON.stringify(invalidSchema, null, 2).slice(
+          0,
+          50
+        )}\n\t...\n`
+      )
+    );
   });
 }

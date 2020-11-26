@@ -1,4 +1,4 @@
-import { ValidationRuleSchema, FormilySchemas, RuleSchema, FormilyElements, HtmlNameTemplate } from '../types';
+import { ValidationRuleSchema, FormilySchemas, RuleSchema, FormilyElements } from '../types';
 import { isNullOrUndefined, each, isCallable, merge, getter, isPlainObject } from '../utils';
 import { isEmptyValue } from './validations';
 
@@ -97,54 +97,14 @@ export function cascadeRules(parentRules: Record<string, ValidationRuleSchema>, 
   });
 }
 
-type HtmlNameGenerator = {
-  keysGens: Exclude<HtmlNameTemplate['keys'], undefined>[];
-  template: Exclude<HtmlNameTemplate['template'], undefined>;
-  genName: (formElement: FormilyElements, ancestors: FormilyElements[] | null) => string;
-};
+export function genHtmlName(formElement: FormilyElements, ancestors: FormilyElements[] | null): string {
+  const keysPath = ancestors
+    ? ancestors.reduce((acc: string[], fe) => {
+        return 'index' in fe ? [...acc, '' + fe.index] : [...acc, fe.formId];
+      }, [])
+    : [];
+  const [root, ...rest] = [...keysPath, 'index' in formElement ? '' + formElement.index : formElement.formId];
+  const htmlName = rest ? `${root}[${rest.join('][')}]` : root;
 
-const _htmlNameTemplates = new Map<string, HtmlNameGenerator>();
-
-export function getHtmlNameGenerator(key: string) {
-  return _htmlNameTemplates.get(key) as HtmlNameGenerator;
-}
-
-const defaultKeyGen = (_: any, parentKeys: string[]) => parentKeys;
-
-export function registerHtmlNameGenerator({ formType, keys, template }: HtmlNameTemplate) {
-  const gen = getHtmlNameGenerator(formType);
-  const keysGens: HtmlNameGenerator['keysGens'] = gen
-    ? keys
-      ? [keys, ...gen.keysGens]
-      : gen.keysGens
-    : [defaultKeyGen];
-  template = template || gen.template;
-
-  if (!template) {
-    throw new Error("Missing 'template' for html name generator");
-  }
-
-  _htmlNameTemplates.set(formType, {
-    keysGens,
-    template,
-    genName(formElement: FormilyElements, ancestors: FormilyElements[] | null) {
-      const keysPath = ancestors
-        ? ancestors
-            .map(e => {
-              const templ = getHtmlNameGenerator(e.formType);
-
-              return templ.keysGens.reduce(
-                (acc: string[], keysGen) => {
-                  acc = keysGen(e, acc);
-                  return acc;
-                },
-                [e.formId]
-              );
-            })
-            .flat()
-        : [formElement.formId];
-
-      return this.template.call(formElement, keysPath);
-    }
-  });
+  return formElement.type === 'set' ? `${htmlName}[]` : htmlName;
 }

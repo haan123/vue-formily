@@ -5,7 +5,6 @@ import { Form } from './Form';
 import { Forms } from './Forms';
 import { Validation, ValidationProps } from './Validation';
 import { ValidationRuleSchema } from './ValidationRule';
-import { FormElement } from './FormElement';
 import FormGroupsItem from '../FormGroupsItem';
 
 declare module 'vue/types/vue' {
@@ -16,12 +15,6 @@ declare module 'vue/types/vue' {
     forms: Forms;
   }
 }
-
-export type HtmlNameTemplate = {
-  formType: string;
-  keys?: (formElement: FormilyElements, parentKeys: string[]) => string[];
-  template?: (keyPath: string[]) => string;
-};
 
 export type Validations = {
   [name: string]: Validation;
@@ -46,10 +39,6 @@ export type SchemaValidation = {
 
 export type FormSchema = FormGroupSchema;
 
-export interface FormContainer extends FormElement {
-  sync: (field: FormilyElements) => void;
-}
-
 export type FormilySchemas = FormFieldSchema | FormGroupSchema | FormGroupsSchema;
 
 export type FormilyElements = FormField | FormGroup | FormGroups | FormGroupsItem;
@@ -58,6 +47,8 @@ export interface FormilyOptions {
   name?: string;
   rules: Record<string, ValidationRuleSchema>;
 }
+
+export type Prop<T> = T | ((...args: any[]) => T);
 
 export * from './Validation';
 export * from './ValidationRule';
