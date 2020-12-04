@@ -1,0 +1,11 @@
+{
+  "title": "vue-formily",
+  "url": "https://content.nuxtjs.org/",
+  "logo": {
+    "light": "/logo-light.svg",
+    "dark": "/logo-dark.svg"
+  },
+  "defaultBranch": "master",
+  "github": "haan123/vue-formily",
+  "twitter": "@haquangngocan"
+}
