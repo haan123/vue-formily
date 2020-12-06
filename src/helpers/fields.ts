@@ -1,6 +1,5 @@
-import { ValidationRuleSchema, FormilySchemas, RuleSchema, FormilyElements } from '../../types';
-import { isNullOrUndefined, each, isCallable, merge, getter, isPlainObject } from '../utils';
-import { isEmptyValue } from './validations';
+import { ValidationRuleSchema, FormilySchemas, RuleSchema, FormilyElements } from '../types';
+import { isNullOrUndefined, each, isCallable, merge, getter, isPlainObject, isEmpty } from '../utils';
 
 function genProp(obj: any, props: Record<string, any>, key: string, context?: any, ...args: any[]) {
   const property = Object.getOwnPropertyDescriptor(props, key);
@@ -20,6 +19,8 @@ function genProp(obj: any, props: Record<string, any>, key: string, context?: an
           return isCallable(value) ? value.call(context, ...args) : value;
         }
   );
+
+  return obj;
 }
 
 export function genProps(
@@ -48,12 +49,12 @@ export function genProps(
       const keys = Object.keys(props);
 
       keys.forEach(key => {
-        genProp(_props, props, key, context, ...args);
+        genProp(_props || {}, props, key, context, ...args);
       });
     }
   });
 
-  return !isEmptyValue(_props) ? _props : null;
+  return isEmpty(_props) ? _props : null;
 }
 
 export function traverseFields(path: string | string[] = [], fields: any) {

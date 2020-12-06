@@ -1,15 +1,37 @@
-import { isEmptyValue } from '../helpers';
-import { ValidationMessageTemplate, ValidationRuleSchema, Validator, ValidationProps } from '../../types';
-import { def, isCallable, isPlainObject, logMessage, toMap } from '../utils';
+import { def, isCallable, isPlainObject, logMessage, toMap, isEmpty } from '../utils';
+
+export interface ValidationMessageGenerator {
+  (value: any, props: Record<string, any>, data: Map<string, any> | null): string;
+}
+
+export type ValidationMessageTemplate = string | ValidationMessageGenerator;
 
 export type ValidationRuleResult = {
   valid: boolean;
   message: string | null;
 };
 
+export type Validator = (
+  value: any,
+  props: Record<string, any>,
+  data: Map<string, any> | null
+) => boolean | Promise<boolean>;
+export interface RuleSchema {
+  validate?: Validator;
+  validatable?: (this: ValidationRule, form: Form, vm: Vue) => boolean;
+  types?: string[];
+  props?: Record<string, any>;
+  message?: ValidationMessageTemplate;
+  cascade?: boolean;
+  inherit?: boolean;
+  allowEmpty?: boolean;
+}
+
+export type ValidationRuleSchema = Validator | RuleSchema;
+
 export default class ValidationRule {
   readonly data!: Map<string, any>;
-  readonly props!: ValidationProps;
+  readonly props!: Record<string, any>;
   readonly _template!: ValidationMessageTemplate | null;
   readonly _validator!: Validator;
   message!: string | null;
@@ -30,10 +52,8 @@ export default class ValidationRule {
       if (!('allowEmpty' in rule) || rule.allowEmpty) {
         validator = (rule.validate as Validator) || null;
       } else if (!rule.allowEmpty) {
-        validator = (value: any, props: ValidationProps, data: Map<string, any> | null) => {
-          return (
-            !isEmptyValue(value) && (!rule.validate || (rule.validate as Validator).call(this, value, props, data))
-          );
+        validator = (value: any, props: Record<string, any>, data: Map<string, any> | null) => {
+          return !isEmpty(value) && (!rule.validate || (rule.validate as Validator).call(this, value, props, data));
         };
       }
 

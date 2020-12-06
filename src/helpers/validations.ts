@@ -1,6 +1,6 @@
-import { genProps } from '.';
-import { FormField, SchemaValidation, ValidationRuleSchema } from '../../types';
-import { each, isCallable, isNullOrUndefined, isNumber, isPlainObject } from '../utils';
+import { genProps } from './fields';
+import { FormField, ValidationRuleSchema } from '../types';
+import { each, isCallable, isNumber } from '../utils';
 
 export function cast(value: any, type: FormField['type']): FormField['value'] {
   let typedValue: FormField['value'] = null;
@@ -28,46 +28,6 @@ export function cast(value: any, type: FormField['type']): FormField['value'] {
   }
 
   return typedValue;
-}
-
-export function getLength(value: any): number {
-  if (Array.isArray(value)) {
-    return value.length;
-  }
-
-  if (isPlainObject(value)) {
-    return Object.keys(value).length;
-  }
-
-  if (typeof value === 'string') {
-    return value.length;
-  }
-
-  return 0;
-}
-
-const _cache = {
-  value: null,
-  isEmpty: false
-};
-
-export function isEmptyValue(value: any): boolean {
-  let isEmpty = false;
-
-  if (_cache.value === value) {
-    return _cache.isEmpty;
-  }
-
-  if (isNullOrUndefined(value)) {
-    isEmpty = false;
-  } else if (value === false || !getLength(value)) {
-    isEmpty = true;
-  }
-
-  _cache.value = value;
-  _cache.isEmpty = isEmpty;
-
-  return isEmpty;
 }
 
 export function genValidationRules(
@@ -108,8 +68,17 @@ export function invalidateSchemaValidation(sv: SchemaValidation, reason?: string
   sv.infos = infos;
 }
 
+export type SchemaValidation = {
+  valid: boolean;
+  reason?: string;
+  infos?: Record<string, string>;
+};
+
 export function indentifySchema(schema: any, type: string) {
-  const i = {
+  const i: {
+    identified: boolean;
+    sv: SchemaValidation;
+  } = {
     identified: false,
     sv: { valid: false }
   };

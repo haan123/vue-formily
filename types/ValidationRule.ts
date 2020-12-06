@@ -1,9 +1,9 @@
-import { Form, ValidationMessageTemplate, ValidationProps } from '.';
+import { Form, ValidationMessageTemplate } from '.';
 import { ValidationRuleResult } from '../src/core/ValidationRule';
 
 export type Validator = (
   value: any,
-  props: ValidationProps,
+  props: Record<string, any>,
   data: Map<string, any> | null
 ) => boolean | Promise<boolean>;
 export interface RuleSchema {
@@ -23,7 +23,7 @@ export declare class ValidationRule {
   constructor(rule: ValidationRule | ValidationRuleSchema, data?: any);
 
   readonly data: Map<string, any>;
-  readonly props: ValidationProps;
+  readonly props: Record<string, any>;
   readonly _template: ValidationMessageTemplate | null;
   readonly _validator: Validator;
   message: string | null;

@@ -1,8 +1,7 @@
-import FormElement from './FormElement';
-import FormGroup from './FormGroup';
+import FormElement, { FormElementData, FormElementSchema } from './FormElement';
+import FormGroup, { FormGroupSchema } from './FormGroup';
 import FormGroupsItem from './FormGroupsItem';
 import { cascadeRules, genHtmlName, genProps, indentifySchema, invalidateSchemaValidation } from '../helpers';
-import { FormGroupSchema, FormGroupsSchema, SchemaValidation, FormElementData } from '../../types';
 import { def, logMessage } from '../utils';
 
 function normalizeGroupSchema(group: any) {
@@ -12,12 +11,18 @@ function normalizeGroupSchema(group: any) {
   };
 }
 
+export interface FormGroupsSchema extends FormElementSchema {
+  formType: FormGroups['formType'];
+  group: Omit<FormGroupSchema, 'formId' | 'formType'>;
+  props?: Record<string, any>;
+}
+
 type FormGroupsData = FormElementData;
 const _privateData = new WeakMap<FormGroups, FormGroupsData>();
 
 export default class FormGroups extends FormElement {
   static FORM_TYPE = 'groups';
-  static accept(schema: any): SchemaValidation {
+  static accept(schema: any) {
     const { identified, sv } = indentifySchema(schema, FormGroups.FORM_TYPE);
 
     if (!identified) {

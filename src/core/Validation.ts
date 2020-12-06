@@ -1,7 +1,15 @@
-import { isEmptyValue } from '../helpers';
-import { ValidationResult, ValidationRuleSchema } from '../../types';
-import { each } from '../utils';
-import ValidationRule from './ValidationRule';
+import { each, isEmpty } from '../utils';
+import ValidationRule, { ValidationRuleSchema } from './ValidationRule';
+
+export interface ValidationOptions {
+  bails?: boolean;
+}
+
+export type ValidationResult = {
+  valid: boolean;
+  errors: string[] | null;
+  invalidRules: Record<string, ValidationRule> | null;
+};
 
 export default class Validation {
   rules: Record<string, ValidationRule> | null = null;
@@ -47,13 +55,13 @@ export default class Validation {
       );
     }
 
-    this.errors = !isEmptyValue(errors) ? errors : null;
+    this.errors = !isEmpty(errors) ? errors : null;
     this.valid = isValid;
 
     return {
       valid: this.valid,
       errors: this.errors,
-      invalidRules: !isEmptyValue(invalidRules) ? invalidRules : null
+      invalidRules: !isEmpty(invalidRules) ? invalidRules : null
     };
   }
 }

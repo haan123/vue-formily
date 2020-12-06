@@ -3,7 +3,7 @@ import { FormGroups, FormGroupsSchema } from './FormGroups';
 import { FormGroup, FormGroupSchema } from './FormGroup';
 import { Form } from './Form';
 import { Forms } from './Forms';
-import { Validation, ValidationProps } from './Validation';
+import { Validation } from './Validation';
 import { ValidationRuleSchema } from './ValidationRule';
 import { FormGroupsItem } from './FormGroupsItem';
 
@@ -21,7 +21,7 @@ export type Validations = {
 };
 
 export interface ValidationMessageGenerator {
-  (value: any, props: ValidationProps, data: Map<string, any> | null): string;
+  (value: any, props: Record<string, any>, data: Map<string, any> | null): string;
 }
 
 export type ValidationMessageTemplate = string | ValidationMessageGenerator;
@@ -48,7 +48,7 @@ export interface FormilyOptions {
   rules?: Record<string, ValidationRuleSchema>;
 }
 
-export type Prop<T> = T | ((...args: any[]) => T);
+export type PropValue<T> = T | ((...args: any[]) => T);
 
 export * from './Validation';
 export * from './ValidationRule';

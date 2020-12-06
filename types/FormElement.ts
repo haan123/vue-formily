@@ -6,7 +6,7 @@ export type FormElementData = {
 };
 
 export type FormElementSchema = {
-  readonly formId: Prop<string>;
+  readonly formId: PropValue<string>;
   rules?: Record<string, ValidationRuleSchema>;
   model?: string;
 };

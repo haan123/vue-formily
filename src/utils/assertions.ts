@@ -1,3 +1,5 @@
+import { getLength } from './common';
+
 const _toString = Object.prototype.toString;
 
 export function isObject(obj: any) {
@@ -19,4 +21,28 @@ export function isNumber(value: any) {
 
 export function isCallable(fn: unknown): fn is Function {
   return typeof fn === 'function';
+}
+
+const _cache = {
+  value: null,
+  isEmpty: false
+};
+
+export function isEmpty(value: any): boolean {
+  let empty = false;
+
+  if (_cache.value === value) {
+    return _cache.isEmpty;
+  }
+
+  if (isNullOrUndefined(value)) {
+    empty = false;
+  } else if (value === false || !getLength(value)) {
+    empty = true;
+  }
+
+  _cache.value = value;
+  _cache.isEmpty = empty;
+
+  return empty;
 }

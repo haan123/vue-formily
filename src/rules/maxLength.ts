@@ -1,7 +1,7 @@
-import { getLength } from '../helpers';
-import { RuleSchema, Validator, ValidationProps } from '../../types';
+import { getLength } from '../utils';
+import { RuleSchema, Validator } from '../types';
 
-export const validate: Validator = (value: string, { maxLength }: ValidationProps) => {
+export const validate: Validator = (value: string, { maxLength }: Record<string, number>) => {
   return getLength(value) <= maxLength;
 };
 

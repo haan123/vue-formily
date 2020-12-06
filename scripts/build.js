@@ -7,8 +7,8 @@ const { createConfig } = require('./config');
 const { reportSize } = require('./info');
 const { generateDts } = require('./generate-dts');
 
-async function minify({ code, pkg, bundleName }) {
-  const pkgout = path.join(__dirname, `../packages/${pkg}/dist`);
+async function minify({ code, bundleName }) {
+  const pkgout = path.join(__dirname, `../dist`);
   const output = await Terser.minify(code, {
     compress: true,
     mangle: true
@@ -21,10 +21,10 @@ async function minify({ code, pkg, bundleName }) {
   console.log(`${chalk.green('Output File:')} ${fileName} ${stats}`);
 }
 
-async function build(pkg) {
-  const pkgout = path.join(__dirname, `../packages/${pkg}/dist`);
+(async function Bundle() {
+  const pkgout = path.join(__dirname, `../dist`);
   for (const format of ['es', 'umd']) {
-    const { input, output, bundleName } = createConfig(pkg, format);
+    const { input, output, bundleName } = createConfig(format);
     const bundle = await rollup(input);
     const {
       output: [{ code }]
@@ -37,26 +37,9 @@ async function build(pkg) {
     console.log(`${chalk.green('Output File:')} ${bundleName} ${stats}`);
 
     if (format === 'umd') {
-      await minify({ bundleName, pkg, code });
+      await minify({ bundleName, code });
     }
   }
 
-  await generateDts(pkg);
-
-  return true;
-}
-
-(async function Bundle() {
-  const arg = [...process.argv][2];
-  if (arg === 'vue-formily' || !arg) {
-    await build('vue-formily');
-  }
-
-  if (arg === 'rules' || !arg) {
-    await build('rules');
-  }
-
-  if (arg === 'i18n' || !arg) {
-    await build('i18n');
-  }
+  await generateDts();
 })();

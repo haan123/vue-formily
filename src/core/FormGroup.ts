@@ -1,4 +1,3 @@
-import FormElement from './FormElement';
 import {
   cascadeRules,
   genHtmlName,
@@ -9,16 +8,22 @@ import {
   traverseFields
 } from '../helpers';
 import { genFields } from '../helpers/groups';
-import { FormElementData, FormGroupSchema, FormilyElements, SchemaValidation, ValidationResult } from '../../types';
+import FormElement, { FormElementData, FormElementSchema } from './FormElement';
 import { def, logMessage } from '../utils';
-import Validation from './Validation';
+import Validation, { ValidationResult } from './Validation';
+
+export interface FormGroupSchema extends FormElementSchema {
+  formType: FormGroup['formType'];
+  fields: FormElementSchema[];
+  props?: Record<string, any>;
+}
 
 type FormGroupData = FormElementData;
 const _privateData = new WeakMap<FormGroup, FormGroupData>();
 
 export default class FormGroup extends FormElement {
   static FORM_TYPE = 'group';
-  static accept(schema: any): SchemaValidation {
+  static accept(schema: any) {
     const { identified, sv } = indentifySchema(schema, FormGroup.FORM_TYPE);
 
     if (!identified) {
@@ -44,7 +49,9 @@ export default class FormGroup extends FormElement {
   readonly formType!: 'group';
   readonly type!: 'enum';
 
-  fields: FormilyElements[];
+  validation!: Validation;
+
+  fields: FormElement[];
 
   constructor(schema: FormGroupSchema, parent: any = null, ...args: any[]) {
     super(schema, parent, ...args);
@@ -83,7 +90,7 @@ export default class FormGroup extends FormElement {
     return !this.invalidated() && !this.fields.find(f => !f.valid);
   }
 
-  getField(path: string | string[] = [], fields?: FormilyElements[]): FormilyElements | null {
+  getField(path: string | string[] = [], fields?: FormElement[]): FormElement | null {
     return traverseFields(path, fields || this.fields);
   }
 

@@ -10,8 +10,6 @@ export type ValidationResult = {
   invalidRules: Record<string, ValidationRule> | null;
 };
 
-export type ValidationProps = Record<string, any>;
-
 export declare class Validation {
   constructor(rules: Record<string, ValidationRuleSchema>, data?: any);
 

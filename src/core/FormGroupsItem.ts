@@ -1,5 +1,4 @@
-import { FormGroupSchema, FormGroups } from '../../types';
-import FormGroup from './FormGroup';
+import FormGroup, { FormGroupSchema } from './FormGroup';
 import { getter } from '../utils';
 
 export default class FormGroupsItem extends FormGroup {
@@ -9,9 +8,9 @@ export default class FormGroupsItem extends FormGroup {
     super(schema, parent, ...args);
 
     getter(this, 'index', () => {
-      const { groups } = this.parent as FormGroups;
+      const { groups } = this.parent as any;
 
-      return groups?.findIndex(group => group === this);
+      return groups?.findIndex((group: any) => group === this);
     });
   }
 }

@@ -1,5 +1,5 @@
 import { VueConstructor } from 'vue';
-import { FormSchema, FormilyOptions, RuleSchema } from '../types';
+import { FormSchema, FormilyOptions } from '../types';
 import Form from './core/Form';
 import { merge } from './utils';
 import { maxLength, minLength, min, max } from './rules';

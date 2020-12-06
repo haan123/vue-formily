@@ -1,4 +1,4 @@
-import { FormilySchemas, FormilyElements, FormElementConstructor } from '../../types';
+import { FormilySchemas, FormilyElements, FormElementConstructor } from '../types';
 import { logMessage } from '../utils';
 
 const _formElements: FormElementConstructor[] = [];

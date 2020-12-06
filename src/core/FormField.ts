@@ -1,13 +1,6 @@
-import {
-  FormFieldSchema,
-  ValidationResult,
-  SchemaValidation,
-  FormElementData,
-  FormFieldValidationResult
-} from '../../types';
-import FormElement from './FormElement';
+import FormElement, { FormElementData, FormElementSchema } from './FormElement';
 import { def, logError, logMessage, isCallable, getter, setter, ref, Ref } from '../utils';
-import Validation from './Validation';
+import Validation, { ValidationResult } from './Validation';
 import {
   cast,
   genValidationRules,
@@ -17,26 +10,43 @@ import {
   genHtmlName
 } from '../helpers';
 
-type FormFieldData = FormElementData;
-const _privateData = new WeakMap<FormField, FormFieldData>();
+export type Formatter = (this: FormField, value: FormField['value']) => string;
 
-const FIELD_TYPES: Record<string, any> = {
-  STRING: 'string',
-  NUMBER: 'number',
-  BOOLEAN: 'boolean',
-  DATE: 'date'
+export type FormFieldValidationResult = ValidationResult & {
+  value: FormField['value'];
 };
 
+export interface FormFieldSchema extends FormElementSchema {
+  formType: 'field';
+  type: FormField['type'];
+  inputType?: string;
+  label?: string;
+  hint?: string;
+  help?: string;
+  placeholder?: string;
+  options?: any[];
+  formatter?: Formatter;
+  id?: string;
+  default?: string;
+  value?: FormField['value'] | FormField['value'][];
+  props?: Record<string, any>;
+}
+
+export type FormFieldData = FormElementData;
+const _privateData = new WeakMap<FormField, FormFieldData>();
+
+export type FormFieldType = 'string' | 'number' | 'boolean' | 'date';
+
 export default class FormField extends FormElement {
-  static FORM_TYPE = 'field';
+  static FORM_TYPE: 'field' = 'field';
+  static FIELD_TYPE_STRING: 'string' = 'string';
+  static FIELD_TYPE_NUMBER: 'number' = 'number';
+  static FIELD_TYPE_BOOLEAN: 'boolean' = 'boolean';
+  static FIELD_TYPE_DATE: 'date' = 'date';
 
-  static FIELD_TYPE_STRING = FIELD_TYPES.STRING;
-  static FIELD_TYPE_NUMBER = FIELD_TYPES.NUMBER;
-  static FIELD_TYPE_BOOLEAN = FIELD_TYPES.BOOLEAN;
-  static FIELD_TYPE_DATE = FIELD_TYPES.DATE;
+  static accept(schema: any) {
+    const type: FormFieldType = (FormField as any)[`FIELD_TYPE_${schema.type.toUpperCase()}`];
 
-  static accept(schema: any): SchemaValidation {
-    const type = FIELD_TYPES[schema.type && schema.type.toUpperCase()];
     const { identified, sv } = indentifySchema(schema, type);
 
     if (!identified) {
@@ -69,6 +79,7 @@ export default class FormField extends FormElement {
   pending = false;
   raw!: string | null;
   value!: string | number | boolean | Date | null;
+  validation!: Validation;
 
   constructor(schema: FormFieldSchema, parent?: any) {
     super(schema, parent);

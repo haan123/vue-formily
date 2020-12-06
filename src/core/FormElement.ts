@@ -1,11 +1,22 @@
-import { FormElementData, FormilyElements, FormilySchemas, Validation } from '../../types';
+import { PropValue, ValidationRuleSchema } from '../types';
 import { camelCase, def, getter, logMessage } from '../utils';
+
+export interface FormElementData {
+  ancestors: any[] | null;
+  invalidated: boolean;
+}
+
+export interface FormElementSchema {
+  readonly formId: PropValue<string>;
+  rules?: Record<string, ValidationRuleSchema>;
+  model?: string;
+}
 
 let uid = 0;
 
 const _privateData = new WeakMap();
 
-function genFormElementAncestors(formElement: any): FormilyElements[] | null {
+function genFormElementAncestors(formElement: FormElement): any[] | null {
   const path = [];
 
   let parent = formElement.parent;
@@ -19,19 +30,18 @@ function genFormElementAncestors(formElement: any): FormilyElements[] | null {
 }
 
 export default abstract class FormElement {
-  readonly parent!: any;
+  readonly parent!: FormElement;
   readonly formId!: string;
   readonly model!: string;
   readonly htmlName!: string;
   readonly _uid!: number;
   readonly valid!: boolean;
-  validation!: Validation;
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
-  abstract initialize(schema: FormilySchemas, parent: any, data: FormElementData, ...args: any[]): void;
+  abstract initialize(schema: FormElementSchema, parent: any, data: FormElementData, ...args: any[]): void;
 
-  constructor(schema: FormilySchemas, parent: any = null, ...args: any[]) {
+  constructor(schema: FormElementSchema, parent: any = null, ...args: any[]) {
     if (!schema.formId) {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
