@@ -1,9 +1,9 @@
-import { RuleSchema } from '../types';
+import { ValidationRuleSchema } from '../types';
 import { isEmpty } from '../utils';
 
 export const validate = (value: any) => !isEmpty(value);
 
-const schema: RuleSchema = {
+const schema: ValidationRuleSchema = {
   allowEmpty: false
 };
 

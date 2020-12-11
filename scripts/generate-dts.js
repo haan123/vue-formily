@@ -5,7 +5,7 @@ const fs = require('fs-extra');
 const { rollup } = require('rollup');
 const { default: dts } = require('rollup-plugin-dts');
 const tsconfig = require('../tsconfig.json');
-const { pkgName } = require('./config');
+const { pkgName } = require('./rollup.config');
 
 async function bundleDts(declarationDir) {
   let entry = path.join(__dirname, declarationDir, 'index.d.ts');

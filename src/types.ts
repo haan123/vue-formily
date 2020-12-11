@@ -1,25 +1,27 @@
+import { RuleSchema, Validator } from './core/validations/types';
+
+export type ValidationRuleSchema =
+  | Validator
+  | (RuleSchema & {
+      types?: string[];
+      cascade?: boolean;
+      inherit?: boolean;
+      validatable?: (form: Record<string, any>, vm: Vue) => boolean;
+    });
+
 export type PropValue<T> = T | ((...args: any[]) => T);
 
-export type ValidationRuleResult = {
+export type SchemaValidation = {
   valid: boolean;
-  message: string | null;
+  reason?: string;
+  infos?: Record<string, string>;
 };
 
-export type Validator = (
-  value: any,
-  props: Record<string, any>,
-  data: Map<string, any> | null
-) => boolean | Promise<boolean>;
-
-export interface RuleSchema {
-  validate?: Validator;
-  validatable?: (this: ValidationRule, form: Form, vm: Vue) => boolean;
-  types?: string[];
-  props?: Record<string, any>;
-  message?: ValidationMessageTemplate;
-  cascade?: boolean;
-  inherit?: boolean;
-  allowEmpty?: boolean;
+export interface FormElementConstructor extends Function {
+  accept(schema: any): SchemaValidation;
+  create(schema: any, ...args: any[]): unknown;
 }
 
-export type ValidationRuleSchema = Validator | RuleSchema;
+export interface VueFormilyOptions {
+  rules?: Record<string, ValidationRuleSchema>;
+}

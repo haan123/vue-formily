@@ -3,9 +3,10 @@ const fs = require('fs-extra');
 const { rollup } = require('rollup');
 const chalk = require('chalk');
 const Terser = require('terser');
-const { createConfig } = require('./config');
+const { createConfig } = require('./rollup.config');
 const { reportSize } = require('./info');
 const { generateDts } = require('./generate-dts');
+const shell = require('shelljs')
 
 async function minify({ code, bundleName }) {
   const pkgout = path.join(__dirname, `../dist`);
@@ -20,6 +21,15 @@ async function minify({ code, bundleName }) {
   const stats = reportSize({ code: output.code, path: filePath });
   console.log(`${chalk.green('Output File:')} ${fileName} ${stats}`);
 }
+
+shell.rm('-rf', 'esm', 'dist');
+shell.exec('tsc -p tsconfig.dist.json');
+shell.exec(`
+  NODE_ENV=esm babel esm-temp \
+  --out-dir esm \
+  --source-maps \
+  --ignore 'esm-temp/types.js'
+`);
 
 (async function Bundle() {
   const pkgout = path.join(__dirname, `../dist`);
@@ -43,3 +53,5 @@ async function minify({ code, bundleName }) {
 
   await generateDts();
 })();
+
+

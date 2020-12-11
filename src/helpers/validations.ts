@@ -1,34 +1,7 @@
-import { genProps } from './fields';
-import { FormField, ValidationRuleSchema } from '../types';
+import { ValidationRuleSchema, SchemaValidation } from '../types';
+
+import { genProps } from './elements';
 import { each, isCallable, isNumber } from '../utils';
-
-export function cast(value: any, type: FormField['type']): FormField['value'] {
-  let typedValue: FormField['value'] = null;
-
-  if (value === undefined) {
-    return typedValue;
-  }
-
-  if (type === 'string') {
-    typedValue = value ? '' + value : '';
-  } else if (type === 'number') {
-    if (!isNumber(value)) {
-      throw new Error(`"${value}" is not a "number"`);
-    }
-
-    typedValue = +value;
-  } else if (type === 'boolean') {
-    typedValue = !!value;
-  } else if (type === 'date') {
-    try {
-      typedValue = new Date(value);
-    } catch (error) {
-      throw new Error(`"${value}" is not a "date" value`);
-    }
-  }
-
-  return typedValue;
-}
 
 export function genValidationRules(
   rules?: Record<string, ValidationRuleSchema>,
@@ -67,12 +40,6 @@ export function invalidateSchemaValidation(sv: SchemaValidation, reason?: string
   sv.reason = reason;
   sv.infos = infos;
 }
-
-export type SchemaValidation = {
-  valid: boolean;
-  reason?: string;
-  infos?: Record<string, string>;
-};
 
 export function indentifySchema(schema: any, type: string) {
   const i: {

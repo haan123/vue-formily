@@ -1,7 +1,10 @@
-import Formily from './Formily';
+import VueFormily from './VueFormily';
 
-export default Formily;
+export * from './core/elements';
+export * from './core/validations';
+
+export default VueFormily;
 
 if (typeof window !== 'undefined' && window.Vue) {
-  window.Vue.use(Formily);
+  window.Vue.use(VueFormily);
 }
