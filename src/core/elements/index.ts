@@ -1,13 +1,13 @@
 import Form from './Form';
-import FormField from './FormField';
-import FormGroup from './FormGroup';
-import FormGroups from './FormGroups';
-import FormElement from './FormElement';
+import Field from './Field';
+import Group from './Group';
+import Collection from './Collection';
+import Element from './Element';
 
 export {
   Form,
-  FormField,
-  FormGroup,
-  FormGroups,
-  FormElement
+  Field,
+  Group,
+  Collection,
+  Element
 }

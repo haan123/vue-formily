@@ -1,49 +1,43 @@
 import { PropValue, ValidationRuleSchema } from '../../types';
 
-export interface FormElementSchema {
-  readonly formId: PropValue<string>;
+export interface ElementSchema {
+  formId: PropValue<string>;
   model?: string;
+  props?: Record<string, PropValue<any>>;
 }
 
-export interface FormElementData {
+export interface ElementData {
   ancestors: any[] | null;
   invalidated: boolean;
 }
 
-export interface FormGroupSchema extends FormElementSchema {
+export type FieldsSchema = FieldSchema | Collectionchema | CollectionSchema;
+
+export interface Collectionchema extends ElementSchema {
   formType: 'group';
-  fields: FormElementSchema[];
-  props?: Record<string, any>;
+  fields: FieldsSchema[];
   rules?: Record<string, ValidationRuleSchema>;
 }
 
-export interface FormGroupsSchema extends FormElementSchema {
+export interface CollectionSchema extends ElementSchema {
   formType: 'groups';
-  group: Omit<FormGroupSchema, 'formId' | 'formType'>;
-  props?: Record<string, any>;
+  group: Omit<Collectionchema, 'formId' | 'formType'>;
   rules?: Record<string, ValidationRuleSchema>;
 }
 
-export type FormSchema = FormGroupSchema;
+export type FormSchema = Collectionchema;
 
-export type FormFieldType = 'string' | 'number' | 'boolean' | 'date';
-export type FormFieldValue = string | number | boolean | Date | null;
+export type FieldType = 'string' | 'number' | 'boolean' | 'date';
+export type FieldValue = string | number | boolean | Date | null;
 
-export type Formatter = (value: FormFieldValue) => string;
+export type Formatter = (value: FieldValue) => string;
 
-export interface FormFieldSchema extends FormElementSchema {
+export interface FieldSchema extends ElementSchema {
   formType: 'field';
-  type: FormFieldType;
+  type: FieldType;
   inputType?: string;
-  label?: string;
-  hint?: string;
-  help?: string;
-  placeholder?: string;
-  options?: any[];
-  formatter?: Formatter;
-  id?: string;
-  default?: string;
-  value?: FormFieldValue | FormFieldValue[];
-  props?: Record<string, any>;
+  format?: Formatter;
+  default?: FieldValue;
+  value?: FieldValue;
   rules?: Record<string, ValidationRuleSchema>;
 }

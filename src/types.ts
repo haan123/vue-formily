@@ -3,7 +3,7 @@ import { RuleSchema, Validator } from './core/validations/types';
 export type ValidationRuleSchema =
   | Validator
   | (RuleSchema & {
-      types?: string[];
+      for?: string[];
       cascade?: boolean;
       inherit?: boolean;
       validatable?: (form: Record<string, any>, vm: Vue) => boolean;
@@ -17,7 +17,7 @@ export type SchemaValidation = {
   infos?: Record<string, string>;
 };
 
-export interface FormElementConstructor extends Function {
+export interface ElementConstructor extends Function {
   accept(schema: any): SchemaValidation;
   create(schema: any, ...args: any[]): unknown;
 }

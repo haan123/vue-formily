@@ -1,11 +1,10 @@
 import { VueConstructor } from 'vue';
 import { FormSchema } from './core/elements/types';
 import { VueFormilyOptions } from './types';
-import Form from './core/elements/Form';
 import { merge } from './utils';
 import { maxLength, minLength, min, max } from './rules';
-import { registerFormElement } from './helpers/elements';
-import { FormField, FormGroup, FormGroups } from './core/elements';
+import { registerElement } from './helpers/elements';
+import { Form, Field, Group, Collection } from './core/elements';
 
 const defaultOptions: VueFormilyOptions = {
   rules: {
@@ -51,7 +50,7 @@ export default class VueFormily {
     }
 
     // Initialize default form elements
-    [FormField, FormGroup, FormGroups].forEach(F => registerFormElement(F));
+    [Field, Group, Collection].forEach(F => registerElement(F));
 
     const vf = new VueFormily(options);
 

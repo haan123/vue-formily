@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "es2017",
     "module": "esnext",
     "strict": true,
     "importHelpers": true,
@@ -19,9 +19,8 @@
     },
     "lib": [
       "esnext",
-      "dom",
-      "dom.iterable",
-      "scripthost"
+      "es2017",
+      "dom"
     ]
   },
   "include": [

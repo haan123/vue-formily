@@ -57,10 +57,6 @@ function themeModule () {
       name: 'index'
     })
   })
-  // Override editor style on dev mode
-  if (options.dev) {
-    options.css.push(path.resolve(__dirname, 'assets/css/main.dev.css'))
-  }
   // Configure TailwindCSS
   hook('tailwindcss:config', function (defaultTailwindConfig) {
     Object.assign(defaultTailwindConfig, defu(defaultTailwindConfig, tailwindConfig({ primaryColor })))
@@ -116,6 +112,7 @@ export default {
     theme_color: primaryColor
   },
   content: {
+    liveEdit: false,
     markdown: {
       prism: {
         theme: 'prism-themes/themes/prism-material-oceanic.css'

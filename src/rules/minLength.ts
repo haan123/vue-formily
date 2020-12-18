@@ -1,14 +1,13 @@
 import { ValidationRuleSchema } from '../types';
 import { getLength } from '../utils';
 
-export const validate = (value: string, { minLength }: Record<string, number>) => {
+export const validate = (value: any, { minLength }: Record<string, number>) => {
   return getLength(value) >= minLength;
 };
 
 const schema: ValidationRuleSchema = {
   validate,
-  cascade: true,
-  types: ['string', 'group', 'groups'],
+  for: ['string', 'group', 'groups'],
   props: {
     minLength: 0
   }

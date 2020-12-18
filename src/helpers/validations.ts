@@ -1,7 +1,7 @@
 import { ValidationRuleSchema, SchemaValidation } from '../types';
 
 import { genProps } from './elements';
-import { each, isCallable, isNumber } from '../utils';
+import { each, isCallable } from '../utils';
 
 export function genValidationRules(
   rules?: Record<string, ValidationRuleSchema>,
@@ -17,7 +17,7 @@ export function genValidationRules(
      */
     if (isCallable(rule)) {
       validationRules[key] = rule;
-    } else if (!rule.types || (type && rule.types.includes(type))) {
+    } else if (!rule.for || (type && rule.for.includes(type))) {
       const _rule: ValidationRuleSchema | null = rule;
 
       if (props && key in props) {

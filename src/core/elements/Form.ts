@@ -1,8 +1,8 @@
 import { FormSchema } from './types';
 
-import FormGroup from './FormGroup';
+import Group from './Group';
 
-export default class Form extends FormGroup {
+export default class Form extends Group {
   constructor(schema: FormSchema) {
     super(schema);
   }

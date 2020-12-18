@@ -1,19 +1,19 @@
 import { ValidationResult } from '../validations/types';
-import { FormElementData, FormFieldSchema, FormFieldType, FormFieldValue } from './types';
+import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
 
-import FormElement from './FormElement';
+import Element from './Element';
 import { def, logError, logMessage, isCallable, getter, setter, ref, Ref, isNumber } from '../../utils';
 import Validation from '../validations/Validation';
-import { genValidationRules, genProps, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
+import { genValidationRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
 
-type FormFieldValidationResult = ValidationResult & {
-  value: FormFieldValue;
+type FieldValidationResult = ValidationResult & {
+  value: FieldValue;
 };
 
-const _privateData = new WeakMap<FormField, FormElementData>();
+let _privateData: WeakMap<Element, ElementData>;
 
-export function cast(value: any, type: FormFieldType): FormFieldValue {
-  let typedValue: FormFieldValue = null;
+export function cast(value: any, type: FieldType): FieldValue {
+  let typedValue: FieldValue = null;
 
   if (value === undefined) {
     return typedValue;
@@ -40,15 +40,17 @@ export function cast(value: any, type: FormFieldType): FormFieldValue {
   return typedValue;
 }
 
-export default class FormField extends FormElement {
-  static FORM_TYPE: 'field' = 'field';
-  static FIELD_TYPE_STRING: 'string' = 'string';
-  static FIELD_TYPE_NUMBER: 'number' = 'number';
-  static FIELD_TYPE_BOOLEAN: 'boolean' = 'boolean';
-  static FIELD_TYPE_DATE: 'date' = 'date';
+function formatter(value: any): string { return value }
+
+export default class Field extends Element {
+  static FORM_TYPE = 'field';
+  static FIELD_TYPE_STRING = 'string';
+  static FIELD_TYPE_NUMBER = 'number';
+  static FIELD_TYPE_BOOLEAN = 'boolean';
+  static FIELD_TYPE_DATE = 'date';
 
   static accept(schema: any) {
-    const type: FormFieldType = (FormField as any)[`FIELD_TYPE_${schema.type.toUpperCase()}`];
+    const type: FieldType = (Field as any)[`FIELD_TYPE_${schema.type && schema.type.toUpperCase()}`];
 
     const { identified, sv } = indentifySchema(schema, type);
 
@@ -56,7 +58,7 @@ export default class FormField extends FormElement {
       if (schema.formType !== 'field') {
         invalidateSchemaValidation(sv, `'formType' value must be 'field'`, { formId: schema.formId });
       } else if (!type) {
-        invalidateSchemaValidation(sv, `type '${schema.type}' is not supported for FormField`, {
+        invalidateSchemaValidation(sv, `type '${schema.type}' is not supported`, {
           formId: schema.formId
         });
       }
@@ -69,25 +71,24 @@ export default class FormField extends FormElement {
     return sv;
   }
 
-  static create(schema: any, ...args: any[]): FormField {
-    return new FormField(schema, ...args);
+  static create(schema: any, ...args: any[]): Field {
+    return new Field(schema, ...args);
   }
 
-  readonly formType!: 'field';
-  readonly type!: 'string' | 'number' | 'boolean' | 'date';
+  readonly formType!: string;
+  readonly type!: FieldType;
   readonly inputType!: string;
-  readonly default!: FormFieldValue;
-  readonly props: Record<string, any> | null;
+  readonly default!: FieldValue;
   readonly formatted!: string | null;
   pending = false;
   raw!: string | null;
-  value!: string | number | boolean | Date | null;
+  value!: FieldValue;
   validation!: Validation;
 
-  constructor(schema: FormFieldSchema, parent?: any) {
+  constructor(schema: FieldSchema, parent: Element | null = null) {
     super(schema, parent);
 
-    const accepted = FormField.accept(schema);
+    const accepted = Field.accept(schema);
 
     if (!accepted.valid) {
       throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, accepted.infos));
@@ -112,24 +113,21 @@ export default class FormField extends FormElement {
 
     def(this, 'default', defaultValue, { writable: false });
 
-    const props = (this.props = genProps([schema.props], this));
-
-    const validationRules = genValidationRules(rules, props, this.type, this);
+    const validationRules = genValidationRules(rules, this.props, this.type, this);
 
     def(this, 'validation', new Validation(validationRules, { field: this }), { writable: false });
 
-    const formatter = isCallable(schema.formatter) ? schema.formatter.bind(this) : (value: any): string => value;
+    const format = isCallable(schema.format) ? schema.format : formatter;
 
-    let formattedValue = formatter(this.default);
-
+    const formatted = ref(format.call(this, this.default));
     const raw = ref(schema.default !== undefined ? schema.default : '');
 
-    setter(this, 'value', null, (val: any, typedValue: Ref) => {
+    setter(this, 'value', null, (val: any, typed: Ref) => {
       raw.value = val;
 
       this.validate(raw.value).then(({ value }) => {
-        typedValue.value = value;
-        formattedValue = formatter(typedValue.value);
+        typed.value = value;
+        formatted.value = format.call(this, typed.value);
       });
     });
 
@@ -138,7 +136,7 @@ export default class FormField extends FormElement {
       this.value = val;
     });
 
-    getter(this, 'formatted', () => formattedValue);
+    getter(this, 'formatted', formatted);
 
     // trigger validation for value
     this.value = this.raw;
@@ -148,33 +146,27 @@ export default class FormField extends FormElement {
     return !this.invalidated() && this.validation.valid;
   }
 
-  initialize(schema: FormFieldSchema, parent: any, data: FormElementData) {
-    _privateData.set(this, data);
+  initialize(schema: FieldSchema, parent: any, data: WeakMap<Element, ElementData>) {
+    _privateData = data;
   }
 
   getHtmlName(): string {
-    return genHtmlName(this, (_privateData.get(this) as FormElementData).ancestors);
+    return genHtmlName(this, (_privateData.get(this) as ElementData).ancestors);
   }
 
-  async validate(val: any): Promise<FormFieldValidationResult> {
-    let value: FormFieldValue = null;
+  async validate(val: any): Promise<FieldValidationResult> {
+    let value: FieldValue = null;
     let result: ValidationResult = {
       errors: null
     };
 
     this.pending = true;
 
-    try {
-      const typedValue = cast(val, this.type);
-      result = await this.validation.validate(typedValue);
+    const typedValue = cast(val, this.type);
+    result = await this.validation.validate(typedValue);
 
-      if (result.errors) {
-        value = typedValue;
-      }
-    } catch (error) {
-      logError(`${error}`, {
-        formId: this.formId
-      });
+    if (!result.errors) {
+      value = typedValue;
     }
 
     this.pending = false;

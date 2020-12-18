@@ -1,22 +1,26 @@
-import { FormElementConstructor, ValidationRuleSchema } from '../types';
+import { ElementConstructor, ValidationRuleSchema } from '../types';
 
-import { isNullOrUndefined, each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage } from '../utils';
+import { each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage, Ref } from '../utils';
 
-const _formElements: FormElementConstructor[] = [];
+const _Elements: ElementConstructor[] = [];
 
-export function registerFormElement(F: FormElementConstructor) {
-  if (!_formElements.includes(F)) {
-    _formElements.push(F);
+export function registerElement(F: ElementConstructor) {
+  if (!_Elements.includes(F)) {
+    _Elements.push(F);
   }
 }
 
 export function genFields(fields: any[], ...args: any[]) {
-  const length = _formElements.length;
+  const length = _Elements.length;
   let invalidSchema: any;
+
+  if (!length) {
+    throw new Error(logMessage('No form elements have been registed yet'));
+  }
 
   return fields.map(schema => {
     for (let i = 0; i < length; i++) {
-      const F = _formElements[i];
+      const F = _Elements[i];
       const accepted = F.accept(schema);
 
       if (accepted.valid) {
@@ -46,10 +50,7 @@ function genProp(obj: any, props: Record<string, any>, key: string, context?: an
     key,
     _getter
       ? _getter
-      : (val: any) => {
-          if (val !== undefined) {
-            return val;
-          }
+      : () => {
           const value = props[key];
 
           return isCallable(value) ? value.call(context, ...args) : value;
@@ -111,17 +112,13 @@ export function traverseFields(path: string | string[] = [], fields: any) {
 }
 
 export function cascadeRules(parentRules: Record<string, ValidationRuleSchema>, fields: any[]) {
-  if (isNullOrUndefined(parentRules)) {
-    return fields;
-  }
-
-  return fields.map(fieldSchema => {
+  return parentRules ? fields.map(fieldSchema => {
     const { rules = {} } = fieldSchema;
 
     each(parentRules, (parentRule, key) => {
       const rule = rules[key];
 
-      if (isCallable(parentRule) || !parentRule.cascade || (rule && 'inherit' in rule && rule.inherit === false)) {
+      if (isCallable(parentRule) || parentRule.cascade === false || (rule && rule.inherit === false)) {
         return;
       }
 
@@ -131,17 +128,17 @@ export function cascadeRules(parentRules: Record<string, ValidationRuleSchema>, 
     fieldSchema.rules = rules;
 
     return fieldSchema;
-  });
+  }) : fields;
 }
 
-export function genHtmlName(formElement: any, ancestors: any[] | null): string {
+export function genHtmlName(Element: any, ancestors: any[] | null): string {
   const keysPath = ancestors
     ? ancestors.reduce((acc: string[], fe) => {
         return 'index' in fe ? [...acc, '' + fe.index] : [...acc, fe.formId];
       }, [])
     : [];
-  const [root, ...rest] = [...keysPath, 'index' in formElement ? '' + formElement.index : formElement.formId];
+  const [root, ...rest] = [...keysPath, 'index' in Element ? '' + Element.index : Element.formId];
   const htmlName = rest ? `${root}[${rest.join('][')}]` : root;
 
-  return formElement.type === 'set' ? `${htmlName}[]` : htmlName;
+  return Element.type === 'set' ? `${htmlName}[]` : htmlName;
 }

@@ -1,14 +1,16 @@
+import { PropValue } from '../../types';
+import { ElementData, ElementSchema } from './types';
+import { genProps } from '../../helpers/elements';
 import { camelCase, def, getter, logMessage } from '../../utils';
-import { FormElementData, FormElementSchema } from './types';
 
 let uid = 0;
 
 const _privateData = new WeakMap();
 
-function genFormElementAncestors(formElement: FormElement): any[] | null {
+function genElementAncestors(elem: Element): any[] | null {
   const path = [];
 
-  let parent = formElement.parent;
+  let parent = elem.parent;
 
   while (parent) {
     path.unshift(parent);
@@ -18,19 +20,20 @@ function genFormElementAncestors(formElement: FormElement): any[] | null {
   return path.length ? path : null;
 }
 
-export default abstract class FormElement {
-  readonly parent!: FormElement;
+export default abstract class Element {
+  readonly parent!: Element | null;
   readonly formId!: string;
   readonly model!: string;
   readonly htmlName!: string;
   readonly _uid!: number;
   readonly valid!: boolean;
+  readonly props: Record<string, PropValue<any>> | null;
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
-  abstract initialize(schema: FormElementSchema, parent: any, data: FormElementData, ...args: any[]): void;
+  abstract initialize(schema: ElementSchema, parent: any, data: WeakMap<Element, ElementData>, ...args: any[]): void;
 
-  constructor(schema: FormElementSchema, parent: any = null, ...args: any[]) {
+  constructor(schema: ElementSchema, parent: Element | null = null, ...args: any[]) {
     if (!schema.formId) {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
@@ -39,15 +42,16 @@ export default abstract class FormElement {
     def(this, 'parent', parent, { writable: false });
     getter(this, 'formId', schema.formId, { reactive: false });
     def(this, 'model', schema.model || camelCase(this.formId));
+    this.props = genProps([schema.props], this);
 
     const data = {
-      ancestors: genFormElementAncestors(this),
+      ancestors: genElementAncestors(this),
       invalidated: false
     };
 
     _privateData.set(this, data);
 
-    this.initialize(schema, parent, data, ...args);
+    this.initialize(schema, parent, _privateData, ...args);
 
     getter(this, 'htmlName', () => this.getHtmlName());
     getter(this, 'valid', () => this.isValid());
@@ -58,7 +62,7 @@ export default abstract class FormElement {
     return data.invalidated;
   }
 
-  // clearFormElement() {}
+  // clearElement() {}
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   invalidate(error?: string) {

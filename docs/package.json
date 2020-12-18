@@ -29,6 +29,7 @@
     "vue-scrollactive": "^0.9.3"
   },
   "devDependencies": {
-    "nuxt": "^2.14.7"
+    "nuxt": "^2.14.7",
+    "postcss-advanced-variables": "^3.0.1"
   }
 }
