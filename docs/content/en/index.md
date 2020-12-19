@@ -4,7 +4,11 @@ description: 'vue-formily - form manangemnet for your Vue project'
 position: 1
 category: ''
 features:
-  - Dynamic form generation
+  - Supported elements (Form Groups, Form Group, Form Field)
+  - Extensible
+  - Type checking
+  - Validations
+  - Dynamic form elements generation
 ---
 
 <img src="/preview.png" class="light-img" />
@@ -16,5 +20,3 @@ features:
 ## Features
 
 <list :items="features"></list>
-
-<p class="flex items-center">Enjoy light and dark mode:&nbsp;<app-color-switcher class="inline-flex ml-2"></app-color-switcher></p>
