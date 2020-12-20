@@ -1,5 +1,5 @@
 import { ValidationResult } from '../validations/types';
-import { ElementData, Collectionchema } from './types';
+import { ElementData, GroupSchema } from './types';
 
 import {
   cascadeRules,
@@ -36,8 +36,8 @@ export default class Group extends Element {
     return sv;
   }
 
-  static create(schema: any, ...args: any[]): Group {
-    return new Group(schema, ...args);
+  static create(schema: GroupSchema, parent: Element | null = null): Group {
+    return new Group(schema, parent);
   }
 
   readonly formType!: 'group';
@@ -47,8 +47,8 @@ export default class Group extends Element {
 
   fields: Element[];
 
-  constructor(schema: Collectionchema, parent: Element | null = null, ...args: any[]) {
-    super(schema, parent, ...args);
+  constructor(schema: GroupSchema, parent: Element | null = null) {
+    super(schema, parent);
 
     const accepted = Group.accept(schema);
 
@@ -70,7 +70,7 @@ export default class Group extends Element {
     def(this, 'validation', new Validation(validationRules, { field: this }), { writable: false });
   }
 
-  initialize(schema: Collectionchema, parent: any, data: WeakMap<Element, ElementData>) {
+  initialize(schema: GroupSchema, parent: any, data: WeakMap<Element, ElementData>) {
     _privateData = data;
   }
 
@@ -82,8 +82,8 @@ export default class Group extends Element {
     return !this.invalidated() && !this.fields.find(f => !f.valid);
   }
 
-  getField(path: string | string[] = [], fields?: Element[]): Element | null {
-    return traverseFields(path, fields || this.fields);
+  getField(path: string | string[] = []): Element | null {
+    return traverseFields(path, this.fields);
   }
 
   async validate(val: any): Promise<ValidationResult> {

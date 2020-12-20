@@ -14,7 +14,7 @@ By default, **vue-formily** will inject an object called `forms` to current **Vu
 Create new **form element** and injects it to `forms` object.
 
 **Arguments:**
-- schema (type: [`FormilySchemas`]())
+- schema (type: [`FieldSchemas`]())
 **Return**: `Form`
 - **Usage**:
 asdsa

@@ -3,12 +3,16 @@ import { Element } from '@/core/elements';
 describe('Element', () => {
   class A extends Element {
     constructor(schema: any) {
-      super(schema)
+      super(schema);
     }
 
     initialize() {}
-    isValid() { return true; }
-    getHtmlName() { return '' }
+    isValid() {
+      return true;
+    }
+    getHtmlName() {
+      return '';
+    }
   }
 
   it('Throw error with undefined `formId`', () => {

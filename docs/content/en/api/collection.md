@@ -1,34 +1,30 @@
 ---
-title: Element
-description: 'Element'
-position: 21
+title: Collection
+description: 'Collection'
+position: 24
 category: Api
 ---
 
-## Abstract Class Element
+## Abstract Class Collection
 <tree :items="[
-  { text: 'Element' }
+  { text: 'Element', url: '/api/element' },
+  { text: 'Collection' }
 ]"></tree>
 
 Abstract class for other form elements.
 
-**All Known Subclasses**
-- [Field](/api/field)
-- [Group](/api/group)
-- [Collection](/api/collection)
-
 ## Constructor
 ```typescript
-Element(schema: ElementSchema, parent: any = null)
+Collection(schema: CollectionSchema, parent: any = null)
 ```
 
 **Parameters**
 - **schema** - an object that define the field, see [FieldSchema](/api/form-field#schema) for more details. 
-- **parent** - the parent of this element.
+- **parent** - the parent form element of this field.
 
 ## Schema
 ```typescript
-interface ElementSchema {
+interface CollectionSchema {
   formId: PropValue<string>;
   model?: string;
   props?: Record<string, PropValue<any>>;
@@ -48,7 +44,7 @@ To reduce the burden on the **Vue reactivity system** and inscrease performance,
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ---------------- | ----------- |
-| **parent** <prop-infos readonly></prop-infos> | `Element` | `null` | the parent of this element. |
+| **parent** <prop-infos readonly></prop-infos> | `Collection` | `null` | the parent form element of this element. |
 | **formId** <prop-infos readonly></prop-infos> | `string` | | the unique id of this element in the form |
 | **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. |
 | **_uid** <prop-infos readonly></prop-infos> | `number` | | The global unique id of the element. |
@@ -83,7 +79,7 @@ This abstract method will run one time when constructuring this element. The `pr
 
 **Signatures**
 ```typescript
-abstract initialize(schema: ElementSchema, parent: any, data: WeakMap<Element, ElementData>, ...args: any[]): void;
+abstract initialize(schema: CollectionSchema, parent: any, data: WeakMap<Collection, CollectionData>, ...args: any[]): void;
 ```
 
 **Parameters**

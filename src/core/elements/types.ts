@@ -11,21 +11,21 @@ export interface ElementData {
   invalidated: boolean;
 }
 
-export type FieldsSchema = FieldSchema | Collectionchema | CollectionSchema;
+export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
 
-export interface Collectionchema extends ElementSchema {
+export interface GroupSchema extends ElementSchema {
   formType: 'group';
-  fields: FieldsSchema[];
+  fields: FieldSchemas[];
   rules?: Record<string, ValidationRuleSchema>;
 }
 
 export interface CollectionSchema extends ElementSchema {
   formType: 'groups';
-  group: Omit<Collectionchema, 'formId' | 'formType'>;
+  group: Omit<GroupSchema, 'formId' | 'formType'>;
   rules?: Record<string, ValidationRuleSchema>;
 }
 
-export type FormSchema = Collectionchema;
+export type FormSchema = GroupSchema;
 
 export type FieldType = 'string' | 'number' | 'boolean' | 'date';
 export type FieldValue = string | number | boolean | Date | null;

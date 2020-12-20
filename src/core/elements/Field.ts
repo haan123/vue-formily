@@ -71,8 +71,8 @@ export default class Field extends Element {
     return sv;
   }
 
-  static create(schema: any, ...args: any[]): Field {
-    return new Field(schema, ...args);
+  static create(schema: FieldSchema, parent: Element | null = null): Field {
+    return new Field(schema, parent);
   }
 
   readonly formType!: string;
