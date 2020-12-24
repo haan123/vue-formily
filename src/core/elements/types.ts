@@ -14,14 +14,12 @@ export interface ElementData {
 export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
 
 export interface GroupSchema extends ElementSchema {
-  formType: 'group';
   fields: FieldSchemas[];
   rules?: Record<string, ValidationRuleSchema>;
 }
 
 export interface CollectionSchema extends ElementSchema {
-  formType: 'groups';
-  group: Omit<GroupSchema, 'formId' | 'formType'>;
+  group: Omit<GroupSchema, 'formId'>;
   rules?: Record<string, ValidationRuleSchema>;
 }
 
@@ -33,7 +31,6 @@ export type FieldValue = string | number | boolean | Date | null;
 export type Formatter = (value: FieldValue) => string;
 
 export interface FieldSchema extends ElementSchema {
-  formType: 'field';
   type: FieldType;
   inputType?: string;
   format?: Formatter;

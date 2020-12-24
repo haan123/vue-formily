@@ -22,9 +22,7 @@ export default class Group extends Element {
     const { identified, sv } = indentifySchema(schema, Group.FORM_TYPE);
 
     if (!identified) {
-      if (schema.formType !== Group.FORM_TYPE) {
-        invalidateSchemaValidation(sv, `'formType' must be '${Group.FORM_TYPE}'`, { formId: schema.formId });
-      } else if (!Array.isArray(schema.fields) || !schema.fields.length) {
+      if (!Array.isArray(schema.fields) || !schema.fields.length) {
         invalidateSchemaValidation(sv, "'fields' is empty or missing", { formId: schema.formId });
       }
 
@@ -40,7 +38,7 @@ export default class Group extends Element {
     return new Group(schema, parent);
   }
 
-  readonly formType!: 'group';
+  readonly formType!: string;
   readonly type!: 'enum';
 
   validation!: Validation;

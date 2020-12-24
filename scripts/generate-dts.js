@@ -5,9 +5,9 @@ const fs = require('fs-extra');
 const { rollup } = require('rollup');
 const { default: dts } = require('rollup-plugin-dts');
 const tsconfig = require('../tsconfig.json');
-const { pkgName } = require('./rollup.config');
+const { pkgNameMap } = require('./rollup.config');
 
-async function bundleDts(declarationDir) {
+async function bundleDts(declarationDir, pkg) {
   let entry = path.join(__dirname, declarationDir, 'index.d.ts');
   // if it doesn't exist then probably was nested cause of relative imports
   if (!fs.existsSync(entry)) {
@@ -22,18 +22,18 @@ async function bundleDts(declarationDir) {
   // Generate .d.ts rollup
   const config = {
     input: entry,
-    output: { file: `dist/${pkgName}.d.ts`, format: 'es' },
+    output: { file: `dist/${pkgNameMap[pkg]}.d.ts`, format: 'es' },
     plugins: [dts()]
   };
 
   const bundle = await rollup(config);
   await bundle.write(config.output);
   await fs.remove(`dist/types`);
-  console.log(chalk.cyan(`Bundled ${pkgName} Declaration Files...`));
+  console.log(chalk.cyan(`Bundled ${pkgNameMap[pkg]} Declaration Files...`));
 }
 
-exports.generateDts = async function generateDts() {
-  console.log(chalk.cyan(`Generating Declaration Files for ${pkgName} ...`));
+exports.generateDts = async function generateDts(pkg) {
+  console.log(chalk.cyan(`Generating Declaration Files for ${pkgNameMap[pkg]} ...`));
   const declarationDir = `../dist/types`;
 
   const options = {
@@ -57,5 +57,5 @@ exports.generateDts = async function generateDts() {
     fs.outputFileSync(path.resolve(__dirname, file), contents);
   }
 
-  await bundleDts(declarationDir);
+  await bundleDts(declarationDir, pkg);
 };

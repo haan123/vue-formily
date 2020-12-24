@@ -1,39 +1,39 @@
 import { VueConstructor } from 'vue';
 import { FormSchema } from './core/elements/types';
-import { VueFormilyOptions } from './types';
+import { ValidationRuleSchema, VueFormilyOptions } from './types';
 import { merge } from './utils';
-import { maxLength, minLength, min, max } from './rules';
 import { registerElement } from './helpers/elements';
 import { Form, Field, Group, Collection } from './core/elements';
+import { registerLocalizer } from './helpers';
 
 const defaultOptions: VueFormilyOptions = {
-  rules: {
-    minLength,
-    maxLength,
-    min,
-    max
-  }
+  alias: 'forms'
 };
 
 export default class VueFormily {
   static version = '__VERSION__';
 
-  readonly options: VueFormilyOptions;
+  readonly alias: string;
+  readonly rules?: Record<string, ValidationRuleSchema>;
 
   vm: any;
 
   constructor(options: VueFormilyOptions = {}) {
-    this.options = merge({}, defaultOptions, options);
+    const _options = merge({}, defaultOptions, options);
+    this.alias = _options.alias;
+    this.rules = _options.rules;
+
+    if (_options.localizer) {
+      registerLocalizer(_options.localizer);
+    }
   }
 
   add(schema: FormSchema) {
-    const { rules } = this.options;
-
-    schema.rules = merge({}, this.options.rules, rules);
+    schema.rules = merge({}, this.rules, schema.rules);
 
     const form = new Form(schema);
 
-    this.vm.$set(this.vm.$forms, form.formId, {
+    this.vm.$set(this.vm[this.alias], form.formId, {
       fields: form.fields
     });
 
@@ -45,12 +45,12 @@ export default class VueFormily {
   }
 
   static install(Vue: VueConstructor, options?: VueFormilyOptions) {
-    if (Vue.prototype.$formily) {
+    if (Vue.prototype.$vf) {
       return;
     }
 
     // Initialize default form elements
-    [Field, Group, Collection].forEach(F => registerElement(F));
+    [Group, Collection, Field].forEach(F => registerElement(F));
 
     const vf = new VueFormily(options);
 
@@ -64,7 +64,7 @@ export default class VueFormily {
     Vue.mixin({
       data() {
         return {
-          $forms: {}
+          [vf.alias]: {}
         };
       }
     });

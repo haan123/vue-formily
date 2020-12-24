@@ -1,12 +1,12 @@
 import { ElementConstructor, ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage, Ref } from '../utils';
+import { each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage } from '../utils';
 
 const _Elements: ElementConstructor[] = [];
 
 export function registerElement(F: ElementConstructor) {
   if (!_Elements.includes(F)) {
-    _Elements.push(F);
+    _Elements.unshift(F);
   }
 }
 
@@ -61,11 +61,11 @@ function genProp(obj: any, props: Record<string, any>, key: string, context?: an
 }
 
 export function genProps(
-  properties?: (Record<string, any> | any[] | undefined)[],
+  properties: (Record<string, any> | any[] | undefined)[],
   context?: any,
   ...args: any[]
 ): Record<string, any> | null {
-  if (!properties || !properties.length) {
+  if (isEmpty(properties)) {
     return null;
   }
 
@@ -91,7 +91,7 @@ export function genProps(
     }
   });
 
-  return isEmpty(_props) ? _props : null;
+  return !isEmpty(_props) ? _props : null;
 }
 
 export function traverseFields(path: string | string[] = [], fields: any) {

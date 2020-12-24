@@ -8,15 +8,16 @@ const { reportSize } = require('./info');
 const { generateDts } = require('./generate-dts');
 const shell = require('shelljs')
 
+const dist = path.join(__dirname, `../dist`);
+
 async function minify({ code, bundleName }) {
-  const pkgout = path.join(__dirname, `../dist`);
   const output = await Terser.minify(code, {
     compress: true,
     mangle: true
   });
 
   const fileName = bundleName.replace(/\.js$/, '.min.js');
-  const filePath = `${pkgout}/${fileName}`;
+  const filePath = `${dist}/${fileName}`;
   fs.outputFileSync(filePath, output.code);
   const stats = reportSize({ code: output.code, path: filePath });
   console.log(`${chalk.green('Output File:')} ${fileName} ${stats}`);
@@ -31,16 +32,15 @@ shell.exec(`
   --ignore 'esm-temp/types.js'
 `);
 
-(async function Bundle() {
-  const pkgout = path.join(__dirname, `../dist`);
+async function build(pkg) {
   for (const format of ['es', 'umd']) {
-    const { input, output, bundleName } = createConfig(format);
+    const { input, output, bundleName } = createConfig(pkg, format);
     const bundle = await rollup(input);
     const {
       output: [{ code }]
     } = await bundle.generate(output);
 
-    const outputPath = path.join(pkgout, bundleName);
+    const outputPath = path.join(dist, bundleName);
     fs.outputFileSync(outputPath, code);
     const stats = reportSize({ code, path: outputPath });
     // eslint-disable-next-line
@@ -51,7 +51,12 @@ shell.exec(`
     }
   }
 
-  await generateDts();
+  await generateDts(pkg);
+}
+
+(async function Bundle() {
+  await build('vue-formily');
+  await build('rules');
 })();
 
 

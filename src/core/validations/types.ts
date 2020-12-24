@@ -1,5 +1,5 @@
 export interface ValidationMessageGenerator {
-  (value: any, props: Record<string, any>, data: Map<string, any> | null): string;
+  (value: any, props: Record<string, any>, data: Record<string, any> | null): string;
 }
 
 export type ValidationMessageTemplate = string | ValidationMessageGenerator;
@@ -11,7 +11,7 @@ export type ValidationRuleResult = {
 export type Validator = (
   value: any,
   props: Record<string, any>,
-  data: Map<string, any> | null
+  data: Record<string, any> | null
 ) => boolean | Promise<boolean>;
 
 export interface RuleSchema {

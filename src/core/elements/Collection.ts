@@ -1,24 +1,17 @@
-import { ElementData, Collectionchema, CollectionSchema } from './types';
+import { ElementData, GroupSchema, CollectionSchema } from './types';
 
 import Element from './Element';
 import Group from './Group';
 import { cascadeRules, genHtmlName, indentifySchema, invalidateSchemaValidation } from '../../helpers';
 import { def, getter, logMessage } from '../../utils';
 
-function normalizeGroupSchema(group: any) {
-  return {
-    formType: Group.FORM_TYPE,
-    ...group
-  };
-}
-
 let _privateData: WeakMap<Element, ElementData>;
 
 export class CollectionItem extends Group {
   index!: number;
 
-  constructor(schema: Collectionchema, parent: Collection, ...args: any[]) {
-    super(schema, parent, ...args);
+  constructor(schema: GroupSchema, parent: Collection) {
+    super(schema, parent);
 
     getter(this, 'index', () => {
       const { groups } = this.parent as any;
@@ -29,15 +22,15 @@ export class CollectionItem extends Group {
 }
 
 export default class Collection extends Element {
-  static FORM_TYPE = 'groups';
+  static FORM_TYPE = 'collection';
   static accept(schema: any) {
     const { identified, sv } = indentifySchema(schema, Collection.FORM_TYPE);
 
     if (!identified) {
-      if (schema.formType !== Collection.FORM_TYPE) {
-        invalidateSchemaValidation(sv, `"type" value must be ${Collection.FORM_TYPE}`, { formId: schema.formId });
+      if (schema.group === undefined) {
+        invalidateSchemaValidation(sv, "'group' is empty or missing", { formId: schema.formId });
       } else {
-        const accepted = Group.accept(normalizeGroupSchema(schema.group));
+        const accepted = Group.accept(schema.group);
 
         if (!accepted.valid) {
           invalidateSchemaValidation(sv, `invalid group schema, ${accepted.reason}`, accepted.infos);
@@ -56,9 +49,9 @@ export default class Collection extends Element {
     return new Collection(schema, ...args);
   }
 
-  readonly _schema!: Collectionchema;
+  readonly _schema!: GroupSchema;
   readonly props!: Record<string, any> | null;
-  readonly formType!: 'groups';
+  readonly formType!: string;
   readonly type!: 'set';
 
   groups: CollectionItem[] | null;
@@ -81,7 +74,7 @@ export default class Collection extends Element {
       schema.group.fields = cascadeRules(schema.rules, schema.group.fields);
     }
 
-    def(this, '_schema', normalizeGroupSchema(schema.group), { writable: false });
+    def(this, '_schema', schema.group, { writable: false });
   }
 
   initialize(schema: CollectionSchema, parent: any, data: WeakMap<Element, ElementData>) {

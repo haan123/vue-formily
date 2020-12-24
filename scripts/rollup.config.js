@@ -2,44 +2,55 @@ const path = require('path');
 const typescript = require('rollup-plugin-typescript2');
 const replace = require('rollup-plugin-replace');
 
-const formatName = 'VueFormily';
+const dirMap = {
+  'vue-formily': path.resolve(__dirname, `../src/index.ts`),
+  rules: path.resolve(__dirname, `../src/rules/index.ts`),
+}
 
-const pkgName = 'vue-formily';
+const formatNameMap = {
+  'vue-formily': 'VueFormily',
+  rules: 'VeeValidateRules'
+};
+
+const pkgNameMap = {
+  'vue-formily': 'vue-formily',
+  rules: 'vue-formily-rules'
+};
 
 const formatMap = {
   es: 'esm',
   umd: ''
 };
 
-function createConfig(format) {
-  const tsPlugin = typescript({
-    tsconfig: path.resolve(__dirname, '../tsconfig.json'),
-    cacheRoot: path.resolve(__dirname, '../node_modules/.rts2_cache'),
-    useTsconfigDeclarationDir: true,
-    tsconfigOverride: {
-      exclude: ['**/tests']
-    }
-  });
+const tsPlugin = typescript({
+  tsconfig: path.resolve(__dirname, '../tsconfig.json'),
+  cacheRoot: path.resolve(__dirname, '../node_modules/.rts2_cache'),
+  useTsconfigDeclarationDir: true,
+  tsconfigOverride: {
+    exclude: ['**/tests']
+  }
+});
 
-  const pkg = require(path.resolve(__dirname, `../package.json`));
+const package = require(path.resolve(__dirname, `../package.json`));
 
+function createConfig(pkg, format) {
   const config = {
     input: {
-      input: path.resolve(__dirname, `../src/index.ts`),
+      input: dirMap[pkg],
       external: ['vue'],
-      plugins: [tsPlugin, replace({ __VERSION__: pkg.version })]
+      plugins: [tsPlugin, replace({ __VERSION__: package.version })]
     },
     output: {
       banner: `/**
-  * vue-formily v${pkg.version}
+  * vue-formily v${package.version}
   *
-  * @link ${pkg.homepage}
-  * @source ${pkg.repository}
+  * @link ${package.homepage}
+  * @source ${package.repository}
   * (c) ${new Date().getFullYear()} An Ha
   * @license MIT
   */`,
       format,
-      name: format === 'umd' ? formatName : undefined,
+      name: format === 'umd' ? formatNameMap[pkg] : undefined,
       sourcemap: true,
       globals: {
         vue: 'Vue'
@@ -47,14 +58,14 @@ function createConfig(format) {
     }
   };
 
-  config.bundleName = `${pkgName}${formatMap[format] ? '.' + formatMap[format] : ''}.js`;
+  config.bundleName = `${pkgNameMap[pkg]}${formatMap[format] ? '.' + formatMap[format] : ''}.js`;
 
   return config;
 }
 
 module.exports = {
-  formatName,
-  pkgName,
+  formatNameMap,
+  pkgNameMap,
   formatMap,
   createConfig
 };

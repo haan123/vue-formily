@@ -55,9 +55,7 @@ export default class Field extends Element {
     const { identified, sv } = indentifySchema(schema, type);
 
     if (!identified) {
-      if (schema.formType !== 'field') {
-        invalidateSchemaValidation(sv, `'formType' value must be 'field'`, { formId: schema.formId });
-      } else if (!type) {
+      if (!type) {
         invalidateSchemaValidation(sv, `type '${schema.type}' is not supported`, {
           formId: schema.formId
         });
@@ -81,7 +79,7 @@ export default class Field extends Element {
   readonly default!: FieldValue;
   readonly formatted!: string | null;
   pending = false;
-  raw!: string | null;
+  raw!: string;
   value!: FieldValue;
   validation!: Validation;
 
@@ -96,20 +94,11 @@ export default class Field extends Element {
 
     const { type, rules, inputType = 'text' } = schema;
 
-    let defaultValue = null;
-
-    def(this, 'formType', schema.formType, { writable: false });
+    def(this, 'formType', Field.FORM_TYPE, { writable: false });
     def(this, 'type', type, { writable: false });
     def(this, 'inputType', inputType, { writable: false });
 
-    try {
-      defaultValue = cast(schema.default, this.type);
-    } catch (error) {
-      logError(`${error}`, {
-        formId: this.formId,
-        field: 'default'
-      });
-    }
+    const defaultValue = cast(schema.default, this.type);
 
     def(this, 'default', defaultValue, { writable: false });
 
@@ -162,11 +151,17 @@ export default class Field extends Element {
 
     this.pending = true;
 
-    const typedValue = cast(val, this.type);
-    result = await this.validation.validate(typedValue);
+    try {
+      const typedValue = cast(val, this.type);
+      result = await this.validation.validate(typedValue);
 
-    if (!result.errors) {
-      value = typedValue;
+      if (!result.errors) {
+        value = typedValue;
+      }
+    } catch (error) {
+      logError(`${error}`, {
+        formId: this.formId
+      });
     }
 
     this.pending = false;

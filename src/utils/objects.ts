@@ -1,17 +1,5 @@
 import { isCallable, isPlainObject } from './assertions';
 
-export function toMap(data?: any) {
-  if (data === undefined) {
-    return null;
-  }
-
-  if (isPlainObject(data)) {
-    return new Map(Object.keys(data).map(key => [key, (data as Record<string, any>)[key]]));
-  }
-
-  return new Map(data as Map<string, any>);
-}
-
 export function def(
   obj: any,
   key: string,

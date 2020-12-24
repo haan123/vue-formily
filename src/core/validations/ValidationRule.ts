@@ -1,12 +1,14 @@
 import { RuleSchema, ValidationMessageTemplate, ValidationRuleResult, Validator } from './types';
 
-import { def, isCallable, isPlainObject, logMessage, toMap, isEmpty } from '../../utils';
+import { def, isCallable, isPlainObject, logMessage, isEmpty } from '../../utils';
+import { getLocalizer } from '@/helpers';
 
+const localizer = getLocalizer();
 export default class ValidationRule {
-  readonly data!: Map<string, any>;
   readonly props!: Record<string, any>;
   readonly _template!: ValidationMessageTemplate | null;
   readonly _validator!: Validator;
+  data!: Record<string, any>;
   message!: string | null;
   valid: boolean;
 
@@ -25,7 +27,7 @@ export default class ValidationRule {
       if (!('allowEmpty' in rule) || rule.allowEmpty) {
         validator = (rule.validate as Validator) || null;
       } else if (!rule.allowEmpty) {
-        validator = (value: any, props: Record<string, any>, data: Map<string, any> | null) => {
+        validator = (value: any, props: Record<string, any>, data: Record<string, any> | null) => {
           return !isEmpty(value) && (!rule.validate || (rule.validate as Validator).call(this, value, props, data));
         };
       }
@@ -40,14 +42,14 @@ export default class ValidationRule {
 
     this.valid = true;
 
-    def(this, 'data', toMap(data || null), { writable: false });
+    def(this, 'data', data || {}, { reactive: false });
     def(this, 'props', vProps || {}, { writable: false });
     def(this, '_template', template, { writable: false });
     def(this, '_validator', validator.bind(this), { writable: false });
   }
 
   addData(key: string, value: any) {
-    this.data.set(key, value);
+    this.data[key] = value;
   }
 
   async validate(value: any): Promise<ValidationRuleResult> {
@@ -60,6 +62,8 @@ export default class ValidationRule {
       } else if (typeof this._template === 'string') {
         error = this._template;
       }
+
+      error = localizer(typeof error === 'string' ? error : 'validation.invalid', this.props, this.data);
     }
 
     this.valid = valid;
