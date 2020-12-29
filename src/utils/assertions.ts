@@ -28,16 +28,14 @@ const _cache = {
   isEmpty: false
 };
 
-export function isEmpty(value: any): boolean {
+export function isEmpty(value: any): value is (null | undefined | false) {
   let empty = false;
 
   if (_cache.value === value) {
     return _cache.isEmpty;
   }
 
-  if (isNullOrUndefined(value)) {
-    empty = false;
-  } else if (value === false || !getLength(value)) {
+  if (isNullOrUndefined(value) || value === false || !getLength(value)) {
     empty = true;
   }
 

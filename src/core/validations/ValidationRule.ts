@@ -1,6 +1,6 @@
 import { RuleSchema, ValidationMessageTemplate, ValidationRuleResult, Validator } from './types';
 
-import { def, isCallable, isPlainObject, logMessage, isEmpty } from '../../utils';
+import { def, isCallable, isPlainObject, logMessage, isEmpty, valueOrNull } from '../../utils';
 import { getLocalizer } from '@/helpers';
 
 const localizer = getLocalizer();
@@ -25,7 +25,7 @@ export default class ValidationRule {
       validator = rule;
     } else if (isPlainObject(rule)) {
       if (!('allowEmpty' in rule) || rule.allowEmpty) {
-        validator = (rule.validate as Validator) || null;
+        validator = valueOrNull(rule.validate);
       } else if (!rule.allowEmpty) {
         validator = (value: any, props: Record<string, any>, data: Record<string, any> | null) => {
           return !isEmpty(value) && (!rule.validate || (rule.validate as Validator).call(this, value, props, data));
@@ -33,7 +33,7 @@ export default class ValidationRule {
       }
 
       vProps = rule.props;
-      template = isCallable(rule.message) ? rule.message : rule.message || null;
+      template = isCallable(rule.message) ? rule.message : valueOrNull(rule.message);
     }
 
     if (!validator) {

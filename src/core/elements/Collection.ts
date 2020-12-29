@@ -5,7 +5,7 @@ import Group from './Group';
 import { cascadeRules, genHtmlName, indentifySchema, invalidateSchemaValidation } from '../../helpers';
 import { def, getter, logMessage } from '../../utils';
 
-let _privateData: WeakMap<Element, ElementData>;
+let _privateData: ElementData;
 
 export class CollectionItem extends Group {
   index!: number;
@@ -77,12 +77,12 @@ export default class Collection extends Element {
     def(this, '_schema', schema.group, { writable: false });
   }
 
-  initialize(schema: CollectionSchema, parent: any, data: WeakMap<Element, ElementData>) {
+  initialize(schema: CollectionSchema, parent: any, data: ElementData) {
     _privateData = data;
   }
 
   getHtmlName(): string {
-    return genHtmlName(this, (_privateData.get(this) as ElementData).ancestors);
+    return genHtmlName(this, _privateData.ancestors);
   }
 
   isValid(): boolean {

@@ -13,3 +13,7 @@ export function getLength(value: any): number {
 
   return 0;
 }
+
+export function valueOrNull(value: any) {
+  return value !== undefined ? value : null;
+}

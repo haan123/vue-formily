@@ -1,7 +1,7 @@
 import { PropValue } from '../../types';
 import { ElementData, ElementSchema } from './types';
 import { genProps } from '../../helpers/elements';
-import { camelCase, def, getter, logMessage } from '../../utils';
+import { camelCase, def, getter, logMessage, valueOrNull } from '../../utils';
 
 let uid = 0;
 
@@ -31,42 +31,34 @@ export default abstract class Element {
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
-  abstract initialize(schema: ElementSchema, parent: any, data: WeakMap<Element, ElementData>, ...args: any[]): void;
+  abstract initialize(schema: ElementSchema, parent: any, data: ElementData, ...args: any[]): void;
+  abstract invalidate(error?: string): void;
 
-  constructor(schema: ElementSchema, parent: Element | null = null, ...args: any[]) {
+  constructor(schema: ElementSchema, parent?: Element, ...args: any[]) {
     if (!schema.formId) {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
 
     def(this, '_uid', uid++, { writable: false });
-    def(this, 'parent', parent, { writable: false });
+    def(this, 'parent', valueOrNull(parent), { writable: false });
     getter(this, 'formId', schema.formId, { reactive: false });
     def(this, 'model', schema.model || camelCase(this.formId));
     this.props = genProps([schema.props], this);
 
     const data = {
-      ancestors: genElementAncestors(this),
-      invalidated: false
+      ancestors: genElementAncestors(this)
     };
 
     _privateData.set(this, data);
 
-    this.initialize(schema, parent, _privateData, ...args);
+    this.initialize(schema, parent, data, ...args);
 
     getter(this, 'htmlName', () => this.getHtmlName());
     getter(this, 'valid', () => this.isValid());
   }
 
-  invalidated() {
+  reset() {
     const data = _privateData.get(this);
-    return data.invalidated;
-  }
-
-  // clearElement() {}
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  invalidate(error?: string) {
-    const data = _privateData.get(this);
-    data.invalidated = true;
+    data.invalidated = false;
   }
 }

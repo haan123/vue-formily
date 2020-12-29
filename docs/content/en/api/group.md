@@ -22,7 +22,7 @@ Group(schema: GroupSchema, parent: Element | null = null)
 ```
 
 **Parameters**
-- **schema** - an object that define the field, see [FieldSchema](/api/form-field#schema) for more details. 
+- **schema** - an object that define the field, see [GroupSchema](/api/group#schema) for more details. 
 - **parent** - the parent of this field.
 
 ## Schema
@@ -49,7 +49,7 @@ To reduce the burden on the **Vue reactivity system** and inscrease performance,
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ---------------- | ----------- |
-| static **FORM_TYPE** | `string` | `group` | the type of the `Group` |
+| *static* **FORM_TYPE** | `string` | `group` | the type of the `Group` |
 | **formType** <prop-infos readonly></prop-infos> | `group` | `group` | the form type of this field |
 | **type** <prop-infos readonly></prop-infos> | `enum` | `enum` | the type of this field |
 | **validation** <prop-infos readonly></prop-infos> | [`Validation`](/api/validation) | `{ rules: null, errors: null, valid: true }` | contains `rules` of this field, the `errors` messages of all **failed rules**, the `valid` identifies if this field and all its children fields are valid.  |

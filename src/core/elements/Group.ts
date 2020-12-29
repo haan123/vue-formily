@@ -14,7 +14,7 @@ import Element from './Element';
 import { def, logMessage } from '../../utils';
 import Validation from '../validations/Validation';
 
-let _privateData: WeakMap<Element, ElementData>;
+let _privateData: ElementData;
 
 export default class Group extends Element {
   static FORM_TYPE = 'group';
@@ -34,7 +34,7 @@ export default class Group extends Element {
     return sv;
   }
 
-  static create(schema: GroupSchema, parent: Element | null = null): Group {
+  static create(schema: GroupSchema, parent?: Element): Group {
     return new Group(schema, parent);
   }
 
@@ -45,7 +45,7 @@ export default class Group extends Element {
 
   fields: Element[];
 
-  constructor(schema: GroupSchema, parent: Element | null = null) {
+  constructor(schema: GroupSchema, parent?: Element) {
     super(schema, parent);
 
     const accepted = Group.accept(schema);
@@ -68,12 +68,12 @@ export default class Group extends Element {
     def(this, 'validation', new Validation(validationRules, { field: this }), { writable: false });
   }
 
-  initialize(schema: GroupSchema, parent: any, data: WeakMap<Element, ElementData>) {
+  initialize(schema: GroupSchema, parent: any, data: ElementData) {
     _privateData = data;
   }
 
   getHtmlName(): string {
-    return genHtmlName(this, (_privateData.get(this) as ElementData).ancestors);
+    return genHtmlName(this, _privateData.ancestors);
   }
 
   isValid(): boolean {

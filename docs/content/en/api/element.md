@@ -19,11 +19,11 @@ Abstract class for other form elements.
 
 ## Constructor
 ```typescript
-Element(schema: ElementSchema, parent: any = null)
+Element(schema: ElementSchema, parent?: Element)
 ```
 
 **Parameters**
-- **schema** - an object that define the field, see [FieldSchema](/api/form-field#schema) for more details. 
+- **schema** - an object that define the field, see [ElementSchema](/api/element#schema) for more details. 
 - **parent** - the parent of this element.
 
 ## Schema
@@ -48,12 +48,12 @@ To reduce the burden on the **Vue reactivity system** and inscrease performance,
 
 | Prop | Type | Default | Description |
 | ---- | ---- | ---------------- | ----------- |
-| **parent** <prop-infos readonly></prop-infos> | `Element` | `null` | the parent of this element. |
+| **parent** <prop-infos readonly></prop-infos> | `Element \| null` | `null` | the parent of this element. |
 | **formId** <prop-infos readonly></prop-infos> | `string` | | the unique id of this element in the form |
-| **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. |
+| **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. For radio buttons this name is not unique. |
 | **_uid** <prop-infos readonly></prop-infos> | `number` | | The global unique id of the element. |
 | **valid** <prop-infos readonly></prop-infos> | `boolean` | | Identifies if this element and all its children elements are valid. |
-| **props** <prop-infos readonly></prop-infos> | `Record<string, PropValue<any>>` | `null` | these properties can be used to dynamically format the user interface. Currently, they are using for [ValidationRule](/api/validation-rule). |
+| **props** <prop-infos readonly></prop-infos> | `Record<string, PropValue<any>> \| null` | `null` | these properties can be used to dynamically format the user interface. Currently, they are using for [ValidationRule](/api/validation-rule). |
 
 ## Methods
 ### abstract isValid
@@ -68,7 +68,7 @@ abstract isValid(): boolean;
 - `boolean` - `true` if this element and all its children elements are valid, `false` otherwise.
 
 ### abstract getHtmlName
-Returns the global unique name of this element, which can be used as name in the html form.
+Returns the global unique name of this element, which can be used as name in the html form. For radio buttons this name is not unique.
 
 **Signatures**
 ```typescript

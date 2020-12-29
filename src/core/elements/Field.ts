@@ -2,7 +2,7 @@ import { ValidationResult } from '../validations/types';
 import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
 
 import Element from './Element';
-import { def, logError, logMessage, isCallable, getter, setter, ref, Ref, isNumber } from '../../utils';
+import { def, logError, logMessage, isCallable, getter, setter, ref, Ref, isNumber, valueOrNull, isEmpty } from '../../utils';
 import Validation from '../validations/Validation';
 import { genValidationRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
 
@@ -10,7 +10,13 @@ type FieldValidationResult = ValidationResult & {
   value: FieldValue;
 };
 
-let _privateData: WeakMap<Element, ElementData>;
+type FieldData = ElementData & {
+  dirty: boolean;
+  invalidated: boolean;
+  error: string | null;
+};
+
+let _privateData: FieldData;
 
 export function cast(value: any, type: FieldType): FieldValue {
   let typedValue: FieldValue = null;
@@ -69,7 +75,7 @@ export default class Field extends Element {
     return sv;
   }
 
-  static create(schema: FieldSchema, parent: Element | null = null): Field {
+  static create(schema: FieldSchema, parent?: Element): Field {
     return new Field(schema, parent);
   }
 
@@ -78,12 +84,14 @@ export default class Field extends Element {
   readonly inputType!: string;
   readonly default!: FieldValue;
   readonly formatted!: string | null;
+  readonly dirty!: boolean;
+  readonly error!: string | null;
   pending = false;
   raw!: string;
   value!: FieldValue;
   validation!: Validation;
 
-  constructor(schema: FieldSchema, parent: Element | null = null) {
+  constructor(schema: FieldSchema, parent?: Element) {
     super(schema, parent);
 
     const accepted = Field.accept(schema);
@@ -115,7 +123,7 @@ export default class Field extends Element {
       raw.value = val;
 
       this.validate(raw.value).then(({ value }) => {
-        typed.value = value;
+      typed.value = value;
         formatted.value = format.call(this, typed.value);
       });
     });
@@ -126,21 +134,49 @@ export default class Field extends Element {
     });
 
     getter(this, 'formatted', formatted);
+    getter(this, 'dirty', () => _privateData.dirty);
+    getter(this, 'error', () => {
+      if (this.dirty && !this.valid) {
+        if (_privateData.error) {
+          return _privateData.error
+        }
 
-    // trigger validation for value
+        return !isEmpty(this.validation.errors) ? this.validation.errors[0] : null;
+      }
+
+      return null;
+    });
+
+    // trigger validation
     this.value = this.raw;
   }
 
   isValid() {
-    return !this.invalidated() && this.validation.valid;
+    return !_privateData.invalidated && this.validation.valid;
   }
 
-  initialize(schema: FieldSchema, parent: any, data: WeakMap<Element, ElementData>) {
-    _privateData = data;
+  invalidate(error?: string) {
+    _privateData.error = valueOrNull(error);
+    _privateData.invalidated = true;
+
+    this.touch();
+  }
+
+  initialize(schema: FieldSchema, parent: any, data: ElementData) {
+    _privateData = data as FieldData;
   }
 
   getHtmlName(): string {
-    return genHtmlName(this, (_privateData.get(this) as ElementData).ancestors);
+    return genHtmlName(this, _privateData.ancestors);
+  }
+
+  touch() {
+    _privateData.dirty = true;
+  }
+
+  clean() {
+    _privateData.dirty = false;
+    _privateData.invalidated = false;
   }
 
   async validate(val: any): Promise<FieldValidationResult> {

@@ -8,7 +8,6 @@ export interface ElementSchema {
 
 export interface ElementData {
   ancestors: any[] | null;
-  invalidated: boolean;
 }
 
 export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;

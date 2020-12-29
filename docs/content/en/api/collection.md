@@ -15,11 +15,11 @@ Abstract class for other form elements.
 
 ## Constructor
 ```typescript
-Collection(schema: CollectionSchema, parent: any = null)
+Collection(schema: CollectionSchema, parent: Element)
 ```
 
 **Parameters**
-- **schema** - an object that define the field, see [FieldSchema](/api/form-field#schema) for more details. 
+- **schema** - an object that define the field, see [CollectionSchema](/api/collection#schema) for more details. 
 - **parent** - the parent form element of this field.
 
 ## Schema
@@ -46,7 +46,7 @@ To reduce the burden on the **Vue reactivity system** and inscrease performance,
 | ---- | ---- | ---------------- | ----------- |
 | **parent** <prop-infos readonly></prop-infos> | `Collection` | `null` | the parent form element of this element. |
 | **formId** <prop-infos readonly></prop-infos> | `string` | | the unique id of this element in the form |
-| **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. |
+| **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. For radio buttons this name is not unique. |
 | **_uid** <prop-infos readonly></prop-infos> | `number` | | The global unique id of the element. |
 | **valid** <prop-infos readonly></prop-infos> | `boolean` | | Identifies if this element and all its children elements are valid. |
 | **props** <prop-infos readonly></prop-infos> | `Record<string, PropValue<any>>` | `null` | these properties can be used to dynamically format the user interface. Currently, they are using for [ValidationRule](/api/validation-rule). |
@@ -64,7 +64,7 @@ abstract isValid(): boolean;
 - `boolean` - `true` if this element and all its children elements are valid, `false` otherwise.
 
 ### abstract getHtmlName
-Returns the global unique name of this element, which can be used as name in the html form.
+Returns the global unique name of this element, which can be used as name in the html form. For radio buttons this name is not unique.
 
 **Signatures**
 ```typescript

@@ -1,6 +1,6 @@
 import { ElementConstructor, ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage } from '../utils';
+import { each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage, valueOrNull } from '../utils';
 
 const _Elements: ElementConstructor[] = [];
 
@@ -98,10 +98,10 @@ export function traverseFields(path: string | string[] = [], fields: any) {
   if (typeof path === 'string') path = path.split('.');
 
   const fieldName = path.shift();
-  let field = fields.find((f: any) => f.formId === fieldName) || null;
+  let field = fields.find((f: any) => f.formId === fieldName);
 
   if (!field || !path.length) {
-    return field;
+    return valueOrNull(field);
   }
 
   if ('fields' in field) {
