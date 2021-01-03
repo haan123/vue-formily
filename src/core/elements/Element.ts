@@ -1,11 +1,11 @@
 import { PropValue } from '../../types';
 import { ElementData, ElementSchema } from './types';
 import { genProps } from '../../helpers/elements';
-import { camelCase, def, getter, logMessage, valueOrNull } from '../../utils';
+import { camelCase, def, getter, logMessage, now, valueOrNull } from '../../utils';
 
 let uid = 0;
 
-const _privateData = new WeakMap();
+const _storage = new WeakMap();
 
 function genElementAncestors(elem: Element): any[] | null {
   const path = [];
@@ -20,6 +20,21 @@ function genElementAncestors(elem: Element): any[] | null {
   return path.length ? path : null;
 }
 
+
+export function reactiveGetter(obj: Element, key: string, value: any) {
+  getter(obj, key, value).on('updated', function (this: Element) {
+    const data: ElementData = _storage.get(this);
+
+    if (data.timer) {
+      clearTimeout(data.timer);
+    }
+
+    data.timer = setTimeout(() => {
+      this.reactive()
+    }, 10);
+  });
+}
+
 export default abstract class Element {
   readonly parent!: Element | null;
   readonly formId!: string;
@@ -28,6 +43,7 @@ export default abstract class Element {
   readonly _uid!: number;
   readonly valid!: boolean;
   readonly props: Record<string, PropValue<any>> | null;
+  __timestamp__: number = now();
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
@@ -46,10 +62,11 @@ export default abstract class Element {
     this.props = genProps([schema.props], this);
 
     const data = {
-      ancestors: genElementAncestors(this)
+      ancestors: genElementAncestors(this),
+      timer: null
     };
 
-    _privateData.set(this, data);
+    _storage.set(this, data);
 
     this.initialize(schema, parent, data, ...args);
 
@@ -58,7 +75,11 @@ export default abstract class Element {
   }
 
   reset() {
-    const data = _privateData.get(this);
+    const data = _storage.get(this);
     data.invalidated = false;
+  }
+
+  reactive() {
+    this.__timestamp__ = now();
   }
 }

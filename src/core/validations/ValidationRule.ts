@@ -69,6 +69,7 @@ export default class ValidationRule {
     this.valid = valid;
 
     return {
+      valid,
       error
     };
   }

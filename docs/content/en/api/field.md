@@ -30,14 +30,16 @@ interface FieldSchema extends ElementSchema {
   inputType?: string; // Any HTML Input Type
   format?: Formatter;
   /**
-   * The value when the field has been reset
+   * The value when the field has been reset.
+   * For `date` type, it's any valid date represented as a string based on the current date format.
    */
-  default?: FieldValue;
+  default?: string | number | boolean;
   /**
    * The initial value of the field, 
-   * if not provided, `default` will be used
+   * if not provided, `default` will be used.
+   * For `date` type, it's any valid date represented as a string based on the current date format.
    */
-  value?: FieldValue;
+  value?: string | number | boolean;
   rules?: Record<string, ValidationRuleSchema>;
 }
 ```
@@ -59,6 +61,7 @@ To reduce the burden on the **Vue reactivity system** and inscrease performance,
 | **formType** <prop-infos readonly></prop-infos> | `string` | `field` | The form type of this field. |
 | **type** <prop-infos readonly></prop-infos> | [`FieldType`]() | `string` | The type of the field, the type is one of the `FIELD_TYPE` constants defined in this class  |
 | **inputType** <prop-infos readonly></prop-infos> | `string` | `text` | The [HTML Input Type](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/input) of this field  |
+| **checked** <prop-infos readonly reactive></prop-infos> | `boolean` | `false` | Identifies if the current selected state of this field is `checked`. In case of a `boolean` field the property directly represent the boolean value. In case of a `string` or `number` field, the property is `true` if the current value matched with the value specified as `checkedValue`. In this way a selected status can be as determined for non-boolean fields.  |
 | **default** <prop-infos readonly></prop-infos> | [`FieldValue`]() | `null` | The **typed value** when calling `reset()` or the initial value when `value` does not set in **schema**, which can be a `string`, `number`, `boolean` or `Date` or `null`.  |
 | **value** <prop-infos reactive></prop-infos> | [`FieldValue`]() | `null` | The **typed value** representation, which can be a `string`, `number`, `boolean`, `Date` or `null`. <alert> `value` will be set **asynchronously** after validating `raw` value </alert> |
 | **formatted** <prop-infos readonly reactive></prop-infos> | `string \| null` | `null` | the formatted value generated from [`Formatter`]() in [`FieldSchema`](). <alert> `formatted` will be set **asynchronously** after validating `raw` value </alert> |

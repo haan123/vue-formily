@@ -17,3 +17,7 @@ export function getLength(value: any): number {
 export function valueOrNull(value: any) {
   return value !== undefined ? value : null;
 }
+
+export function now() {
+  return Date.now();
+}

@@ -8,6 +8,7 @@ export interface ElementSchema {
 
 export interface ElementData {
   ancestors: any[] | null;
+  timer: number | null;
 }
 
 export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
@@ -33,7 +34,8 @@ export interface FieldSchema extends ElementSchema {
   type: FieldType;
   inputType?: string;
   format?: Formatter;
-  default?: FieldValue;
-  value?: FieldValue;
+  default?: string | number | boolean;
+  value?: string | number | boolean;
   rules?: Record<string, ValidationRuleSchema>;
+  checkedValue: string;
 }

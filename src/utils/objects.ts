@@ -19,8 +19,21 @@ export function def(
 }
 
 export function ref(value: any): Ref {
+  const fns: Record<string, any> = {};
+
   return {
-    value
+    get value() {
+      return value;
+    },
+    set value(val: any) {
+      value = val;
+      fns.updated.call(this, value);
+    },
+    on(name: 'updated', fn: () => void) {
+      fns[name] = fn;
+
+      return this;
+    }
   };
 }
 
@@ -30,6 +43,7 @@ export function isRefValue(value: any): value is Ref {
 
 export type Ref = {
   value: any;
+  on: (name: 'updated', fn: () => void) => void;
 };
 
 export function getter(obj: any, key: string, value: any, { reactive = true }: { reactive?: boolean } = {}) {
@@ -50,6 +64,8 @@ export function getter(obj: any, key: string, value: any, { reactive = true }: {
     configurable: reactive,
     enumerable: true
   });
+
+  return _ref;
 }
 
 export function setter(obj: any, key: string, value: any, set: any, { reactive = true }: { reactive?: boolean } = {}) {

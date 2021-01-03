@@ -23,6 +23,13 @@ export default class Validation {
     this.rules[key] = new ValidationRule(ruleOrSchema, data);
   }
 
+  reset() {
+    this.errors = null;
+    this.valid = true;
+
+    each(this.rules, (rule) => rule.reset());
+  }
+
   async validate(value: any): Promise<ValidationResult> {
     const rules = this.rules;
     const errors: string[] = [];
@@ -36,10 +43,7 @@ export default class Validation {
 
           if (error) {
             isValid = false;
-
-            if (error) {
-              errors.push(error);
-            }
+            errors.push(error);
           }
         })
       );
