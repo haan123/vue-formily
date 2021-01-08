@@ -2,9 +2,9 @@ import { ValidationResult } from '../validations/types';
 import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
 
 import Element, { reactiveGetter } from './Element';
-import { def, logError, logMessage, isCallable, setter, ref, Ref, isNumber, isEmpty } from '../../utils';
+import { def, logMessage, isCallable, setter, ref, Ref, isNumber, isEmpty } from '../../utils';
 import Validation from '../validations/Validation';
-import { genValidationRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
+import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
 
 type FieldValidationResult = ValidationResult & {
   value: FieldValue;
@@ -104,10 +104,7 @@ export default class Field extends Element {
     const defaultValue = cast(defu, this.type);
 
     def(this, 'default', defaultValue, { writable: false });
-
-    const validationRules = genValidationRules(rules, this.props, this.type, this);
-
-    def(this, 'validation', new Validation(validationRules, { field: this }), { writable: false });
+    def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this), { field: this }), { writable: false });
 
     const format = isCallable(schema.format) ? schema.format : formatter;
 
@@ -170,11 +167,10 @@ export default class Field extends Element {
 
     this.pending = true;
 
-    const typedValue = cast(val, this.type);
-    result = await this.validation.validate(typedValue);
+    result = await this.validation.validate(val);
 
-    if (!result.errors) {
-      value = typedValue;
+    if (result.errors) {
+      value = cast(val, this.type);
     }
 
     this.pending = false;

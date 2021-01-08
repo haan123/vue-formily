@@ -11,7 +11,7 @@ category: Api
   { text: 'Group' }
 ]"></tree>
 
-The class is the **central class** within the whole form handling. It is the container element for **fields** and other **form elements**.
+The class is the **central class** within the whole form handling. It is the container element for **fields** and other **form elements**. Access to the elements of a form is provided via an index based access or via an associative array access. For example, the field `firstname` can be accessed with the expression `myform.firstname`.
 
 **All Known Subclasses**
 - [Form](/api/form)
@@ -36,7 +36,7 @@ interface GroupSchema extends ElementSchema {
    * Object with `key` is rule's name,
    * `value` is the schema of the rule
   */
-  rules?: Record<string, ValidationRuleSchema>;
+  rules?: Record<string, RuleSchema>;
 }
 ```
 

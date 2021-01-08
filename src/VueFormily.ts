@@ -1,6 +1,6 @@
 import { VueConstructor } from 'vue';
 import { FormSchema } from './core/elements/types';
-import { ValidationRuleSchema, VueFormilyOptions } from './types';
+import { RuleSchema, VueFormilyOptions } from './types';
 import { merge } from './utils';
 import { registerElement } from './helpers/elements';
 import { Form, Field, Group, Collection } from './core/elements';
@@ -14,7 +14,7 @@ export default class VueFormily {
   static version = '__VERSION__';
 
   readonly alias: string;
-  readonly rules?: Record<string, ValidationRuleSchema>;
+  readonly rules?: Record<string, RuleSchema>;
 
   vm: any;
 

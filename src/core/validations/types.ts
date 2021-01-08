@@ -4,21 +4,21 @@ export interface ValidationMessageGenerator {
 
 export type ValidationMessageTemplate = string | ValidationMessageGenerator;
 
-export type ValidationRuleResult = {
+export type RuleResult = {
   error: string | null;
-  valid: boolean;
 };
 
 export type Validator = (
   value: any,
   props: Record<string, any>,
   data: Record<string, any> | null
-) => boolean | Promise<boolean>;
+) => string | boolean | Promise<string | boolean>;
 
 export interface RuleSchema {
   validate?: Validator;
+  name?: string;
   props?: Record<string, any>;
-  message?: ValidationMessageTemplate;
+  error?: ValidationMessageTemplate;
   allowEmpty?: boolean;
 }
 
@@ -28,5 +28,4 @@ export interface ValidationOptions {
 
 export type ValidationResult = {
   errors: string[] | null;
-  valid: boolean;
 };

@@ -10,6 +10,7 @@ export const validate = (value: any, { max }: Record<string, number | Date>) => 
 
 const schema: ValidationRuleSchema = {
   validate,
+  name: 'max',
   for: ['number', 'date']
 };
 

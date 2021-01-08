@@ -1,38 +1,38 @@
 import { ValidationRuleSchema, SchemaValidation } from '../types';
 
 import { genProps } from './elements';
-import { each, isCallable } from '../utils';
+import { isCallable } from '../utils';
 
-export function genValidationRules(
-  rules?: Record<string, ValidationRuleSchema>,
+export function normalizeRules(
+  rules: ValidationRuleSchema[] = [],
   props: Record<string, any> | null = null,
   type: string | null = null,
   ...args: any[]
-): Record<string, ValidationRuleSchema> {
-  const validationRules: Record<string, ValidationRuleSchema> = {};
+): ValidationRuleSchema[] {
+  const _rules: ValidationRuleSchema[] = [];
 
-  each(rules, (rule: ValidationRuleSchema, key: string) => {
+  rules.forEach((rule: ValidationRuleSchema) => {
     /**
      * Only apply validation rule to 'function' or 'undefined' or field that has type is included in 'types' property of the rule
      */
     if (isCallable(rule)) {
-      validationRules[key] = rule;
+      _rules.push(rule);
     } else if (!rule.for || (type && rule.for.includes(type))) {
       const _rule: ValidationRuleSchema | null = rule;
 
-      if (props && key in props) {
-        const _props = genProps([rule.props, [key, props]], ...args);
+      if (props && rule.name && rule.name in props) {
+        const _props = genProps([rule.props, [rule.name, props]], ...args);
 
         if (_props) {
           _rule.props = _props;
         }
       }
 
-      validationRules[key] = _rule;
+      _rules.push(rule);
     }
   });
 
-  return validationRules;
+  return _rules;
 }
 
 export function invalidateSchemaValidation(sv: SchemaValidation, reason?: string, infos?: Record<string, string>) {

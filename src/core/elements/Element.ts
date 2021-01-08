@@ -25,14 +25,14 @@ export function reactiveGetter(obj: Element, key: string, value: any) {
   getter(obj, key, value).on('updated', function (this: Element) {
     const data: ElementData = _storage.get(this);
 
-    if (data.timer) {
+    if (data.timer ) {
       clearTimeout(data.timer);
     }
 
     data.timer = setTimeout(() => {
       this.reactive()
     }, 10);
-  });
+  }, obj);
 }
 
 export default abstract class Element {

@@ -7,6 +7,7 @@ export const validate = (value: any, { minLength }: Record<string, number>) => {
 
 const schema: ValidationRuleSchema = {
   validate,
+  name: 'minLength',
   for: ['string', 'group', 'groups'],
   props: {
     minLength: 0

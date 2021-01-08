@@ -4,7 +4,7 @@ import { ElementData, GroupSchema } from './types';
 import {
   cascadeRules,
   genHtmlName,
-  genValidationRules,
+  normalizeRules,
   indentifySchema,
   invalidateSchemaValidation,
   traverseFields
@@ -45,6 +45,8 @@ export default class Group extends Element {
 
   fields: Element[];
 
+  readonly [key: string]: any;
+
   constructor(schema: GroupSchema, parent?: Element) {
     super(schema, parent);
 
@@ -63,9 +65,9 @@ export default class Group extends Element {
 
     this.fields = genFields(schema.fields, this) as Element[];
 
-    const validationRules = genValidationRules(schema.rules, this.props, this.type, this);
+    this.fields.forEach((field) => def(this, field.model, field), { writable: false });
 
-    def(this, 'validation', new Validation(validationRules, { field: this }), { writable: false });
+    def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this), { field: this }), { writable: false });
   }
 
   initialize(schema: GroupSchema, parent: any, data: ElementData) {
@@ -74,6 +76,10 @@ export default class Group extends Element {
 
   getHtmlName(): string {
     return genHtmlName(this, _privateData.ancestors);
+  }
+
+  invalidate() {
+
   }
 
   isValid(): boolean {

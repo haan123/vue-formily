@@ -53,7 +53,7 @@ To reduce the burden on the **Vue reactivity system** and inscrease performance,
 | **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. For radio buttons this name is not unique. |
 | **_uid** <prop-infos readonly></prop-infos> | `number` | | The global unique id of the element. |
 | **valid** <prop-infos readonly></prop-infos> | `boolean` | | Identifies if this element and all its children elements are valid. <alert> On first init, a form element is always `valid`. </alert> |
-| **props** <prop-infos readonly></prop-infos> | `Record<string, PropValue<any>> \| null` | `null` | These properties can be used to dynamically format the user interface. Currently, they are using for [ValidationRule](/api/validation-rule). |
+| **props** <prop-infos readonly></prop-infos> | `Record<string, PropValue<any>> \| null` | `null` | These properties can be used to dynamically format the user interface. Currently, they are using for [Rule](/api/validation-rule). |
 
 ## Methods
 ### abstract isValid

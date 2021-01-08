@@ -40,7 +40,7 @@ interface FieldSchema extends ElementSchema {
    * For `date` type, it's any valid date represented as a string based on the current date format.
    */
   value?: string | number | boolean;
-  rules?: Record<string, ValidationRuleSchema>;
+  rules?: Record<string, RuleSchema>;
 }
 ```
 
@@ -124,4 +124,4 @@ async validate(val: any): Promise<FieldValidationResult>
 - [FieldType]()
 - [Formatter]()
 - [FieldValue]()
-- [ValidationRuleSchema]()
+- [RuleSchema]()

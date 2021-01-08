@@ -1,48 +1,50 @@
-import { Validator, RuleSchema, ValidationResult } from './types';
+import { RuleSchema, ValidationResult, Validator } from './types';
 import { each, isEmpty } from '../../utils';
-import ValidationRule from './ValidationRule';
+import Rule from './Rule';
 
-type VSchema = Validator | RuleSchema;
+type ValitionRuleSchema = Validator | RuleSchema;
 
 export default class Validation {
-  rules: Record<string, ValidationRule> | null = null;
+  rules: Rule[] | null = null;
   errors: string[] | null = null;
-  valid = true;
 
-  constructor(rules: Record<string, VSchema>, data?: any) {
-    each(rules, (schema: VSchema, key: string) => {
-      this.addRule(key, schema, data);
+  constructor(rules: ValitionRuleSchema[], data?: any) {
+    rules.forEach((schema: ValitionRuleSchema) => {
+      this.addRule(schema, data);
     });
+
+    // this.rules.forE
   }
 
-  addRule(key: string, ruleOrSchema: ValidationRule | VSchema, data?: any) {
-    if (!this.rules) {
-      this.rules = {};
-    }
+  addRule(ruleOrSchema: Rule | ValitionRuleSchema, data?: any) {
+    const rule = new Rule(ruleOrSchema, data);
 
-    this.rules[key] = new ValidationRule(ruleOrSchema, data);
+    if (!this.rules) {
+      this.rules = [rule]
+    } else {
+      const found = this.rules.find((rule) => rule.name);
+
+      if (!found) {
+        this.rules = this.rules ? [...this.rules, rule] : [rule];
+      }
+    }
   }
 
   reset() {
     this.errors = null;
-    this.valid = true;
 
     each(this.rules, (rule) => rule.reset());
   }
 
   async validate(value: any): Promise<ValidationResult> {
-    const rules = this.rules;
     const errors: string[] = [];
-    let isValid = true;
 
-    if (rules) {
+    if (this.rules) {
       await Promise.all(
-        Object.keys(rules).map(async key => {
-          const rule: ValidationRule = rules[key];
+        this.rules.map(async rule => {
           const { error } = await rule.validate(value);
 
           if (error) {
-            isValid = false;
             errors.push(error);
           }
         })
@@ -50,7 +52,6 @@ export default class Validation {
     }
 
     this.errors = !isEmpty(errors) ? errors : null;
-    this.valid = isValid;
 
     return {
       errors: this.errors

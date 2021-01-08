@@ -10,6 +10,7 @@ describe('Element', () => {
     isValid() {
       return true;
     }
+    invalidate() {}
     getHtmlName() {
       return '';
     }

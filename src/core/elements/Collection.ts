@@ -85,6 +85,10 @@ export default class Collection extends Element {
     return genHtmlName(this, _privateData.ancestors);
   }
 
+  invalidate(){
+
+  }
+
   isValid(): boolean {
     return !!(this.groups && this.groups.find(g => !g.valid));
   }

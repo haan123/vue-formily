@@ -4,7 +4,6 @@ import { Field } from '@/core/elements';
 describe('Field', () => {
   const field = new Field({
     formId: 'field_name',
-    formType: 'field',
     type: 'number'
   });
 

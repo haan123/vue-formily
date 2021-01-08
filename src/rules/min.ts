@@ -6,6 +6,7 @@ export const validate = (value: any, { min }: Record<string, number | Date>) => 
 
 const schema: ValidationRuleSchema = {
   validate,
+  name: 'min',
   for: ['number', 'date']
 };
 

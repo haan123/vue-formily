@@ -15,9 +15,14 @@ npm run serve
 npm run build
 ```
 
-### Run your unit tests
+### Run tests
 ```
-npm run test:unit
+npm test
+```
+
+### Run test with watch
+```
+npm test -- --watch path/to/file
 ```
 
 ### Lints and fixes files

@@ -1,4 +1,5 @@
 import { isCallable, isPlainObject } from './assertions';
+import { each } from './collections';
 
 export function def(
   obj: any,
@@ -27,10 +28,10 @@ export function ref(value: any): Ref {
     },
     set value(val: any) {
       value = val;
-      fns.updated.call(this, value);
+      each(fns, (fn) => fn(this, value))
     },
-    on(name: 'updated', fn: () => void) {
-      fns[name] = fn;
+    on(name: 'updated', fn: () => void, context: any) {
+      fns[name] = fn.bind(context || this);
 
       return this;
     }
@@ -43,7 +44,7 @@ export function isRefValue(value: any): value is Ref {
 
 export type Ref = {
   value: any;
-  on: (name: 'updated', fn: () => void) => void;
+  on: (name: 'updated', fn: () => void, context: any) => void;
 };
 
 export function getter(obj: any, key: string, value: any, { reactive = true }: { reactive?: boolean } = {}) {

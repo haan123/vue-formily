@@ -1,4 +1,8 @@
-import { Group } from '@/core/elements';
+import { Collection, Field, Group } from '@/core/elements';
+import { FieldSchema } from '@/core/elements/types';
+import { registerElement } from '@/helpers';
+
+[Field, Group, Collection].forEach(F => registerElement(F));
 
 describe('Group', () => {
   // const field = new Group({
@@ -11,16 +15,7 @@ describe('Group', () => {
 
   const schema: any = { formId: 'group_test' }
 
-  it('Throw error with invalid `formType`', () => {
-    expect(function() {
-      schema.formType = 'abc';
-      new Group(schema)
-    }).toThrowError('Invalid schema, \'formType\' must be \'group\'');
-  });
-
   it('Throw error with undefined `fields`', () => {
-    schema.formType = 'group';
-
     expect(function() {
       new Group(schema)
     }).toThrowError('Invalid schema, \'fields\' is empty or missing');
@@ -31,5 +26,17 @@ describe('Group', () => {
       schema.fields = [];
       new Group(schema)
     }).toThrowError('Invalid schema, \'fields\' is empty or missing');
+  });
+
+  it('Can access field from index signature', () => {
+    schema.fields.push({
+      formId: 'a',
+      type: 'string'
+    } as FieldSchema);
+
+    const group = new Group(schema)
+
+    expect(group).toHaveProperty('a');
+    expect(group.a).toBeInstanceOf(Field);
   });
 });

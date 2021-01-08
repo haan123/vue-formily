@@ -6,7 +6,6 @@ export type ValidationRuleSchema =
       for?: string[];
       cascade?: boolean;
       inherit?: boolean;
-      validatable?: (form: Record<string, any>, vm: Vue) => boolean;
     });
 
 export type PropValue<T> = T | ((...args: any[]) => T);
@@ -23,7 +22,7 @@ export interface ElementConstructor extends Function {
 }
 
 export interface VueFormilyOptions {
-  rules?: Record<string, ValidationRuleSchema>;
+  rules?: Record<string, RuleSchema>;
   alias?: string;
   localizer?: any;
 }

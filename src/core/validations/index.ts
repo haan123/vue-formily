@@ -1,7 +1,7 @@
 import Validation from './Validation';
-import ValidationRule from './ValidationRule';
+import Rule from './Rule';
 
 export {
   Validation,
-  ValidationRule
+  Rule
 }

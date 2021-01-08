@@ -7,6 +7,7 @@ export const validate = (value: any) => isNumber(value);
 const schema: ValidationRuleSchema = {
   validate,
   cascade: false,
+  name: 'numeric',
   for: ['number']
 };
 
