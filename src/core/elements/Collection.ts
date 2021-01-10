@@ -62,7 +62,7 @@ export default class Collection extends Element {
     const accepted = Collection.accept(schema);
 
     if (!accepted.valid) {
-      throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, accepted.infos));
+      throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
     def(this, 'formType', Collection.FORM_TYPE, { writable: false });

@@ -53,7 +53,7 @@ export default class Group extends Element {
     const accepted = Group.accept(schema);
 
     if (!accepted.valid) {
-      throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, accepted.infos));
+      throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
     def(this, 'formType', Group.FORM_TYPE, { writable: false });
@@ -65,7 +65,7 @@ export default class Group extends Element {
 
     this.fields = genFields(schema.fields, this) as Element[];
 
-    this.fields.forEach((field) => def(this, field.model, field), { writable: false });
+    this.fields.forEach((field) => def(this, field.model, field, { writable: false }));
 
     def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this), { field: this }), { writable: false });
   }

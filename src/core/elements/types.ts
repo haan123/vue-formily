@@ -1,4 +1,4 @@
-import { PropValue, RuleSchema } from '../../types';
+import { PropValue, ValidationRuleSchema } from '../../types';
 
 export interface ElementSchema {
   formId: PropValue<string>;
@@ -15,12 +15,12 @@ export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
 
 export interface GroupSchema extends ElementSchema {
   fields: FieldSchemas[];
-  rules?: RuleSchema[];
+  rules?: ValidationRuleSchema[];
 }
 
 export interface CollectionSchema extends ElementSchema {
   group: Omit<GroupSchema, 'formId'>;
-  rules?: RuleSchema[];
+  rules?: ValidationRuleSchema[];
 }
 
 export type FormSchema = GroupSchema;
@@ -36,6 +36,6 @@ export interface FieldSchema extends ElementSchema {
   format?: Formatter;
   default?: string | number | boolean;
   value?: string | number | boolean;
-  rules?: RuleSchema[];
+  rules?: ValidationRuleSchema[];
   checkedValue?: string;
 }

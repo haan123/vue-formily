@@ -3,8 +3,9 @@ import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
 
 import Element, { reactiveGetter } from './Element';
 import { def, logMessage, isCallable, setter, ref, Ref, isNumber, isEmpty } from '../../utils';
-import Validation from '../validations/Validation';
+import Validation, { ExtValidation } from '../validations/Validation';
 import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
+import { Rule } from '../validations';
 
 type FieldValidationResult = ValidationResult & {
   value: FieldValue;
@@ -19,7 +20,7 @@ type FieldData = ElementData & {
 
 let _privateData: FieldData;
 
-export function cast(value: any, type: FieldType): FieldValue {
+export function cast(value: any, type: FieldType, validation: ExtValidation<'numeric'>): FieldValue {
   if (value === undefined) {
     return null;
   }
@@ -28,15 +29,18 @@ export function cast(value: any, type: FieldType): FieldValue {
     case 'string':
       return value ? '' + value : '';
     case 'number':
-      return isNumber(value) ? +value : null;
+      if (validation.numeric) {
+        validation.numeric.validate(value)
+      }
+      if (!isNumber(value))  {
+        throw new Error(logMessage(`[Parse error] ${value} is not a number.`));
+      }
+
+      return +value;
     case 'boolean':
       return !!value;
     case 'date':
-      try {
-        return new Date(value);
-      } catch (error) {
-        return null;
-      }
+      return new Date(value);
   }
 }
 
@@ -91,7 +95,7 @@ export default class Field extends Element {
     const accepted = Field.accept(schema);
 
     if (!accepted.valid) {
-      throw new Error(logMessage(`Invalid schema, ${accepted.reason}`, accepted.infos));
+      throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
     const { type, rules, inputType = 'text' } = schema;
@@ -167,11 +171,17 @@ export default class Field extends Element {
 
     this.pending = true;
 
-    result = await this.validation.validate(val);
-
-    if (result.errors) {
+    try {
       value = cast(val, this.type);
+      result = await this.validation.validate(value);
+
+      if (result.errors) {
+        value = null;
+      }
+    } catch (error) {
+      value = null;
     }
+
 
     this.pending = false;
 

@@ -18,14 +18,14 @@ describe('Group', () => {
   it('Throw error with undefined `fields`', () => {
     expect(function() {
       new Group(schema)
-    }).toThrowError('Invalid schema, \'fields\' is empty or missing');
+    }).toThrowError('[Schema error] \'fields\' is empty or missing');
   });
 
   it('Throw error with empty `fields`', () => {
     expect(function() {
       schema.fields = [];
       new Group(schema)
-    }).toThrowError('Invalid schema, \'fields\' is empty or missing');
+    }).toThrowError('[Schema error] \'fields\' is empty or missing');
   });
 
   it('Can access field from index signature', () => {

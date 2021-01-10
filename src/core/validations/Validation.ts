@@ -1,11 +1,15 @@
 import { RuleSchema, ValidationResult, Validator } from './types';
-import { each, isEmpty } from '../../utils';
+import { def, each, isEmpty } from '../../utils';
 import Rule from './Rule';
 
 type ValitionRuleSchema = Validator | RuleSchema;
 
+export type ExtValidation<K extends string> = Validation & {
+  [key in K]: Rule;
+}
+
 export default class Validation {
-  rules: Rule[] | null = null;
+  rules: Rule[] = [];
   errors: string[] | null = null;
 
   constructor(rules: ValitionRuleSchema[], data?: any) {
@@ -13,7 +17,7 @@ export default class Validation {
       this.addRule(schema, data);
     });
 
-    // this.rules.forE
+    this.rules.forEach((rule) => def(this, rule.name, rule, { writable: false }));
   }
 
   addRule(ruleOrSchema: Rule | ValitionRuleSchema, data?: any) {

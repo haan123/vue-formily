@@ -1,4 +1,4 @@
-import { ElementConstructor, RuleSchema } from '../types';
+import { ElementConstructor, ValidationRuleSchema } from '../types';
 
 import { each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage, valueOrNull } from '../utils';
 
@@ -111,7 +111,7 @@ export function traverseFields(path: string | string[] = [], fields: any) {
   return field;
 }
 
-export function cascadeRules(parentRules: Record<string, RuleSchema>, fields: any[]) {
+export function cascadeRules(parentRules: ValidationRuleSchema[], fields: any[]) {
   return parentRules ? fields.map(fieldSchema => {
     const { rules = {} } = fieldSchema;
 
