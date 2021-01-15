@@ -1,6 +1,7 @@
 import { RuleSchema, ValidationResult, Validator } from './types';
-import { def, each, isEmpty } from '../../utils';
-import Rule from './Rule';
+import { getter, logMessage, ref, Ref } from '../../utils';
+import Rule, { RuleOptions } from './Rule';
+import { Objeto, reactiveGetter } from '../Objeto';
 
 type ValitionRuleSchema = Validator | RuleSchema;
 
@@ -8,57 +9,110 @@ export type ExtValidation<K extends string> = Validation & {
   [key in K]: Rule;
 }
 
-export default class Validation {
+type Data = {
+  valid: Ref<boolean>;
+};
+let _storage: WeakMap<Validation, Data>;
+
+export type ValidationOptions = {
+  data?: any;
+};
+
+export default class Validation extends Objeto {
+  readonly errors: string[] | null = null;
+  readonly valid!: boolean;
   rules: Rule[] = [];
-  errors: string[] | null = null;
 
-  constructor(rules: ValitionRuleSchema[], data?: any) {
-    rules.forEach((schema: ValitionRuleSchema) => {
-      this.addRule(schema, data);
-    });
+  constructor(rules?: ValitionRuleSchema[], options: ValidationOptions = {}) {
+    super();
 
-    this.rules.forEach((rule) => def(this, rule.name, rule, { writable: false }));
+    if (rules) {
+      this.addRules(rules, options);
+    }
+
+    const _data = _storage.get(this) as Data;
+
+    reactiveGetter(this, 'errors', this.rules.map(({ error }) => error));
+    reactiveGetter(this, 'valid', _data.valid);
   }
 
-  addRule(ruleOrSchema: Rule | ValitionRuleSchema, data?: any) {
-    const rule = new Rule(ruleOrSchema, data);
+  addRules(rulesOrSchemas: (Rule | ValitionRuleSchema)[], options: ValidationOptions = {}): Rule[] {
+    return rulesOrSchemas.map((schema: Rule | ValitionRuleSchema) => this.addRule(schema, { data: options.data } ));
+  }
 
-    if (!this.rules) {
-      this.rules = [rule]
+  removeRules(removes: (Rule | string)[]): Rule[] {
+    return removes.map((remove) => this.removeRule(remove));
+  }
+
+  addRule(ruleOrSchema: Rule | ValitionRuleSchema, options: RuleOptions= {}): Rule {
+    const rule = new Rule(ruleOrSchema, options);
+    const found = this.rules.find((r) => r.name === rule.name);
+
+    if (!found) {
+      this.rules = this.rules ? [...this.rules, rule] : [rule];
     } else {
-      const found = this.rules.find((rule) => rule.name);
-
-      if (!found) {
-        this.rules = this.rules ? [...this.rules, rule] : [rule];
-      }
+      throw new Error(logMessage(`Rule "${rule.name}" is already added.`));
     }
+
+    getter(this, rule.name, rule)
+
+    return rule;
+  }
+
+  removeRule(remove: Rule | string) {
+    const index = this.rules.findIndex(({ name }) => {
+      const n = remove instanceof Rule ? remove.name : remove;
+
+      return name === n;
+    });
+
+    const [removed] = index !== -1 ? this.rules.splice(index, 1) : [];
+
+    delete this[removed.name as keyof Validation];
+
+    return removed;
+  }
+
+  initData(storage: any) {
+    _storage = storage;
+    _storage.set(this, {
+      valid: ref(true)
+    } as Data);
   }
 
   reset() {
-    this.errors = null;
-
-    each(this.rules, (rule) => rule.reset());
+    this.rules.forEach((rule) => rule.reset());
   }
 
-  async validate(value: any): Promise<ValidationResult> {
+  async validate(value: any, options: { excluded?: string[] } = {}): Promise<ValidationResult> {
     const errors: string[] = [];
+    const data = _storage.get(this) as Data;
+    const { excluded } = options;
+    let valid = true;
 
     if (this.rules) {
-      await Promise.all(
-        this.rules.map(async rule => {
-          const { error } = await rule.validate(value);
+      const rules = excluded ? this.rules.filter(({ name }) => !excluded.includes(name)) : this.rules;
 
-          if (error) {
-            errors.push(error);
+      await Promise.all(
+        rules.map(async rule => {
+          const result = await rule.validate(value);
+
+          if (!result.valid) {
+            if (result.error) {
+              errors.push(result.error);
+            }
+
+            valid = false;
           }
         })
       );
     }
 
-    this.errors = !isEmpty(errors) ? errors : null;
+    data.valid.value = valid;
 
     return {
-      errors: this.errors
+      errors,
+      valid
     };
   }
 }

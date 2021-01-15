@@ -7,13 +7,13 @@ describe('Field', () => {
     type: 'number'
   });
 
-  it('Should has `valid=false, value=null` with wrong `typed value` entered', async () => {
+  it('Should invalidated with wrong `typed value` entered', async () => {
     field.value = '1a';
 
     await flushPromises();
 
     expect(field.value).toBe(null);
     expect(field.valid).toBe(false);
-    expect((field.validation.rules as any).number.valid).toBe(false);
+    expect((field.validation.rules as any).numeric.valid).toBe(false);
   });
 });

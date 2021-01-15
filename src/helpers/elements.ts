@@ -1,6 +1,7 @@
+import { reactiveGetter } from '@/core/Objeto';
 import { ElementConstructor, ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, getter, isPlainObject, isEmpty, logMessage, valueOrNull } from '../utils';
+import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, valueOrNull } from '../utils';
 
 const _Elements: ElementConstructor[] = [];
 
@@ -45,7 +46,7 @@ function genProp(obj: any, props: Record<string, any>, key: string, context?: an
   const property = Object.getOwnPropertyDescriptor(props, key);
   const _getter = property && property.get;
 
-  getter(
+  reactiveGetter(
     obj,
     key,
     _getter
@@ -118,7 +119,7 @@ export function cascadeRules(parentRules: ValidationRuleSchema[], fields: any[])
     each(parentRules, (parentRule, key) => {
       const rule = rules[key];
 
-      if (isCallable(parentRule) || parentRule.cascade === false || (rule && rule.inherit === false)) {
+      if (isCallable(parentRule) || !parentRule.cascade || (rule && rule.inherit === false)) {
         return;
       }
 

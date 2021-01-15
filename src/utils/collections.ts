@@ -20,7 +20,8 @@ export function merge(target: any, ...sources: any[]) {
 
         acc[key] = merge(target[key], item);
       } else {
-        acc[key] = item;
+        const descriptor = Object.getOwnPropertyDescriptor(source, key);
+        Object.defineProperty(acc, key, descriptor || item);
       }
     }
 

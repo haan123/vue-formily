@@ -6,6 +6,7 @@ export type ValidationMessageTemplate = string | ValidationMessageGenerator;
 
 export type RuleResult = {
   error: string | null;
+  valid: boolean;
 };
 
 export type Validator = (
@@ -20,6 +21,7 @@ export interface RuleSchema {
   props?: Record<string, any>;
   error?: ValidationMessageTemplate;
   allowEmpty?: boolean;
+  cast?: (value: any) => any;
 }
 
 export interface ValidationOptions {
@@ -28,4 +30,5 @@ export interface ValidationOptions {
 
 export type ValidationResult = {
   errors: string[] | null;
+  valid: boolean;
 };

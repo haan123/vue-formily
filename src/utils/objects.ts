@@ -19,7 +19,7 @@ export function def(
   }
 }
 
-export function ref(value: any): Ref {
+export function ref(value: any): Ref<any> {
   const fns: Record<string, any> = {};
 
   return {
@@ -38,18 +38,18 @@ export function ref(value: any): Ref {
   };
 }
 
-export function isRefValue(value: any): value is Ref {
+export function isRefValue(value: any): value is Ref<any> {
   return isPlainObject(value) && 'value' in value;
 }
 
-export type Ref = {
-  value: any;
+export type Ref<T> = {
+  value: T;
   on: (name: 'updated', fn: () => void, context: any) => void;
 };
 
-export function getter(obj: any, key: string, value: any, { reactive = true }: { reactive?: boolean } = {}) {
-  let _ref: Ref;
-  let get = (r: Ref) => r.value;
+export function getter(obj: any, key: string, value: any, { configurable = false }: { configurable?: boolean } = {}) {
+  let _ref: Ref<any>;
+  let get = (r: Ref<any>) => r.value;
 
   if (isCallable(value)) {
     _ref = ref(null);
@@ -62,7 +62,7 @@ export function getter(obj: any, key: string, value: any, { reactive = true }: {
     get() {
       return get.call(this, _ref);
     },
-    configurable: reactive,
+    configurable,
     enumerable: true
   });
 

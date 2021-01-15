@@ -1,11 +1,11 @@
 import { PropValue } from '../../types';
 import { ElementData, ElementSchema } from './types';
 import { genProps } from '../../helpers/elements';
-import { camelCase, def, getter, logMessage, now, valueOrNull } from '../../utils';
+import { camelCase, def, getter, logMessage, valueOrNull } from '../../utils';
+import { Objeto, reactiveGetter } from '../Objeto';
 
 let uid = 0;
-
-const _storage = new WeakMap();
+let _storage: WeakMap<Element, ElementData>;
 
 function genElementAncestors(elem: Element): any[] | null {
   const path = [];
@@ -20,22 +20,7 @@ function genElementAncestors(elem: Element): any[] | null {
   return path.length ? path : null;
 }
 
-
-export function reactiveGetter(obj: Element, key: string, value: any) {
-  getter(obj, key, value).on('updated', function (this: Element) {
-    const data: ElementData = _storage.get(this);
-
-    if (data.timer ) {
-      clearTimeout(data.timer);
-    }
-
-    data.timer = setTimeout(() => {
-      this.reactive()
-    }, 10);
-  }, obj);
-}
-
-export default abstract class Element {
+export default abstract class Element extends Objeto {
   readonly parent!: Element | null;
   readonly formId!: string;
   readonly model!: string;
@@ -43,7 +28,6 @@ export default abstract class Element {
   readonly _uid!: number;
   readonly valid!: boolean;
   readonly props: Record<string, PropValue<any>> | null;
-  __timestamp__: number = now();
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
@@ -51,35 +35,35 @@ export default abstract class Element {
   abstract invalidate(error?: string): void;
 
   constructor(schema: ElementSchema, parent?: Element, ...args: any[]) {
+    super();
+
     if (!schema.formId) {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
 
     def(this, '_uid', uid++, { writable: false });
     def(this, 'parent', valueOrNull(parent), { writable: false });
-    getter(this, 'formId', schema.formId, { reactive: false });
     def(this, 'model', schema.model || camelCase(this.formId));
+    getter(this, 'formId', schema.formId);
     this.props = genProps([schema.props], this);
 
-    const data = {
+    this.initialize(schema, parent, _storage.get(this) as ElementData, ...args);
+
+    reactiveGetter(this, 'htmlName', () => this.getHtmlName());
+    reactiveGetter(this, 'valid', () => this.isValid());
+  }
+
+  initData(storage: any) {
+    _storage = storage;
+    _storage.set(this, {
       ancestors: genElementAncestors(this),
-      timer: null
-    };
-
-    _storage.set(this, data);
-
-    this.initialize(schema, parent, data, ...args);
-
-    getter(this, 'htmlName', () => this.getHtmlName());
-    getter(this, 'valid', () => this.isValid());
+      timer: null,
+      invalidated: false
+    });
   }
 
   reset() {
-    const data = _storage.get(this);
+    const data = _storage.get(this) as ElementData;
     data.invalidated = false;
-  }
-
-  reactive() {
-    this.__timestamp__ = now();
   }
 }

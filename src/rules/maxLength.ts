@@ -8,7 +8,8 @@ export const validate = (value: any, { maxLength }: Record<string, number>) => {
 const schema: ValidationRuleSchema = {
   validate,
   name: 'maxLength',
-  for: ['string', 'group', 'groups'],
+  cascade: true,
+  for: ['string', 'enum', 'set'],
   props: {
     maxLength: Number.MAX_VALUE
   }

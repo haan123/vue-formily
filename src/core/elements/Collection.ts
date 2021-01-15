@@ -3,7 +3,8 @@ import { ElementData, GroupSchema, CollectionSchema } from './types';
 import Element from './Element';
 import Group from './Group';
 import { cascadeRules, genHtmlName, indentifySchema, invalidateSchemaValidation } from '../../helpers';
-import { def, getter, logMessage } from '../../utils';
+import { def, logMessage } from '../../utils';
+import { reactiveGetter } from '../Objeto';
 
 let _privateData: ElementData;
 
@@ -13,7 +14,7 @@ export class CollectionItem extends Group {
   constructor(schema: GroupSchema, parent: Collection) {
     super(schema, parent);
 
-    getter(this, 'index', () => {
+    reactiveGetter(this, 'index', () => {
       const { groups } = this.parent as any;
 
       return groups?.findIndex((group: any) => group === this);

@@ -1,10 +1,12 @@
 import { ValidationResult } from '../validations/types';
 import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
 
-import Element, { reactiveGetter } from './Element';
+import Element from './Element';
 import { def, logMessage, isCallable, setter, ref, Ref, isNumber, isEmpty } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
 import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
+import { reactiveGetter } from '../Objeto';
+import { numeric } from '../../rules';
 import { Rule } from '../validations';
 
 type FieldValidationResult = ValidationResult & {
@@ -14,33 +16,30 @@ type FieldValidationResult = ValidationResult & {
 type FieldData = ElementData & {
   error: string | null;
   default: string | number | boolean | null;
-  raw: Ref;
-  typed: Ref;
+  raw: Ref<string>;
+  typed: Ref<FieldValue>;
 };
 
 let _privateData: FieldData;
 
-export function cast(value: any, type: FieldType, validation: ExtValidation<'numeric'>): FieldValue {
-  if (value === undefined) {
-    return null;
-  }
+const numericRule = new Rule(numeric);
 
-  switch (type) {
-    case 'string':
-      return value ? '' + value : '';
-    case 'number':
-      if (validation.numeric) {
-        validation.numeric.validate(value)
-      }
-      if (!isNumber(value))  {
-        throw new Error(logMessage(`[Parse error] ${value} is not a number.`));
-      }
+const cast = {
+  string(value: any) {
+    return value !== null ? '' + value : null;
+  },
+  async number(value: any, validation: Validation) {
+    const rule = 'numeric' in validation ? (validation as ExtValidation<'numeric'>).numeric : numericRule;
 
-      return +value;
-    case 'boolean':
-      return !!value;
-    case 'date':
-      return new Date(value);
+    const result = await rule.validate(value);
+
+    return result.valid ? +value : null;
+  },
+  boolean(value: any) {
+    return value === true || value === 'true' ? true : false;
+  },
+  date(value: any) {
+    return new Date(value);
   }
 }
 
@@ -84,10 +83,10 @@ export default class Field extends Element {
   readonly formatted!: string | null;
   readonly error!: string | null;
   readonly checked!: boolean;
+  readonly validation!: Validation;
   pending = false;
   raw!: string;
   value!: FieldValue;
-  validation!: Validation;
 
   constructor(schema: FieldSchema, parent?: Element) {
     super(schema, parent);
@@ -104,11 +103,12 @@ export default class Field extends Element {
     def(this, 'type', type, { writable: false });
     def(this, 'inputType', inputType, { writable: false });
 
+    def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this, { field: this })), { writable: false });
+
     const defu = schema.default !== undefined ? schema.default : null;
-    const defaultValue = cast(defu, this.type);
+    const defaultValue = cast[this.type](defu, this.validation);
 
     def(this, 'default', defaultValue, { writable: false });
-    def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this), { field: this }), { writable: false });
 
     const format = isCallable(schema.format) ? schema.format : formatter;
 
@@ -172,8 +172,8 @@ export default class Field extends Element {
     this.pending = true;
 
     try {
-      value = cast(val, this.type);
-      result = await this.validation.validate(value);
+      const typed = cast[this.type](val, this.validation);
+      result = await this.validation.validate(typed);
 
       if (result.errors) {
         value = null;
