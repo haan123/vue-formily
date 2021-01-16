@@ -6,7 +6,7 @@ describe('Element', () => {
       super(schema);
     }
 
-    initialize() {}
+    _initialize() {}
     isValid() {
       return true;
     }

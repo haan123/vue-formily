@@ -73,7 +73,7 @@ export default class Validation extends Objeto {
     return removed;
   }
 
-  initData(storage: any) {
+  _setup(storage: any) {
     _storage = storage;
     _storage.set(this, {
       valid: ref(true)

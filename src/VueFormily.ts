@@ -49,7 +49,7 @@ export default class VueFormily {
       return;
     }
 
-    // Initialize default form elements
+    // _initialize default form elements
     [Group, Collection, Field].forEach(F => registerElement(F));
 
     const vf = new VueFormily(options);

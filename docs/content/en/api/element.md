@@ -78,12 +78,12 @@ abstract getHtmlName(): string | null;
 **Returns**
 - `string` - the global unique name of this element.
 
-### abstract initialize
+### abstract _initialize
 This abstract method will run one time when constructuring this element. The `private data` also passed in this call.
 
 **Signatures**
 ```typescript
-abstract initialize(schema: ElementSchema, parent: any, data: WeakMap<Element, ElementData>, ...args: any[]): void;
+abstract _initialize(schema: ElementSchema, parent: any, data: WeakMap<Element, ElementData>, ...args: any[]): void;
 ```
 
 **Parameters**

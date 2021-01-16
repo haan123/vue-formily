@@ -31,7 +31,7 @@ export default abstract class Element extends Objeto {
 
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
-  abstract initialize(schema: ElementSchema, parent: any, data: ElementData, ...args: any[]): void;
+  abstract _initialize(schema: ElementSchema, parent: any, data: ElementData, ...args: any[]): void;
   abstract invalidate(error?: string): void;
 
   constructor(schema: ElementSchema, parent?: Element, ...args: any[]) {
@@ -47,13 +47,13 @@ export default abstract class Element extends Objeto {
     getter(this, 'formId', schema.formId);
     this.props = genProps([schema.props], this);
 
-    this.initialize(schema, parent, _storage.get(this) as ElementData, ...args);
+    this._initialize(schema, parent, _storage.get(this) as ElementData, ...args);
 
     reactiveGetter(this, 'htmlName', () => this.getHtmlName());
     reactiveGetter(this, 'valid', () => this.isValid());
   }
 
-  initData(storage: any) {
+  _setup(storage: any) {
     _storage = storage;
     _storage.set(this, {
       ancestors: genElementAncestors(this),

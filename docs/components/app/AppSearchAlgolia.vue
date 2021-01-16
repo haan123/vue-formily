@@ -33,7 +33,7 @@ export default {
     }
   },
   mounted () {
-    this.initialize(this.options, this.$i18n.locale)
+    this._initialize(this.options, this.$i18n.locale)
   },
   methods: {
     stripTrailingSlash (url) {
@@ -44,7 +44,7 @@ export default {
       const url = pathname.replace(this.settings.url, '/') + hash
       return this.stripTrailingSlash(url)
     },
-    initialize (userOptions, code) {
+    _initialize (userOptions, code) {
       const lang = this.$i18n.locales.find(locale => locale.code === code)
 
       Promise.all([
@@ -134,7 +134,7 @@ export default {
     },
     update (options, lang) {
       this.$el.innerHTML = '<div id="docsearch"></div>'
-      this.initialize(options, lang)
+      this._initialize(options, lang)
     }
   }
 }

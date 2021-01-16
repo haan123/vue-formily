@@ -19,10 +19,10 @@ const _storage = new WeakMap();
 export abstract class Objeto {
   __ts: number = now();
 
-  abstract initData(storage: any): void;
+  abstract _setup(storage: any): void;
 
   constructor() {
-    this.initData(_storage);
+    this._setup(_storage);
   }
 
   reactive() {

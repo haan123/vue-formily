@@ -78,7 +78,7 @@ export default class Collection extends Element {
     def(this, '_schema', schema.group, { writable: false });
   }
 
-  initialize(schema: CollectionSchema, parent: any, data: ElementData) {
+  _initialize(schema: CollectionSchema, parent: any, data: ElementData) {
     _privateData = data;
   }
 

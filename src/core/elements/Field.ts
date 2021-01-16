@@ -157,7 +157,7 @@ export default class Field extends Element {
     this.validation.reset();
   }
 
-  initialize(schema: FieldSchema, parent: any, data: ElementData) {
+  _initialize(schema: FieldSchema, parent: any, data: ElementData) {
     _privateData = data as FieldData;
   }
 

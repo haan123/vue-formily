@@ -65,7 +65,7 @@ export default class Rule extends Objeto {
     this.error = null;
   }
 
-  initData(storage: any) {
+  _setup(storage: any) {
     _storage = storage;
     _storage.set(this, {} as Data);
   }

@@ -70,7 +70,7 @@ export default class Group extends Element {
     def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this), { field: this }), { writable: false });
   }
 
-  initialize(schema: GroupSchema, parent: any, data: ElementData) {
+  _initialize(schema: GroupSchema, parent: any, data: ElementData) {
     _privateData = data;
   }
 
