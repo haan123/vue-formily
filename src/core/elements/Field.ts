@@ -15,31 +15,35 @@ type FieldValidationResult = ValidationResult & {
 
 type FieldData = ElementData & {
   error: string | null;
-  default: string | number | boolean | null;
-  raw: Ref<string>;
+  raw: Ref<any>;
   typed: Ref<FieldValue>;
 };
 
 let _privateData: FieldData;
 
-const numericRule = new Rule(numeric);
+const dumpRule = new Rule(() => true);
 
-const cast = {
-  string(value: any) {
-    return value !== null ? '' + value : null;
+const typing = {
+  string: {
+    cast(value: any) {
+      return value !== null ? '' + value : null;
+    }
   },
-  async number(value: any, validation: Validation) {
-    const rule = 'numeric' in validation ? (validation as ExtValidation<'numeric'>).numeric : numericRule;
-
-    const result = await rule.validate(value);
-
-    return result.valid ? +value : null;
+  number: {
+    rule: new Rule(numeric),
+    cast(value: any) {
+      return +value;
+    }
   },
-  boolean(value: any) {
-    return value === true || value === 'true' ? true : false;
+  boolean: {
+    cast(value: any) {
+      return value === true || value === 'true' ? true : false;
+    }
   },
-  date(value: any) {
-    return new Date(value);
+  date: {
+    cast(value: any) {
+      return new Date(value);
+    }
   }
 }
 
@@ -79,7 +83,7 @@ export default class Field extends Element {
   readonly formType!: string;
   readonly type!: FieldType;
   readonly inputType!: string;
-  readonly default!: FieldValue;
+  readonly default!: any;
   readonly formatted!: string | null;
   readonly error!: string | null;
   readonly checked!: boolean;
@@ -105,19 +109,17 @@ export default class Field extends Element {
 
     def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this, { field: this })), { writable: false });
 
-    const defu = schema.default !== undefined ? schema.default : null;
-    const defaultValue = cast[this.type](defu, this.validation);
-
-    def(this, 'default', defaultValue, { writable: false });
+    const hasDefault = 'default' in schema;
+    def(this, 'default', hasDefault ? schema.default : null, { writable: false });
 
     const format = isCallable(schema.format) ? schema.format : formatter;
 
     const formatted = ref(format.call(this, this.default));
-    const raw = ref(defu || '');
+    const raw = ref(hasDefault ? this.default : '');
     const typed = ref(null);
 
     setter(this, 'value', typed, (val: any) => {
-      raw.value = val;
+      raw.value = '' + val;
 
       this.validate(raw.value).then(({ value }) => {
         typed.value = value;
@@ -126,32 +128,29 @@ export default class Field extends Element {
     });
 
     setter(this, 'raw', raw, (val: any) => {
-      raw.value = val;
       this.value = val;
     });
 
     reactiveGetter(this, 'formatted', formatted);
-    reactiveGetter(this, 'error', () => _privateData.error);
+    reactiveGetter(this, 'error', _privateData.error);
     reactiveGetter(this, 'checked', () => this.value === true);
 
-    _privateData.default = defu;
     _privateData.raw = raw;
     _privateData.typed = typed;
   }
 
   isValid() {
-    return !_privateData.error;
+    return !_privateData.invalidated && !this.validation.valid;
   }
 
   invalidate(error?: string) {
-    const { errors } = this.validation;
-
-    _privateData.error = error ? error : !isEmpty(errors) ? errors[0] :  null;
+    _privateData.invalidated = true;
+    _privateData.error = error ? error : this.validation.errors[0] || null;
   }
 
   reset() {
     _privateData.error = null;
-    _privateData.raw.value = _privateData.default || '';
+    _privateData.raw.value = this.default;
     _privateData.typed.value = null;
 
     this.validation.reset();
@@ -167,26 +166,34 @@ export default class Field extends Element {
 
   async validate(val: any): Promise<FieldValidationResult> {
     let value: FieldValue = null;
-    let result: ValidationResult;
+    const typi = typing[this.type];
+    let castingRule: Rule = dumpRule;
+    let typed = null;
 
     this.pending = true;
 
-    try {
-      const typed = cast[this.type](val, this.validation);
-      result = await this.validation.validate(typed);
-
-      if (result.errors) {
-        value = null;
-      }
-    } catch (error) {
-      value = null;
+    if ('rule' in typi) {
+      castingRule = (this.validation as ExtValidation<any>)[typi.rule.name] || typi.rule;
     }
 
+    const result = await castingRule.validate(val);
+
+    if (result.valid) {
+      typed = typi.cast(val);
+      await this.validation.validate(typed, { excluded: [castingRule.name] });
+    }
+
+    const { valid, errors } = this.validation;
+
+    if (!valid) {
+      value = null;
+    }
 
     this.pending = false;
 
     return {
-      ...result,
+      errors,
+      valid,
       value
     };
   }

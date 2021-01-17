@@ -1,8 +1,8 @@
 import { VueConstructor } from 'vue';
 import { FormSchema } from './core/elements/types';
-import { RuleSchema, VueFormilyOptions } from './types';
+import { ValidationRuleSchema, VueFormilyOptions } from './types';
 import { merge } from './utils';
-import { registerElement } from './helpers/elements';
+import { registerElement, registerModelizer } from './helpers/elements';
 import { Form, Field, Group, Collection } from './core/elements';
 import { registerLocalizer } from './helpers';
 
@@ -14,7 +14,7 @@ export default class VueFormily {
   static version = '__VERSION__';
 
   readonly alias: string;
-  readonly rules?: Record<string, RuleSchema>;
+  readonly rules?: Record<string, ValidationRuleSchema>;
 
   vm: any;
 
@@ -25,6 +25,10 @@ export default class VueFormily {
 
     if (_options.localizer) {
       registerLocalizer(_options.localizer);
+    }
+
+    if (_options.modelizer) {
+      registerModelizer(_options.modelizer);
     }
   }
 

@@ -49,4 +49,20 @@ describe('Validation', () => {
       excluded: ['numeric']
     })).valid).toBe(true);
   });
+
+  it('Can pick rules when validating', async () => {
+    expect((await validation.validate('a')).valid).toBe(false);
+    expect((await validation.validate('', {
+      picks: ['required']
+    })).valid).toBe(false);
+    expect((await validation.validate('1', {
+      picks: ['numeric']
+    })).valid).toBe(true);
+    expect((await validation.validate('a', {
+      picks: ['numeric']
+    })).valid).toBe(false);
+    expect((await validation.validate('abc', {
+      picks: []
+    })).valid).toBe(true);
+  });
 });

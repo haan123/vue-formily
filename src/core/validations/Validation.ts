@@ -19,7 +19,7 @@ export type ValidationOptions = {
 };
 
 export default class Validation extends Objeto {
-  readonly errors: string[] | null = null;
+  readonly errors!: string[];
   readonly valid!: boolean;
   rules: Rule[] = [];
 
@@ -32,7 +32,7 @@ export default class Validation extends Objeto {
 
     const _data = _storage.get(this) as Data;
 
-    reactiveGetter(this, 'errors', this.rules.map(({ error }) => error));
+    reactiveGetter(this, 'errors', this.rules.map(({ error }) => error).filter((error) => error));
     reactiveGetter(this, 'valid', _data.valid);
   }
 
@@ -54,7 +54,7 @@ export default class Validation extends Objeto {
       throw new Error(logMessage(`Rule "${rule.name}" is already added.`));
     }
 
-    getter(this, rule.name, rule)
+    getter(this, rule.name, rule, { configurable: true })
 
     return rule;
   }
@@ -84,14 +84,15 @@ export default class Validation extends Objeto {
     this.rules.forEach((rule) => rule.reset());
   }
 
-  async validate(value: any, options: { excluded?: string[] } = {}): Promise<ValidationResult> {
+  async validate(value: any, options: { excluded?: string[], picks?: string[] } = {}): Promise<ValidationResult> {
     const errors: string[] = [];
     const data = _storage.get(this) as Data;
-    const { excluded } = options;
+    const { excluded, picks } = options;
     let valid = true;
 
     if (this.rules) {
-      const rules = excluded ? this.rules.filter(({ name }) => !excluded.includes(name)) : this.rules;
+      let rules = picks ? this.rules.filter(({ name }) => picks.includes(name)) : this.rules;
+      rules = excluded ? rules.filter(({ name }) => !excluded.includes(name)) : rules;
 
       await Promise.all(
         rules.map(async rule => {

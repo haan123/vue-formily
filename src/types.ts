@@ -24,7 +24,10 @@ export interface ElementConstructor extends Function {
 export interface VueFormilyOptions {
   rules?: Record<string, RuleSchema>;
   alias?: string;
-  localizer?: any;
+  localizer?: Localizer;
+  modelizer?: any;
 }
 
 export type Localizer = (value: string, props?: Record<string, PropValue<any>>, data?: Record<string, any>) => string
+
+export type Modelizer = (this: Element, formId: string) => string

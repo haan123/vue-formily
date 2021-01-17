@@ -2,7 +2,7 @@ export interface ValidationMessageGenerator {
   (value: any, props: Record<string, any>, data: Record<string, any> | null): string;
 }
 
-export type ValidationMessageTemplate = string | ValidationMessageGenerator;
+export type ValidationMessage = string | ValidationMessageGenerator;
 
 export type RuleResult = {
   error: string | null;
@@ -19,7 +19,7 @@ export interface RuleSchema {
   validate?: Validator;
   name?: string;
   props?: Record<string, any>;
-  error?: ValidationMessageTemplate;
+  message?: ValidationMessage;
   allowEmpty?: boolean;
   cast?: (value: any) => any;
 }
