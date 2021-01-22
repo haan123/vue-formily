@@ -43,9 +43,9 @@ export default abstract class Element extends Objeto {
 
     const modelizer = getModelizer();
 
-    def(this, '_uid', uid++, { writable: false });
-    def(this, 'parent', valueOrNull(parent), { writable: false });
-    def(this, 'model', schema.model || modelizer.call(this, this.formId));
+    def(this, '_uid', uid++);
+    def(this, 'parent', valueOrNull(parent));
+    def(this, 'model', schema.model || modelizer.call(this, this.formId), { writable: true });
     getter(this, 'formId', schema.formId);
     this.props = genProps([schema.props], this);
 

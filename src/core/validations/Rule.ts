@@ -1,16 +1,13 @@
-import { RuleSchema, ValidationMessage, RuleResult, Validator } from './types';
+import { RuleSchema, RuleResult, Validator, ValidationMessage } from './types';
 
-import { def, isCallable, isPlainObject, logMessage, isEmpty, valueOrNull, setter, isNonEmptyString } from '../../utils';
+import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isNonEmptyString } from '../../utils';
 import { getLocalizer } from '@/helpers';
 import { Objeto } from '../Objeto';
 
 const localizer = getLocalizer();
 let count = 0;
 
-type Data = {
-  validator: Validator;
-  message?: ValidationMessage;
-};
+type Data = {};
 let _storage: WeakMap<Rule, Data>;
 
 export type RuleOptions = {
@@ -21,49 +18,39 @@ export default class Rule extends Objeto {
   readonly props!: Record<string, any>;
   readonly name!: string;
   readonly data!: Record<string, any>;
+  message!: ValidationMessage | null;
+  validator!: Validator;
   valid!: boolean;
   error!: string | null;
 
   constructor(rule: Rule | RuleSchema | Validator, options: RuleOptions = {}) {
     super();
 
-    if (!rule) {
-      throw new Error(logMessage('Missing validation rule when creating validation'));
-    }
-
-    const _data = _storage.get(this) as Data;
     let vProps;
 
     if (isCallable(rule)) {
-      _data.validator = rule;
-    } else if (isPlainObject(rule)) {
+      this.validator = rule;
+    } else if (isPlainObject(rule) && rule.validator) {
       if (!('allowEmpty' in rule) || rule.allowEmpty) {
-        _data.validator = valueOrNull(rule.validate);
+        this.validator = rule.validator;
       } else if (!rule.allowEmpty) {
-        _data.validator = (value: any, props: Record<string, any>, data: Record<string, any> | null) => {
-          return !isEmpty(value) && (!rule.validate || (rule.validate as Validator).call(this, value, props, data));
+        this.validator = (value: any, props: Record<string, any>, data: Record<string, any> | null) => {
+          return !isEmpty(value) && (!rule.validator || (rule.validator as Validator).call(this, value, props, data));
         };
       }
 
       vProps = rule.props;
-      _data.message = isCallable(rule.message) ? rule.message : (!isNonEmptyString(rule.message) ? rule.message : null);
+
+      def(this, 'message', isCallable(rule.message) ? rule.message : (!isNonEmptyString(rule.message) ? rule.message : null), { writable: true })
+    } else {
+      throw new Error(logMessage('Missing rule\'s validator'));
     }
 
-    if (!_data.validator) {
-      throw new Error(logMessage('Missing "validate(): boolean" method in validation rule'));
-    }
-
-    def(this, 'data', options.data || {}, { reactive: false });
-    def(this, 'name', rule.name || `r${count++}`, { writable: false });
-    def(this, 'props', vProps || {}, { writable: false });
+    def(this, 'data', options.data || {}, { writable: true });
+    def(this, 'name', rule.name || `r${count++}`);
+    def(this, 'props', vProps || {});
 
     setter(this, 'error', null, (error: any) => isNonEmptyString(error) ? localizer(error, this.props, this.data) : null)
-  }
-
-  setMessage() {
-    const data = _storage.get(this);
-
-    data.
   }
 
   reset() {
@@ -81,8 +68,8 @@ export default class Rule extends Objeto {
   }
 
   async validate(value: any): Promise<RuleResult> {
-    const { validator, message } = _storage.get(this) as Data;
-    const result = await validator.call(this, value, this.props, this.data);
+    const message = this.message;
+    const result = await this.validator(value, this.props, this.data);
     let error = null;
     let valid = true;
 

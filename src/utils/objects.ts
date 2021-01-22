@@ -5,13 +5,13 @@ export function def(
   obj: any,
   key: string,
   val: any,
-  { initValue, reactive = false, writable = true }: { reactive?: boolean; writable?: boolean; initValue?: any } = {}
+  { initValue, configurable = false, writable = false }: { configurable?: boolean; writable?: boolean; initValue?: any } = {}
 ) {
   Object.defineProperty(obj, key, {
     value: val,
     enumerable: true,
     writable,
-    configurable: reactive
+    configurable
   });
 
   if (writable && initValue !== undefined) {

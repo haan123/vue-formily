@@ -2,7 +2,7 @@ import { ValidationResult } from '../validations/types';
 import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
 
 import Element from './Element';
-import { def, logMessage, isCallable, setter, ref, Ref, isNumber, isEmpty } from '../../utils';
+import { def, logMessage, isCallable, setter, ref, Ref } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
 import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
 import { reactiveGetter } from '../Objeto';
@@ -103,14 +103,14 @@ export default class Field extends Element {
 
     const { type, rules, inputType = 'text' } = schema;
 
-    def(this, 'formType', Field.FORM_TYPE, { writable: false });
-    def(this, 'type', type, { writable: false });
-    def(this, 'inputType', inputType, { writable: false });
+    def(this, 'formType', Field.FORM_TYPE);
+    def(this, 'type', type);
+    def(this, 'inputType', inputType);
 
-    def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this, { field: this })), { writable: false });
+    def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this, { field: this })));
 
     const hasDefault = 'default' in schema;
-    def(this, 'default', hasDefault ? schema.default : null, { writable: false });
+    def(this, 'default', hasDefault ? schema.default : null);
 
     const format = isCallable(schema.format) ? schema.format : formatter;
 
@@ -164,11 +164,11 @@ export default class Field extends Element {
     return genHtmlName(this, _privateData.ancestors);
   }
 
-  async validate(val: any): Promise<FieldValidationResult> {
-    let value: FieldValue = null;
+  async validate(val?: any): Promise<FieldValidationResult> {
+    const raw = val !== undefined ? val : this.raw;
     const typi = typing[this.type];
     let castingRule: Rule = dumpRule;
-    let typed = null;
+    let typed: FieldValue = null;
 
     this.pending = true;
 
@@ -176,25 +176,21 @@ export default class Field extends Element {
       castingRule = (this.validation as ExtValidation<any>)[typi.rule.name] || typi.rule;
     }
 
-    const result = await castingRule.validate(val);
+    const result = await castingRule.validate(raw);
 
     if (result.valid) {
-      typed = typi.cast(val);
+      typed = typi.cast(raw);
       await this.validation.validate(typed, { excluded: [castingRule.name] });
     }
 
     const { valid, errors } = this.validation;
-
-    if (!valid) {
-      value = null;
-    }
 
     this.pending = false;
 
     return {
       errors,
       valid,
-      value
+      value: valid ? typed : null
     };
   }
 }

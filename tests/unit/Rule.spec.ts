@@ -1,9 +1,8 @@
-import flushPromises from 'flush-promises';
 import { Rule } from '@/core/validations';
 import { numeric } from '@/rules';
 
 describe('Rule', () => {
-  const validation = new Rule(numeric);
+  const rule = new Rule(numeric);
 
   it('Instantiate successfully with validator', async () => {
     const rule = new Rule(() => true);
@@ -13,14 +12,22 @@ describe('Rule', () => {
   });
 
   it('Instantiate successfully with rule instance', async () => {
-    const rule = new Rule(validation);
-    expect(rule).toBeInstanceOf(Rule);
-    expect((await validation.validate(4)).error).toBe(null);
-    expect(typeof (await validation.validate('4a')).error).toBe('string');
+    const r = new Rule(rule);
+    expect(r).toBeInstanceOf(Rule);
   });
 
   it('Validate successfully', async () => {
-    expect((await validation.validate(4)).error).toBe(null);
-    expect(typeof (await validation.validate('4a')).error).toBe('string');
+    expect((await rule.validate(4)).valid).toBe(true);
+    expect((await rule.validate('4a')).valid).toBe(false);
+  });
+
+  it('Can set message dynamically', async () => {
+    rule.message = 'Value is not a number';
+
+    expect((await rule.validate('4a')).error).toBe('Value is not a number');
+
+    rule.message = (val: any) => `${val} is not a number`;
+
+    expect((await rule.validate('4a')).error).toBe('4a is not a number');
   });
 });

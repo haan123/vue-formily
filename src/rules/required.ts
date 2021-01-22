@@ -1,7 +1,7 @@
 import { ValidationRuleSchema } from '../types';
 import { isEmpty } from '../utils';
 
-export const validate = (value: any) => !isEmpty(value);
+export const validator = (value: any) => !isEmpty(value);
 
 const schema: ValidationRuleSchema = {
   name: 'required',

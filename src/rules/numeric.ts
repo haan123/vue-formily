@@ -2,10 +2,10 @@
 import { isNumber } from '@/utils';
 import { ValidationRuleSchema } from '../types';
 
-export const validate = (value: any) => isNumber(value);
+export const validator = (value: any) => isNumber(value);
 
 const schema: ValidationRuleSchema = {
-  validate,
+  validator,
   name: 'numeric'
 };
 

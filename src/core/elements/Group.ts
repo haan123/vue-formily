@@ -56,8 +56,8 @@ export default class Group extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    def(this, 'formType', Group.FORM_TYPE, { writable: false });
-    def(this, 'type', 'enum', { writable: false });
+    def(this, 'formType', Group.FORM_TYPE);
+    def(this, 'type', 'enum');
 
     if (schema.rules) {
       schema.fields = cascadeRules(schema.rules, schema.fields);
@@ -65,9 +65,9 @@ export default class Group extends Element {
 
     this.fields = genFields(schema.fields, this) as Element[];
 
-    this.fields.forEach((field) => def(this, field.model, field, { writable: false }));
+    this.fields.forEach((field) => def(this, field.model, field));
 
-    def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this), { field: this }), { writable: false });
+    def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this, { field: this })));
   }
 
   _initialize(schema: GroupSchema, parent: any, data: ElementData) {

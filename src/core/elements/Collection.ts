@@ -66,8 +66,8 @@ export default class Collection extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    def(this, 'formType', Collection.FORM_TYPE, { writable: false });
-    def(this, 'type', 'set', { writable: false });
+    def(this, 'formType', Collection.FORM_TYPE);
+    def(this, 'type', 'set');
 
     this.groups = null;
 
@@ -75,7 +75,7 @@ export default class Collection extends Element {
       schema.group.fields = cascadeRules(schema.rules, schema.group.fields);
     }
 
-    def(this, '_schema', schema.group, { writable: false });
+    def(this, '_schema', schema.group);
   }
 
   _initialize(schema: CollectionSchema, parent: any, data: ElementData) {

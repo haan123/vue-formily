@@ -29,4 +29,39 @@ describe('Field', () => {
     expect((field.validation as any).numeric.valid).toBe(false);
     expect((field.validation as any).numeric.error).toBe(null);
   });
+
+  it('Should cast to correct value type', async () => {
+    const f1 = new Field({
+      formId: 'field_name',
+      type: 'number'
+    });
+
+    f1.raw = '1';
+
+    const f2 = new Field({
+      formId: 'field_name',
+      type: 'boolean'
+    });
+
+    f2.raw = 'true';
+
+    const f3 = new Field({
+      formId: 'field_name',
+      type: 'date'
+    });
+
+    f3.raw = 'abc';
+
+    await flushPromises();
+
+    expect(f1.value).toBe(1);
+    expect(f2.value).toBe(true);
+
+    f2.raw = 'a';
+
+    await flushPromises();
+
+    expect(f2.value).toBe(false);
+    expect(f3.value).toBeInstanceOf(Date);
+  });
 });

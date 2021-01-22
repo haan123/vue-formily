@@ -48,3 +48,7 @@ export function isEmpty(value: any): value is (null | undefined | false) {
 export function isNonEmptyString(value: any): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }
+
+export function hasIntl() {
+  return typeof Intl !== "undefined" && Intl.DateTimeFormat;
+}
