@@ -1,3 +1,5 @@
+import { hasIntl } from "./assertions";
+
 export function logMessage(message?: string, infos?: Record<string, string>) {
   const infosText = infos
     ? `(${Object.keys(infos)
@@ -17,4 +19,9 @@ export function logError(message: string, infos?: Record<string, string>) {
   console.error(logMessage(message, infos));
 }
 
+export function formatDate() {
+  if (hasIntl()) {
+    const dtf = new Intl.DateTimeFormat(locString, opts);
+  }
+}
 
