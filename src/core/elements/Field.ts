@@ -1,10 +1,10 @@
 import { ValidationResult } from '../validations/types';
-import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
+import { ElementData, FieldSchema, FieldType, FieldValue, Format } from './types';
 
 import Element from './Element';
 import { def, logMessage, isCallable, setter, ref, Ref } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
-import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName } from '../../helpers';
+import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName, getPlug } from '../../helpers';
 import { reactiveGetter } from '../Objeto';
 import { numeric } from '../../rules';
 import { Rule } from '../validations';
@@ -47,7 +47,12 @@ const typing = {
   }
 }
 
-function formatter(value: any): string { return value }
+function formatter(field: Field, value: any, format?: Format): string {
+  const { type, props } = field;
+  const _formatter = getPlug(` n.${type === 'date' ? 'dateTime' : 'string'}`);
+
+  return _formatter(value, isCallable(format) ? format.call(field, value) : format, props, { field });
+}
 
 export default class Field extends Element {
   static FORM_TYPE = 'field';
@@ -101,7 +106,7 @@ export default class Field extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    const { type, rules, inputType = 'text' } = schema;
+    const { type, rules, inputType = 'text', format } = schema;
 
     def(this, 'formType', Field.FORM_TYPE);
     def(this, 'type', type);
@@ -112,9 +117,7 @@ export default class Field extends Element {
     const hasDefault = 'default' in schema;
     def(this, 'default', hasDefault ? schema.default : null);
 
-    const format = isCallable(schema.format) ? schema.format : formatter;
-
-    const formatted = ref(format.call(this, this.default));
+    const formatted = ref(formatter(this, this.default, format));
     const raw = ref(hasDefault ? this.default : '');
     const typed = ref(null);
 
@@ -123,7 +126,7 @@ export default class Field extends Element {
 
       this.validate(raw.value).then(({ value }) => {
         typed.value = value;
-        formatted.value = format.call(this, typed.value);
+        formatted.value = formatter(this, typed.value, format);
       });
     });
 

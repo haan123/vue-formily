@@ -2,9 +2,12 @@ import { VueConstructor } from 'vue';
 import { FormSchema } from './core/elements/types';
 import { ValidationRuleSchema, VueFormilyOptions } from './types';
 import { merge } from './utils';
-import { registerElement, registerModelizer } from './helpers/elements';
+import { registerElement, plug } from './helpers';
 import { Form, Field, Group, Collection } from './core/elements';
-import { registerLocalizer } from './helpers';
+import {
+  stringFormatter as defaultStringFormatter,
+  dateTimeFormatters as defaultDateTimeFormatters
+} from './utils/formatters';
 
 const defaultOptions: VueFormilyOptions = {
   alias: 'forms'
@@ -20,16 +23,14 @@ export default class VueFormily {
 
   constructor(options: VueFormilyOptions = {}) {
     const _options = merge({}, defaultOptions, options);
-    this.alias = _options.alias;
-    this.rules = _options.rules;
 
-    if (_options.localizer) {
-      registerLocalizer(_options.localizer);
-    }
+    const { alias, rules, localizer, stringFormatter, dateTimeFormatters } = _options;
 
-    if (_options.modelizer) {
-      registerModelizer(_options.modelizer);
-    }
+    this.alias = alias;
+    this.rules = rules;
+
+    plug('stringFormatter', stringFormatter || defaultStringFormatter);
+    plug('dateTimeFormatters', dateTimeFormatters || defaultDateTimeFormatters);
   }
 
   add(schema: FormSchema) {

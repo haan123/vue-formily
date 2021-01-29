@@ -28,6 +28,6 @@ export interface VueFormilyOptions {
   modelizer?: any;
 }
 
-export type Localizer = (value: string, props?: Record<string, PropValue<any>>, data?: Record<string, any>) => string
+export type Localizer = (value: string, props?: Record<string, any>, data?: Record<string, any>) => string
 
 export type Modelizer = (this: Element, formId: string) => string

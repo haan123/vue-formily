@@ -1,10 +1,11 @@
 import { RuleSchema, RuleResult, Validator, ValidationMessage } from './types';
 
 import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isNonEmptyString } from '../../utils';
-import { getLocalizer } from '@/helpers';
 import { Objeto } from '../Objeto';
+import { getPlug } from '@/helpers';
 
-const localizer = getLocalizer();
+const localizer = getPlug('localizer');
+
 let count = 0;
 
 type Data = {};

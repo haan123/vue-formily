@@ -1,11 +1,10 @@
 import { Localizer } from "../types";
+import { merge } from "../utils";
+import { stringFormatter } from "../utils/formatters";
+import { getPlug } from "./plugs";
 
-let _localizer: Localizer = (value: string) => value
+export const localizer: Localizer = (value: string, props: Record<string, any> = {}, data: Record<string, any> = {}) => {
+  const ressource = getPlug(`resource.${data.locale || 'en-US'}`);
 
-export function registerLocalizer(localizer: Localizer) {
-  _localizer = localizer;
-}
-
-export function getLocalizer() {
-  return _localizer;
-}
+  return stringFormatter(value, merge(ressource, props), data);
+};

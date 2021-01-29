@@ -43,3 +43,9 @@ export function each(obj: any, fn: (propValue: any, propName: string, index: num
     }
   }
 }
+
+// export function pick(obj: any, path: string | string[]) {
+//   const _path = typeof path === 'string' ? path.split('.') : path;
+
+//   return _path.reduce((acc, propName: string) => acc ? acc[propName] : undefined, obj);
+// }

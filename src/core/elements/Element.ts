@@ -1,6 +1,6 @@
 import { PropValue } from '../../types';
 import { ElementData, ElementSchema } from './types';
-import { genProps, getModelizer } from '../../helpers/elements';
+import { genProps } from '../../helpers/elements';
 import { def, getter, logMessage, valueOrNull } from '../../utils';
 import { Objeto, reactiveGetter } from '../Objeto';
 
@@ -41,12 +41,10 @@ export default abstract class Element extends Objeto {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
 
-    const modelizer = getModelizer();
-
     def(this, '_uid', uid++);
     def(this, 'parent', valueOrNull(parent));
-    def(this, 'model', schema.model || modelizer.call(this, this.formId), { writable: true });
     getter(this, 'formId', schema.formId);
+    def(this, 'model', schema.model || this.formId, { writable: true });
     this.props = genProps([schema.props], this);
 
     this._initialize(schema, parent, _storage.get(this) as ElementData, ...args);

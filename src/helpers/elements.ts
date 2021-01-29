@@ -4,20 +4,11 @@ import { ElementConstructor, Modelizer, ValidationRuleSchema } from '../types';
 import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, valueOrNull } from '../utils';
 
 const _Elements: ElementConstructor[] = [];
-let _modelizer = (value: string) => value
 
 export function registerElement(F: ElementConstructor) {
   if (!_Elements.includes(F)) {
     _Elements.unshift(F);
   }
-}
-
-export function registerModelizer(modelizer: Modelizer) {
-  _modelizer = modelizer;
-}
-
-export function getModelizer() {
-  return _modelizer;
 }
 
 export function genFields(fields: any[], ...args: any[]) {
