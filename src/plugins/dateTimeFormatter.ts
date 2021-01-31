@@ -1,8 +1,15 @@
-import DateTime from '../DateTime';
-import { zeroPad } from '../strings';
+import { zeroPad, DateTime } from '../utils';
 
 export type DateTimeFormatter = (dt: DateTime, token: string) => string;
 
+const formattingTokensRegExp = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g
+const escapedStringRegExp = /^'([^]*?)'?$/
+const doubleQuoteRegExp = /''/g
+
+function cleanEscapedString(input: string) {
+  const match = input.match(escapedStringRegExp);
+  return match ? match[1].replace(doubleQuoteRegExp, "'") : input;
+}
 
 const MILLISECONDS_IN_DAY = 86400000;
 
@@ -25,7 +32,7 @@ function weekInMonth(year: number, month: number, day: number) {
   return Math.floor(remain > 0 ? 1 + (remain / 7) + (remain % 7 !== 0 ? 1 : 0) : 1)
 }
 
-export const dateTimeFormatters: Record<string, DateTimeFormatter> = {
+export const formatters: Record<string, DateTimeFormatter> = {
   // Era designator, e.g, AD
   G(dt: DateTime, token: string) {
     return `{era_${getLengthName(token.length)}_${dt.year < 0 ? 'b' : 'a'}}`;
@@ -164,4 +171,25 @@ export const dateTimeFormatters: Record<string, DateTimeFormatter> = {
 
     throw new RangeError(`invalid ISO 8601 format: length=${length}`);
   }
+}
+
+export default function dateTimeFormatter(date: Date, format: string){
+  return format
+    .replace(formattingTokensRegExp, (token: string, formatType: string) => {
+      if (token === "''") {
+        return "'"
+      }
+
+      if (formatType === "'") {
+        return cleanEscapedString(token)
+      }
+
+      const formatter = formatters[formatType]
+
+      if (formatter) {
+        return formatter(new DateTime(date.getTime()), token);
+      }
+
+      return token;
+    });
 }

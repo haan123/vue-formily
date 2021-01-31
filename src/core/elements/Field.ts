@@ -49,9 +49,17 @@ const typing = {
 
 function formatter(field: Field, value: any, format?: Format): string {
   const { type, props } = field;
-  const _formatter = getPlug(` n.${type === 'date' ? 'dateTime' : 'string'}`);
+  const _formatter = getPlug(`formatters.${type === 'date' ? 'dateTime' : 'string'}`);
 
-  return _formatter(value, isCallable(format) ? format.call(field, value) : format, props, { field });
+  if (!_formatter) {
+    return value;
+  }
+
+  const localizer = getPlug('localizer');
+  const args = [props, { field }];
+  const result = _formatter(value, isCallable(format) ? format.call(field, value) : format, ...args);
+
+  return localizer(result, ...args);
 }
 
 export default class Field extends Element {

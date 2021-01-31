@@ -1,17 +1,15 @@
 import { VueConstructor } from 'vue';
 import { FormSchema } from './core/elements/types';
 import { ValidationRuleSchema, VueFormilyOptions } from './types';
-import { merge } from './utils';
+import { merge, noop } from './utils';
 import { registerElement, plug } from './helpers';
 import { Form, Field, Group, Collection } from './core/elements';
-import {
-  stringFormatter as defaultStringFormatter,
-  dateTimeFormatters as defaultDateTimeFormatters
-} from './utils/formatters';
+import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from './constants';
 
 const defaultOptions: VueFormilyOptions = {
   alias: 'forms'
 };
+
 
 export default class VueFormily {
   static version = '__VERSION__';
@@ -24,13 +22,14 @@ export default class VueFormily {
   constructor(options: VueFormilyOptions = {}) {
     const _options = merge({}, defaultOptions, options);
 
-    const { alias, rules, localizer, stringFormatter, dateTimeFormatters } = _options;
+    const { alias, rules, localizer = noop, stringFormatter = noop, dateTimeFormatter = noop } = _options;
 
     this.alias = alias;
     this.rules = rules;
 
-    plug('stringFormatter', stringFormatter || defaultStringFormatter);
-    plug('dateTimeFormatters', dateTimeFormatters || defaultDateTimeFormatters);
+    plug(LOCALIZER, localizer);
+    plug(STRING_FORMATTER, stringFormatter);
+    plug(DATE_TIME_FORMATTER, dateTimeFormatter);
   }
 
   add(schema: FormSchema) {

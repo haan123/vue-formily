@@ -19,9 +19,9 @@ function wiy(year: number) {
   return (year + Math.floor(year / 4) - Math.floor(year / 100) + Math.floor(year / 400)) % 7;
 }
 
-function computeWeekInYear(weekYear: number) {
-  const wiy1 = wiy(weekYear);
-  const wiy2 = wiy(weekYear - 1);
+function computeWeeksInYear(year: number) {
+  const wiy1 = wiy(year);
+  const wiy2 = wiy(year - 1);
 
   return 52 + (wiy1 === 4 || wiy2 === 3 ? 1 : 0);
 }
@@ -47,8 +47,8 @@ function gregorianToWeek(gregObj: DateTime) {
 
   if (weekNumber < 1) {
     weekYear = year - 1;
-    weekInYear = computeWeekInYear(weekYear);
-  } else if (weekNumber > computeWeekInYear(year)) {
+    weekInYear = computeWeeksInYear(weekYear);
+  } else if (weekNumber > computeWeeksInYear(year)) {
     weekYear = year + 1;
     weekInYear = 1;
   } else {
@@ -58,7 +58,7 @@ function gregorianToWeek(gregObj: DateTime) {
   return { weekYear, weekInYear, weekday };
 }
 
-export default class DateTime {
+export class DateTime {
   readonly millisecond!: number;
   readonly second!: number;
   readonly minute!: number;
@@ -86,8 +86,6 @@ export default class DateTime {
     const date = new Date(this.timestamp + this.offset * 60 * 1000);
     const timeZone = new Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-    const w = gregorianToWeek(this);
-
     def(this, 'instance', date);
     def(this, 'year', date.getUTCFullYear());
     def(this, 'month', date.getUTCMonth() + 1);
@@ -97,6 +95,9 @@ export default class DateTime {
     def(this, 'second', date.getUTCSeconds());
     def(this, 'millisecond', date.getUTCMilliseconds());
     def(this, 'timeZone', timeZone);
+
+    const w = gregorianToWeek(this);
+
     def(this, 'weekday', w.weekday);
     def(this, 'weekYear', w.weekYear);
     def(this, 'weekInYear', w.weekInYear);

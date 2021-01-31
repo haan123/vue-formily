@@ -21,3 +21,5 @@ export function valueOrNull(value: any) {
 export function now() {
   return Date.now();
 }
+
+export function noop(value: any) { return value; }
