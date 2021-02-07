@@ -41,14 +41,13 @@ function gregorianToWeek(gregObj: DateTime) {
    * where
    * doy = 1 → 365/366, dow = 1 → 7 og div means integer division (i.e. the remainder after a division is discarded).
    */
-  let weekNumber = Math.floor((10 + ordinal - weekday) / 7);
+  let weekInYear = Math.floor(((14 - gregObj.minimalDaysInFirstWeek) + ordinal - weekday) / 7);
   let weekYear;
-  let weekInYear;
 
-  if (weekNumber < 1) {
+  if (weekInYear < 1) {
     weekYear = year - 1;
-    weekInYear = computeWeeksInYear(weekYear);
-  } else if (weekNumber > computeWeeksInYear(year)) {
+    weekInYear = computeWeeksInYear(weekYear)
+  } else if (weekInYear > computeWeeksInYear(year)) {
     weekYear = year + 1;
     weekInYear = 1;
   } else {
@@ -56,6 +55,13 @@ function gregorianToWeek(gregObj: DateTime) {
   }
 
   return { weekYear, weekInYear, weekday };
+}
+
+export type DateTimeOptions = {
+  // 1 -> 7 ~ monday -> sunday
+  firstDayOfWeek?: number;
+  // 1 -> 7
+  minimalDaysInFirstWeek?: number;
 }
 
 export class DateTime {
@@ -73,20 +79,27 @@ export class DateTime {
   readonly weekday!: number;
   readonly weekYear!: number;
   readonly weekInYear!: number;
+  readonly dayOfWeek!: number;
+  readonly firstDayOfWeek!: number;
+  readonly minimalDaysInFirstWeek!: number;
 
   static dayOfWeek(year: number, month: number, day: number) {
     const dow = new Date(Date.UTC(year, month - 1, day)).getUTCDay();
     return dow === 0 ? 7 : dow;
   }
 
-  constructor(timestamp: number) {
+  constructor(timestamp: number, options: DateTimeOptions = {}) {
     def(this, 'timestamp', timestamp || Date.now());
     def(this, 'offset', -new Date(this.timestamp).getTimezoneOffset());
 
+    const { minimalDaysInFirstWeek = 4, firstDayOfWeek = 1 } = options;
     const date = new Date(this.timestamp + this.offset * 60 * 1000);
     const timeZone = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const utcDay = date.getUTCDay()
 
     def(this, 'instance', date);
+    def(this, 'firstDayOfWeek', options.firstDayOfWeek || 1);
+    def(this, 'minimalDaysInFirstWeek', +minimalDaysInFirstWeek);
     def(this, 'year', date.getUTCFullYear());
     def(this, 'month', date.getUTCMonth() + 1);
     def(this, 'day', date.getUTCDate());
@@ -95,7 +108,8 @@ export class DateTime {
     def(this, 'second', date.getUTCSeconds());
     def(this, 'millisecond', date.getUTCMilliseconds());
     def(this, 'timeZone', timeZone);
-
+    def(this, 'dayOfWeek', +firstDayOfWeek + utcDay + 6);
+console.log(this.dayOfWeek)
     const w = gregorianToWeek(this);
 
     def(this, 'weekday', w.weekday);

@@ -44,8 +44,27 @@ export function each(obj: any, fn: (propValue: any, propName: string, index: num
   }
 }
 
-// export function pick(obj: any, path: string | string[]) {
-//   const _path = typeof path === 'string' ? path.split('.') : path;
+const rindex = /\[(\d+)\]/g;
 
-//   return _path.reduce((acc, propName: string) => acc ? acc[propName] : undefined, obj);
-// }
+export function pick(obj: any, path: string | string[]) {
+  const _path = typeof path === 'string' ? path.split('.') : path;
+
+  return _path.reduce((acc, propName: string) => {
+    acc = acc[propName.split('[')[0]]
+
+    if (acc) {
+      // matches name[0], name[0][1]
+      let m = rindex.exec(propName)
+
+      do {
+        if (m) {
+          acc = acc[m[1]]
+        }
+
+        m = rindex.exec(acc);
+      } while (m)
+    }
+
+    return acc
+  }, obj);
+}

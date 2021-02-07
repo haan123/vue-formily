@@ -18,7 +18,7 @@ describe('dateTimeFormatter', () => {
   const date = new Date('2020-12-27T08:06:10.941Z');
 
   it('Should output `G GG GGG GGGG GGGGG` as keys', async () => {
-    expect(formatter(date, 'G GG GGG GGGG GGGGG')).toBe('{era_narrow_a} {era_short_a} {era_long_a} {era_long_a} {era_long_a}');
+    expect(formatter(date, 'G GG GGG GGGG GGGGG')).toBe('{era_narrow[0]} {era_short[0]} {era_long[0]} {era_long[0]} {era_long[0]}');
   });
 
   it('Should output `G GG GGG GGGG GGGGG` as localized strings', async () => {
@@ -36,6 +36,22 @@ describe('dateTimeFormatter', () => {
   });
 
   it('M MM MMM MMMM MMMMM', async () => {
-    expect(formatter(date, 'M MM MMM MMMM MMMMM')).toBe('2020 20 2020 2020 02020');
+    expect(localizer.translate(formatter(date, 'M MM MMM MMMM MMMMM'))).toBe('12 12 D Dec December');
+  });
+
+  it('w ww www wwww wwwww', async () => {
+    // default ISO 8601
+    expect(formatter(new Date('2021-01-06'), 'w ww www wwww wwwww')).toBe('1 01 001 0001 00001');
+    expect(formatter(new Date('2020-02-29'), 'w ww www wwww wwwww', {
+      minimalDaysInFirstWeek: 1
+    })).toBe('9 09 009 0009 00009');
+    expect(formatter(new Date('2020-02-29'), 'w ww www wwww wwwww', {
+      minimalDaysInFirstWeek: 1,
+      firstDayOfWeek: 7,
+    })).toBe('9 09 009 0009 00009');
+  });
+
+  it('W WW WWW WWWW WWWWW', async () => {
+    expect(formatter(new Date('2021-01-18'), 'W WW WWW WWWW WWWWW')).toBe('4 04 004 0004 00004');
   });
 });

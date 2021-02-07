@@ -1,4 +1,4 @@
-import { zeroPad, DateTime } from '../utils';
+import { zeroPad, DateTime, DateTimeOptions } from '../utils';
 
 export type DateTimeFormatter = (dt: DateTime, token: string) => string;
 
@@ -35,7 +35,7 @@ function weekInMonth(year: number, month: number, day: number) {
 export const formatters: Record<string, DateTimeFormatter> = {
   // Era designator, e.g, AD
   G(dt: DateTime, token: string) {
-    return `{era_${getLengthName(token.length)}_${dt.year < 0 ? 'b' : 'a'}}`;
+    return `{era_${getLengthName(token.length)}[${dt.year < 0 ? 1 : 0}]}`;
   },
   // Year, e.g, 2021; 21
   y(dt: DateTime, token: string) {
@@ -55,7 +55,7 @@ export const formatters: Record<string, DateTimeFormatter> = {
       return zeroPad(dt.month, 2);
     }
 
-    return `{month_${getLengthName(token.length - 2)}_${dt.month}}`;
+    return `{month_${getLengthName(token.length - 2)}[${dt.month - 1}]}`;
   },
   // Week in year, e.g, 27
   w(dt: DateTime, token: string) {
@@ -173,7 +173,7 @@ export const formatters: Record<string, DateTimeFormatter> = {
   }
 }
 
-export default function dateTimeFormatter(date: Date, format: string){
+export default function dateTimeFormatter(date: Date, format: string, options?: DateTimeOptions){
   return format
     .replace(formattingTokensRegExp, (token: string, formatType: string) => {
       if (token === "''") {
@@ -187,7 +187,7 @@ export default function dateTimeFormatter(date: Date, format: string){
       const formatter = formatters[formatType]
 
       if (formatter) {
-        return formatter(new DateTime(date.getTime()), token);
+        return formatter(new DateTime(date.getTime(), options), token);
       }
 
       return token;

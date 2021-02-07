@@ -1,5 +1,3 @@
-import { logError } from "@/utils";
-
 const _plugs: Record<string, any> = {};
 
 export function plug(name: string, p: any) {

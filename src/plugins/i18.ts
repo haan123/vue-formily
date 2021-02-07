@@ -3,7 +3,7 @@ import { STRING_FORMATTER } from "../constants";
 import { getPlug } from "../helpers";
 import { merge } from "../utils";
 
-export type Resource = Record<string, string>;
+export type Resource = Record<string, string | string[]>;
 
 export type I18 = {
   translate: Localizer;
@@ -20,7 +20,7 @@ export default {
     return stringFormatter(value, merge(ressource, props));
   },
 
-  setResource(locale: string, resource: Record<string, string>) {
+  setResource(locale: string, resource: Record<string, string | string[]>) {
     _resources[locale] = resource;
   }
 }
