@@ -1,11 +1,40 @@
 import flushPromises from 'flush-promises';
 import { Field } from '@/core/elements';
 import { numeric } from '@/rules';
+import { plug } from '@/helpers';
+import { DATE_TIME_FORMATTER, STRING_FORMATTER } from '@/constants';
+import dateTimeFormatter from '@/plugins/dateTimeFormatter';
+import stringFormatter from '@/plugins/stringFormatter';
+
+plug(DATE_TIME_FORMATTER, dateTimeFormatter);
+plug(STRING_FORMATTER, stringFormatter);
 
 describe('Field', () => {
   const field = new Field({
     formId: 'field_name',
     type: 'number'
+  });
+
+  it('Can format', async () => {
+    const f = new Field({
+      formId: 'field_name',
+      type: 'string',
+      format: '{abc} {obj.aaa} {arr[0]} {arr[1].ddd} {field.value} {field.raw}',
+      value: 'test',
+      props: {
+        abc: 12,
+        obj: {
+          aaa: '123'
+        },
+        arr: [1, {
+          ddd: '2'
+        }]
+      }
+    });
+
+    await flushPromises();
+
+    expect(f.formatted).toBe('12 123 1 2 test test');
   });
 
   it('Should invalidated with wrong `typed value` entered', async () => {

@@ -3,4 +3,4 @@ export * from './strings';
 export * from './collections';
 export * from './objects';
 export * from './common';
-export * from './DateTime';
+export * from './Calendar';

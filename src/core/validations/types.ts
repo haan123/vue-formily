@@ -12,7 +12,7 @@ export type RuleResult = {
 export type Validator = (
   value: any,
   props: Record<string, any>,
-  data: Record<string, any> | null
+  data: Record<string, any>
 ) => string | boolean | Promise<string | boolean>;
 
 export interface RuleSchema {

@@ -14,10 +14,19 @@ export function isPlainObject(obj: any): obj is Record<string, any> {
   return _toString.call(obj) === '[object Object]';
 }
 
+export function isPlainNumber(value: any): value is number {
+  return typeof value === 'number';
+}
+
+export function isString(value: any): value is string {
+  return typeof value === 'string';
+}
+
 const rnumber = /^\d+$/;
 export function isNumber(value: any) {
-  return typeof value === 'number' || rnumber.test(value);
+  return isPlainNumber(value) || rnumber.test(value);
 }
+
 
 export function isCallable(fn: unknown): fn is Function {
   return typeof fn === 'function';

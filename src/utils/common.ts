@@ -1,13 +1,15 @@
+import { isPlainNumber, isPlainObject, isString } from "./assertions";
+
 export function getLength(value: any): number {
   if (Array.isArray(value)) {
     return value.length;
   }
 
-  if (value !== null && typeof value === 'object') {
+  if (value !== null && isPlainObject(value)) {
     return Object.keys(value).length;
   }
 
-  if (typeof value === 'string') {
+  if (isString(value)) {
     return value.length;
   }
 

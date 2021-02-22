@@ -35,7 +35,7 @@ export default class Rule extends Objeto {
       if (!('allowEmpty' in rule) || rule.allowEmpty) {
         this.validator = rule.validator;
       } else if (!rule.allowEmpty) {
-        this.validator = (value: any, props: Record<string, any>, data: Record<string, any> | null) => {
+        this.validator = (value: any, props: Record<string, any>, data: Record<string, any> = {}) => {
           return !isEmpty(value) && (!rule.validator || (rule.validator as Validator).call(this, value, props, data));
         };
       }

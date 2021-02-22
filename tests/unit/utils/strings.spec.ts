@@ -27,7 +27,7 @@ describe('strings utils', () => {
     });
   });
 
-  describe('formatDateTime', () => {
+  describe('formatCalendar', () => {
     const date = new Date('2021-01-27T08:06:10.941Z');
 
     it('Should output `G GG GGG GGGG GGGGG` as keys', async () => {

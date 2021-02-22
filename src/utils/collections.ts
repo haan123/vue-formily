@@ -1,4 +1,4 @@
-import { isPlainObject } from './assertions';
+import { isPlainObject, isString } from './assertions';
 
 export function merge(target: any, ...sources: any[]) {
   return sources.reduce((acc: any, source: any) => {
@@ -46,19 +46,31 @@ export function each(obj: any, fn: (propValue: any, propName: string, index: num
 
 const rindex = /\[(\d+)\]/g;
 
-export function pick(obj: any, path: string | string[]) {
-  const _path = typeof path === 'string' ? path.split('.') : path;
-
-  return _path.reduce((acc, propName: string) => {
-    acc = acc[propName.split('[')[0]]
-
+export function pick(path: string | string[], obj: any) {
+  const _path = isString(path) ? path.split('.') : path;
+  let found = true;
+  const value = _path.reduce((acc, fullName: string) => {
     if (acc) {
+      let name = fullName.split('[')[0];
+
+      if (!(name in acc)) {
+        found = false;
+      }
+
+      acc = acc[name];
+
       // matches name[0], name[0][1]
-      let m = rindex.exec(propName)
+      let m = rindex.exec(fullName)
 
       do {
         if (m) {
-          acc = acc[m[1]]
+          name = m[1];
+
+          if (!(name in acc)) {
+            found = false;
+          }
+
+          acc = acc[name]
         }
 
         m = rindex.exec(acc);
@@ -67,4 +79,24 @@ export function pick(obj: any, path: string | string[]) {
 
     return acc
   }, obj);
+
+  return {
+    found,
+    value
+  }
+}
+
+export function picks(path: string | string[], ...args: any[]) {
+  const length = args.length;
+  let result;
+
+  for (let i = 0; i < length; i++) {
+    result = pick(path, args[i]);
+
+    if (result.found) {
+      return result.value;
+    }
+  }
+
+  return result;
 }

@@ -19,7 +19,7 @@ export function def(
   }
 }
 
-export function ref(value: any): Ref<any> {
+export function ref(value?: any): Ref<any> {
   const fns: Record<string, any> = {};
 
   return {

@@ -1,7 +1,7 @@
 import { reactiveGetter } from '@/core/Objeto';
-import { ElementConstructor, Modelizer, ValidationRuleSchema } from '../types';
+import { ElementConstructor, ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, valueOrNull } from '../utils';
+import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, valueOrNull, isString } from '../utils';
 
 const _Elements: ElementConstructor[] = [];
 
@@ -74,7 +74,7 @@ export function genProps(
 
   properties.forEach(props => {
     if (Array.isArray(props)) {
-      if (props.length === 2 && typeof props[0] === 'string') {
+      if (props.length === 2 && isString(props[0])) {
         genProp(_props, props[1], props[0], context, ...args);
       } else {
         props.forEach(p => {
@@ -96,7 +96,7 @@ export function genProps(
 }
 
 export function traverseFields(path: string | string[] = [], fields: any) {
-  if (typeof path === 'string') path = path.split('.');
+  if (isString(path)) path = path.split('.');
 
   const fieldName = path.shift();
   let field = fields.find((f: any) => f.formId === fieldName);

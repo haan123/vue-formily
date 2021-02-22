@@ -2,12 +2,13 @@ import { ValidationResult } from '../validations/types';
 import { ElementData, FieldSchema, FieldType, FieldValue, Format } from './types';
 
 import Element from './Element';
-import { def, logMessage, isCallable, setter, ref, Ref } from '../../utils';
+import { def, logMessage, isCallable, setter, ref, Ref, isNullOrUndefined } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
 import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName, getPlug } from '../../helpers';
 import { reactiveGetter } from '../Objeto';
 import { numeric } from '../../rules';
 import { Rule } from '../validations';
+import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from '@/constants';
 
 type FieldValidationResult = ValidationResult & {
   value: FieldValue;
@@ -23,11 +24,16 @@ let _privateData: FieldData;
 
 const dumpRule = new Rule(() => true);
 
-const typing = {
+const typing: Record<string, {
+  cast: (value: any) => FieldValue;
+  formatter?: string;
+  rule?: Rule;
+}> = {
   string: {
     cast(value: any) {
       return value !== null ? '' + value : null;
-    }
+    },
+    formatter: STRING_FORMATTER
   },
   number: {
     rule: new Rule(numeric),
@@ -43,23 +49,26 @@ const typing = {
   date: {
     cast(value: any) {
       return new Date(value);
-    }
+    },
+    formatter: DATE_TIME_FORMATTER
   }
 }
 
-function formatter(field: Field, value: any, format?: Format): string {
-  const { type, props } = field;
-  const _formatter = getPlug(`formatters.${type === 'date' ? 'dateTime' : 'string'}`);
+function formatter(field: Field, format?: Format): string {
+  const { type, props, raw, value } = field;
+  const _formatter = getPlug(typing[type].formatter || '');
 
-  if (!_formatter) {
-    return value;
+  if (!format || !_formatter) {
+    return raw;
   }
 
-  const localizer = getPlug('localizer');
-  const args = [props, { field }];
-  const result = _formatter(value, isCallable(format) ? format.call(field, value) : format, ...args);
+  const localizer = getPlug(LOCALIZER);
+  const args = [props, {
+    field
+  }];
+  const result = _formatter(isCallable(format) ? format.call(field, value) : format, ...args);
 
-  return localizer(result, ...args);
+  return localizer ? localizer(result, ...args) : result;
 }
 
 export default class Field extends Element {
@@ -114,7 +123,7 @@ export default class Field extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    const { type, rules, inputType = 'text', format } = schema;
+    const { type, rules, inputType = 'text', format, value } = schema;
 
     def(this, 'formType', Field.FORM_TYPE);
     def(this, 'type', type);
@@ -125,7 +134,7 @@ export default class Field extends Element {
     const hasDefault = 'default' in schema;
     def(this, 'default', hasDefault ? schema.default : null);
 
-    const formatted = ref(formatter(this, this.default, format));
+    const formatted = ref(formatter(this, format));
     const raw = ref(hasDefault ? this.default : '');
     const typed = ref(null);
 
@@ -134,7 +143,7 @@ export default class Field extends Element {
 
       this.validate(raw.value).then(({ value }) => {
         typed.value = value;
-        formatted.value = formatter(this, typed.value, format);
+        formatted.value = formatter(this, format);
       });
     });
 
@@ -146,12 +155,14 @@ export default class Field extends Element {
     reactiveGetter(this, 'error', _privateData.error);
     reactiveGetter(this, 'checked', () => this.value === true);
 
+    this.value = value || this.default;
+
     _privateData.raw = raw;
     _privateData.typed = typed;
   }
 
   isValid() {
-    return !_privateData.invalidated && !this.validation.valid;
+    return !_privateData.invalidated && this.validation.valid;
   }
 
   invalidate(error?: string) {
@@ -183,7 +194,7 @@ export default class Field extends Element {
 
     this.pending = true;
 
-    if ('rule' in typi) {
+    if (typi.rule) {
       castingRule = (this.validation as ExtValidation<any>)[typi.rule.name] || typi.rule;
     }
 

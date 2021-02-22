@@ -1,13 +1,22 @@
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.TimeZone;
 
 public class test {
   public static void main(String[] args){
-    SimpleDateFormat f = new SimpleDateFormat("w ww www wwww wwwww");
+    final SimpleDateFormat f = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+    f.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-    Date d = new Date("2021/01/18 08:06:10");
+    try {
+      final java.util.Date dateObj = f.parse("2020-12-27T08:06:10");
 
-    System.out.println(f.format(d));
+      SimpleDateFormat f2 = new SimpleDateFormat("H HH HHH HHHH HHHHH k kk kkk kkkk kkkkk z ZZZZ");
+
+      System.out.println(f2.format(dateObj));
+    }
+    catch (Exception e) {
+    //The handling for the code
+    }
   }//End of main
 }//End of FirstJavaProgram Class
