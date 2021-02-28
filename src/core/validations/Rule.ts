@@ -2,9 +2,8 @@ import { RuleSchema, RuleResult, Validator, ValidationMessage } from './types';
 
 import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isNonEmptyString } from '../../utils';
 import { Objeto } from '../Objeto';
-import { getPlug } from '@/helpers';
-
-const localizer = getPlug('localizer');
+import { getPlug, emit } from '../../helpers';
+import { LOCALIZER } from '../../constants';
 
 let count = 0;
 
@@ -28,6 +27,7 @@ export default class Rule extends Objeto {
     super();
 
     let vProps;
+    let message = null;
 
     if (isCallable(rule)) {
       this.validator = rule;
@@ -42,7 +42,7 @@ export default class Rule extends Objeto {
 
       vProps = rule.props;
 
-      def(this, 'message', isCallable(rule.message) ? rule.message : (!isNonEmptyString(rule.message) ? rule.message : null), { writable: true })
+      message = isCallable(rule.message) ? rule.message : (isNonEmptyString(rule.message) ? rule.message : null);
     } else {
       throw new Error(logMessage('Missing rule\'s validator'));
     }
@@ -50,8 +50,22 @@ export default class Rule extends Objeto {
     def(this, 'data', options.data || {}, { writable: true });
     def(this, 'name', rule.name || `r${count++}`);
     def(this, 'props', vProps || {});
+    def(this, 'message', message, { writable: true });
+    setter(this, 'error', null, this.setError);
+  }
 
-    setter(this, 'error', null, (error: any) => isNonEmptyString(error) ? localizer(error, this.props, this.data) : null)
+  setError(error: any) {
+    if (isNonEmptyString(error)) {
+      const localizer = getPlug(LOCALIZER)
+
+      if (localizer) {
+        return localizer(error, this.props, this.data)
+      }
+
+      return error
+    }
+
+    return null;
   }
 
   reset() {
@@ -70,6 +84,8 @@ export default class Rule extends Objeto {
 
   async validate(value: any): Promise<RuleResult> {
     const message = this.message;
+
+
     const result = await this.validator(value, this.props, this.data);
     let error = null;
     let valid = true;
@@ -80,7 +96,7 @@ export default class Rule extends Objeto {
       }
 
       valid = false;
-    } else if(isNonEmptyString(result)) {
+    } else if (isNonEmptyString(result)) {
       error = result;
       valid = false;
     }
@@ -88,9 +104,13 @@ export default class Rule extends Objeto {
     this.error = error;
     this.valid = valid;
 
-    return {
+    const ret = {
       error,
       valid
     };
+
+    emit(this, 'validated', ret)
+
+    return ret;
   }
 }

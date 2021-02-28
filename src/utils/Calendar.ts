@@ -1,6 +1,5 @@
-import { getter } from ".";
-import { isNullOrUndefined, isPlainNumber, isString } from "./assertions";
-import { ref, setter } from "./objects";
+import { isNullOrUndefined, isPlainNumber } from "./assertions";
+import { ref, setter, getter } from "./objects";
 
 const ladder = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 /**
@@ -14,7 +13,7 @@ const ladder = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
  * 3 4 5 6 7 1 2
  * 2 3 4 5 6 7 1
  */
-const weeksMap = [1, 7, 6, 5, 4 ,3 , 2];
+const weeksMap = [1, 7, 6, 5, 4 ,3, 2];
 const rsep = /^[, \u200e]+/;
 const rtimezone = /([+-])(\d{1,2})(?::(\d{1,2}))?/;
 const MINUTE = 60000;

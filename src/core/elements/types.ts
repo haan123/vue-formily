@@ -36,8 +36,9 @@ export interface FieldSchema extends ElementSchema {
   inputType?: string;
   format?: Format;
   default?: any;
-  value?: FieldValue;
+  value?: any;
   rules?: ValidationRuleSchema[];
   checkedValue?: string;
   locale?: string;
+  formatOptions?: Record<string, any>;
 }

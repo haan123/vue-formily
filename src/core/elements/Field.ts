@@ -18,6 +18,7 @@ type FieldData = ElementData & {
   error: string | null;
   raw: Ref<any>;
   typed: Ref<FieldValue>;
+  shaked: Ref<boolean>;
 };
 
 let _privateData: FieldData;
@@ -54,7 +55,7 @@ const typing: Record<string, {
   }
 }
 
-function formatter(field: Field, format?: Format): string {
+function formatter(field: Field, format?: Format, options?: Record<string, any>): string {
   const { type, props, raw, value } = field;
   const _formatter = getPlug(typing[type].formatter || '');
 
@@ -66,7 +67,7 @@ function formatter(field: Field, format?: Format): string {
   const args = [props, {
     field
   }];
-  const result = _formatter(isCallable(format) ? format.call(field, value) : format, ...args);
+  const result = _formatter(value, isCallable(format) ? format.call(field, value) : format, options, ...args);
 
   return localizer ? localizer(result, ...args) : result;
 }
@@ -110,6 +111,7 @@ export default class Field extends Element {
   readonly error!: string | null;
   readonly checked!: boolean;
   readonly validation!: Validation;
+  readonly shaked!: boolean;
   pending = false;
   raw!: string;
   value!: FieldValue;
@@ -123,7 +125,7 @@ export default class Field extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    const { type, rules, inputType = 'text', format, value } = schema;
+    const { type, rules, inputType = 'text', format, formatOptions, default: defu } = schema;
 
     def(this, 'formType', Field.FORM_TYPE);
     def(this, 'type', type);
@@ -131,19 +133,28 @@ export default class Field extends Element {
 
     def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this, { field: this })));
 
-    const hasDefault = 'default' in schema;
-    def(this, 'default', hasDefault ? schema.default : null);
+    const typi = typing[this.type];
 
-    const formatted = ref(formatter(this, format));
-    const raw = ref(hasDefault ? this.default : '');
+    if (typi.rule && !(typi.rule.name in this.validation)) {
+      this.validation.addRule(typi.rule)
+    }
+
+    const hasDefault = defu !== undefined;
+    def(this, 'default', hasDefault ? defu : null);
+
+    const value = schema.value !== undefined ? schema.value : defu
+
+    const formatted = ref(null);
+    const raw = ref('');
     const typed = ref(null);
+    const shaked = ref(false);
 
     setter(this, 'value', typed, (val: any) => {
       raw.value = '' + val;
 
       this.validate(raw.value).then(({ value }) => {
         typed.value = value;
-        formatted.value = formatter(this, format);
+        formatted.value = formatter(this, format, formatOptions);
       });
     });
 
@@ -152,30 +163,59 @@ export default class Field extends Element {
     });
 
     reactiveGetter(this, 'formatted', formatted);
-    reactiveGetter(this, 'error', _privateData.error);
-    reactiveGetter(this, 'checked', () => this.value === true);
+    reactiveGetter(this, 'error', this.getError);
+    reactiveGetter(this, 'checked', this.isChecked);
+    reactiveGetter(this, 'shaked', shaked);
 
-    this.value = value || this.default;
+    if (value !== undefined) {
+      this.value = value;
+    }
 
     _privateData.raw = raw;
     _privateData.typed = typed;
+    _privateData.shaked = shaked;
+  }
+
+  getError() {
+    return _privateData.shaked && _privateData.error;
+  }
+
+  isChecked() {
+    return this.value === true;
   }
 
   isValid() {
-    return !_privateData.invalidated && this.validation.valid;
+    return this.validation.valid;
   }
 
   invalidate(error?: string) {
     _privateData.invalidated = true;
-    _privateData.error = error ? error : this.validation.errors[0] || null;
+    _privateData.error = error ? error : (this.validation.errors ? this.validation.errors[0] : null);
   }
 
   reset() {
-    _privateData.error = null;
-    _privateData.raw.value = this.default;
+    _privateData.raw.value = this.default !== null ? this.default : '';
     _privateData.typed.value = null;
 
     this.validation.reset();
+
+    this.clean()
+  }
+
+  clear() {
+    this.raw = '';
+
+    this.clean();
+  }
+
+  clean() {
+    _privateData.shaked.value = false;
+    _privateData.error = null;
+  }
+
+  shake() {
+    _privateData.error = this.validation.errors ? this.validation.errors[0] : null;
+    _privateData.shaked.value = false;
   }
 
   _initialize(schema: FieldSchema, parent: any, data: ElementData) {
@@ -195,17 +235,18 @@ export default class Field extends Element {
     this.pending = true;
 
     if (typi.rule) {
-      castingRule = (this.validation as ExtValidation<any>)[typi.rule.name] || typi.rule;
+      castingRule = (this.validation as ExtValidation<any>)[typi.rule.name];
     }
 
-    const result = await castingRule.validate(raw);
+    let { valid, error } = await castingRule.validate(raw);
+    let errors: string[] | null = [];
 
-    if (result.valid) {
+    if (valid) {
       typed = typi.cast(raw);
-      await this.validation.validate(typed, { excluded: [castingRule.name] });
+      ({ valid, errors } = await this.validation.validate(typed, { excluded: [castingRule.name] }));
+    } else if (error) {
+      errors.push(error)
     }
-
-    const { valid, errors } = this.validation;
 
     this.pending = false;
 

@@ -1,7 +1,8 @@
 import { RuleSchema, ValidationResult, Validator } from './types';
-import { getter, logMessage, ref, Ref } from '../../utils';
+import { getter, logMessage } from '../../utils';
 import Rule, { RuleOptions } from './Rule';
 import { Objeto, reactiveGetter } from '../Objeto';
+import { emit } from '../../helpers';
 
 type ValitionRuleSchema = Validator | RuleSchema;
 
@@ -9,17 +10,13 @@ export type ExtValidation<K extends string> = Validation & {
   [key in K]: Rule;
 }
 
-type Data = {
-  valid: Ref<boolean>;
-};
-let _storage: WeakMap<Validation, Data>;
 
 export type ValidationOptions = {
   data?: any;
 };
 
 export default class Validation extends Objeto {
-  readonly errors!: string[];
+  readonly errors!: string[] | null;
   readonly valid!: boolean;
   rules: Rule[] = [];
 
@@ -30,10 +27,16 @@ export default class Validation extends Objeto {
       this.addRules(rules, options);
     }
 
-    const _data = _storage.get(this) as Data;
+    reactiveGetter(this, 'errors', this.getErrors);
+    reactiveGetter(this, 'valid', this.isValid);
+  }
 
-    reactiveGetter(this, 'errors', this.rules.map(({ error }) => error).filter((error) => error));
-    reactiveGetter(this, 'valid', _data.valid);
+  getErrors() {
+    return !this.isValid() ? this.rules.map(({ error }) => error).filter((error) => error) : null;
+  }
+
+  isValid() {
+    return !this.rules.length || !!this.rules.find(({ valid }) => !valid);
   }
 
   addRules(rulesOrSchemas: (Rule | ValitionRuleSchema)[], options: ValidationOptions = {}): Rule[] {
@@ -73,12 +76,7 @@ export default class Validation extends Objeto {
     return removed;
   }
 
-  _setup(storage: any) {
-    _storage = storage;
-    _storage.set(this, {
-      valid: ref(true)
-    } as Data);
-  }
+  _setup() {}
 
   reset() {
     this.rules.forEach((rule) => rule.reset());
@@ -86,9 +84,10 @@ export default class Validation extends Objeto {
 
   async validate(value: any, options: { excluded?: string[], picks?: string[] } = {}): Promise<ValidationResult> {
     const errors: string[] = [];
-    const data = _storage.get(this) as Data;
     const { excluded, picks } = options;
     let valid = true;
+
+    emit(this, 'validating');
 
     if (this.rules) {
       let rules = picks ? this.rules.filter(({ name }) => picks.includes(name)) : this.rules;
@@ -109,11 +108,13 @@ export default class Validation extends Objeto {
       );
     }
 
-    data.valid.value = valid;
-
-    return {
-      errors,
+    const ret = {
+      errors: errors.length ? errors : null,
       valid
     };
+
+    emit(this, 'validated', ret);
+
+    return ret;
   }
 }
