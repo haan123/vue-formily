@@ -32,7 +32,7 @@ export type FieldValue = string | number | boolean | Date | null;
 export type Format = string | ((value: FieldValue) => string);
 
 export interface FieldSchema extends ElementSchema {
-  type: FieldType;
+  type?: FieldType;
   inputType?: string;
   format?: Format;
   default?: any;

@@ -6,6 +6,18 @@ export function isObject(obj: any) {
   return obj !== null && typeof obj === 'object';
 }
 
+export function isDateObject(date: any) {
+  try {
+    if (_toString.call(date) !== '[object Date]' || isNaN(date.getTime())) {
+      return false
+    }
+  } catch (error) {
+    return false;
+  }
+
+  return true;
+}
+
 export function isNullOrUndefined(value: unknown): value is undefined | null {
   return value === null || value === undefined;
 }

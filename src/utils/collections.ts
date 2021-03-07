@@ -100,3 +100,21 @@ export function picks(path: string | string[], ...args: any[]) {
 
   return result;
 }
+
+export function findIndex(arr: any[], fn: (...args: any[]) => boolean) {
+  let i = -1;
+
+  if (arr) {
+    arr.some((...args) => {
+      if (fn(...args)) {
+        i += 1;
+
+        return true;
+      }
+
+      return false;
+    })
+  }
+
+  return i;
+}

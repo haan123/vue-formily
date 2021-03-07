@@ -1,7 +1,7 @@
 import { RuleSchema, ValidationResult, Validator } from './types';
-import { getter, logMessage } from '../../utils';
+import { findIndex, getter } from '../../utils';
 import Rule, { RuleOptions } from './Rule';
-import { Objeto, reactiveGetter } from '../Objeto';
+import { Objeto } from '../Objeto';
 import { emit } from '../../helpers';
 
 type ValitionRuleSchema = Validator | RuleSchema;
@@ -27,8 +27,8 @@ export default class Validation extends Objeto {
       this.addRules(rules, options);
     }
 
-    reactiveGetter(this, 'errors', this.getErrors);
-    reactiveGetter(this, 'valid', this.isValid);
+    getter(this, 'errors', this.getErrors);
+    getter(this, 'valid', this.isValid);
   }
 
   getErrors() {
@@ -36,7 +36,7 @@ export default class Validation extends Objeto {
   }
 
   isValid() {
-    return !this.rules.length || !!this.rules.find(({ valid }) => !valid);
+    return !this.rules.length || !this.rules.find(({ valid }) => !valid);
   }
 
   addRules(rulesOrSchemas: (Rule | ValitionRuleSchema)[], options: ValidationOptions = {}): Rule[] {
@@ -49,13 +49,13 @@ export default class Validation extends Objeto {
 
   addRule(ruleOrSchema: Rule | ValitionRuleSchema, options: RuleOptions= {}): Rule {
     const rule = new Rule(ruleOrSchema, options);
-    const found = this.rules.find((r) => r.name === rule.name);
+    const currentRule = (this as ExtValidation<any>)[rule.name]
 
-    if (!found) {
-      this.rules = this.rules ? [...this.rules, rule] : [rule];
-    } else {
-      throw new Error(logMessage(`Rule "${rule.name}" is already added.`));
+    if (currentRule) {
+      this.removeRule(currentRule)
     }
+
+    this.rules = this.rules ? [...this.rules, rule] : [rule];
 
     getter(this, rule.name, rule, { configurable: true })
 
@@ -63,7 +63,7 @@ export default class Validation extends Objeto {
   }
 
   removeRule(remove: Rule | string) {
-    const index = this.rules.findIndex(({ name }) => {
+    const index = findIndex(this.rules, ({ name }) => {
       const n = remove instanceof Rule ? remove.name : remove;
 
       return name === n;
@@ -75,8 +75,6 @@ export default class Validation extends Objeto {
 
     return removed;
   }
-
-  _setup() {}
 
   reset() {
     this.rules.forEach((rule) => rule.reset());

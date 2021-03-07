@@ -1,7 +1,6 @@
-import { reactiveGetter } from '@/core/Objeto';
 import { ElementConstructor, ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, valueOrNull, isString } from '../utils';
+import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, valueOrNull, isString, getter } from '../utils';
 
 const _Elements: ElementConstructor[] = [];
 
@@ -46,7 +45,7 @@ function genProp(obj: any, props: Record<string, any>, key: string, context?: an
   const property = Object.getOwnPropertyDescriptor(props, key);
   const _getter = property && property.get;
 
-  reactiveGetter(
+  getter(
     obj,
     key,
     _getter

@@ -10,21 +10,66 @@ plug(DATE_TIME_FORMATTER, dateTimeFormatter);
 plug(STRING_FORMATTER, stringFormatter);
 
 describe('Field', () => {
-  const field = new Field({
-    formId: 'field_name',
-    type: 'number',
-  });
+  // it('Can cast', async () => {
+  //   const f1 = new Field({
+  //     formId: 'field_name',
+  //     type: 'number',
+  //     value: '1'
+  //   });
+  //   const f2 = new Field({
+  //     formId: 'field_name',
+  //     type: 'string',
+  //     value: 123
+  //   });
+  //   const f3 = new Field({
+  //     formId: 'field_name',
+  //     type: 'boolean',
+  //     value: 'true'
+  //   });
+  //   const f4 = new Field({
+  //     formId: 'field_name',
+  //     type: 'date',
+  //     value: '2020/12/3'
+  //   });
+
+  //   await flushPromises();
+
+  //   expect(f1.value).toBe(1);
+  //   expect(f2.value).toBe('123');
+  //   expect(f3.value).toBe(true);
+  //   expect(f4.value).toBeInstanceOf(Date);
+
+  //   const date = new Date();
+
+  //   f1.raw = '3';
+  //   f2.value = date
+  //   f3.raw = 'aaa';
+  //   f4.value = date
+
+  //   await flushPromises();
+
+  //   expect(f1.value).toBe(3);
+  //   expect(typeof f2.value).toBe('string');
+  //   expect(f3.value).toBe(false);
+  //   expect(f4.value).toBeInstanceOf(Date);
+
+  //   f1.raw = '3a';
+  //   f4.raw = 'abc'
+
+  //   await flushPromises();
+
+  //   expect(f1.value).toBe(null);
+  //   expect(f1.valid).toBe(false);
+  //   expect(f4.value).toBe(null);
+  //   expect(f4.valid).toBe(false);
+  // })
 
   // it('Can format', async () => {
-  //   const schema = {
+  //   const f1 = new Field({
   //     formId: 'field_name',
-  //     value: 'test',
-  //   }
-
-  //   let f = new Field({
-  //     ...schema,
   //     type: 'string',
   //     format: '{abc} {obj.aaa} {arr[0]} {arr[1].ddd} {field.value} {field.raw}',
+  //     value: 'test',
   //     props: {
   //       abc: 12,
   //       obj: {
@@ -35,13 +80,8 @@ describe('Field', () => {
   //       }]
   //     }
   //   });
-
-  //   await flushPromises();
-
-  //   expect(f.formatted).toBe('12 123 1 2 test test');
-
-  //   f = new Field({
-  //     ...schema,
+  //   const f2 = new Field({
+  //     formId: 'field_name',
   //     type: 'date',
   //     format: 'yyyy/MM/dd',
   //     value: '2020-01-21',
@@ -49,66 +89,52 @@ describe('Field', () => {
 
   //   await flushPromises();
 
-  //   expect(f.formatted).toBe('2020/01/21');
+  //   expect(f1.formatted).toBe('12 123 1 2 test test');
+  //   expect(f2.formatted).toBe('2020/01/21');
   // });
 
-  it('Should invalidated with wrong `typed value` entered', async () => {
-    field.raw = '1a';
+  // it('Can override default rules', async () => {
+  //   const f = new Field({
+  //     formId: 'field_name',
+  //     type: 'number',
+  //   });
+
+  //   f.validation.addRule({
+  //     ...numeric,
+  //     error: 'test message'
+  //   });
+
+  //   f.value = '1a';
+
+  //   await flushPromises();
+
+  //   expect(f.value).toBe(null);
+  //   expect(f.valid).toBe(false);
+  //   expect((f.validation as any).numeric.valid).toBe(false);
+  //   expect((f.validation as any).numeric.error).toBe('test message');
+  // });
+
+  it('Can be shaked', async () => {
+    const f = new Field({
+      formId: 'field_name',
+      value: '',
+      rules: [
+        {
+          name: 'test',
+          validator: () => false,
+          error: 'test message'
+        }
+      ]
+    });
 
     await flushPromises();
 
-    expect(field.value).toBe(null);
-    expect(field.valid).toBe(false);
+    expect(f.value).toBe(null);
+    expect(f.valid).toBe(false);
+    expect(f.error).toBe(null);
+
+    f.shake();
+
+    expect(f.error).toBe('test message');
   });
-
-  // it('Should use custom numeric rule when field type is number', async () => {
-  //   field.validation.addRule({
-  //     ...numeric,
-  //     message: 'test message'
-  //   });
-
-  //   field.value = '1a';
-
-  //   await flushPromises();
-
-  //   expect(field.value).toBe(null);
-  //   expect(field.valid).toBe(false);
-  //   expect((field.validation as any).numeric.valid).toBe(false);
-  //   expect((field.validation as any).numeric.error).toBe(null);
-  // });
-
-  // it('Should cast to correct value type', async () => {
-  //   const f1 = new Field({
-  //     formId: 'field_name',
-  //     type: 'number'
-  //   });
-
-  //   f1.raw = '1';
-
-  //   const f2 = new Field({
-  //     formId: 'field_name',
-  //     type: 'boolean'
-  //   });
-
-  //   f2.raw = 'true';
-
-  //   const f3 = new Field({
-  //     formId: 'field_name',
-  //     type: 'date'
-  //   });
-
-  //   f3.raw = 'abc';
-
-  //   await flushPromises();
-
-  //   expect(f1.value).toBe(1);
-  //   expect(f2.value).toBe(true);
-
-  //   f2.raw = 'a';
-
-  //   await flushPromises();
-
-  //   expect(f2.value).toBe(false);
-  //   expect(f3.value).toBeInstanceOf(Date);
-  // });
 });

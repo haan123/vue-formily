@@ -2,13 +2,12 @@ import { ValidationResult } from '../validations/types';
 import { ElementData, FieldSchema, FieldType, FieldValue, Format } from './types';
 
 import Element from './Element';
-import { def, logMessage, isCallable, setter, ref, Ref, isNullOrUndefined } from '../../utils';
+import { def, logMessage, isCallable, setter, getter, ref, Ref } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
 import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName, getPlug } from '../../helpers';
-import { reactiveGetter } from '../Objeto';
-import { numeric } from '../../rules';
+import { numeric, dateTime } from '../../rules';
 import { Rule } from '../validations';
-import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from '@/constants';
+import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER, NUMBER_FORMATTER } from '../../constants';
 
 type FieldValidationResult = ValidationResult & {
   value: FieldValue;
@@ -18,10 +17,7 @@ type FieldData = ElementData & {
   error: string | null;
   raw: Ref<any>;
   typed: Ref<FieldValue>;
-  shaked: Ref<boolean>;
 };
-
-let _privateData: FieldData;
 
 const dumpRule = new Rule(() => true);
 
@@ -40,7 +36,8 @@ const typing: Record<string, {
     rule: new Rule(numeric),
     cast(value: any) {
       return +value;
-    }
+    },
+    formatter: NUMBER_FORMATTER
   },
   boolean: {
     cast(value: any) {
@@ -48,6 +45,7 @@ const typing: Record<string, {
     }
   },
   date: {
+    rule: new Rule(dateTime),
     cast(value: any) {
       return new Date(value);
     },
@@ -80,7 +78,7 @@ export default class Field extends Element {
   static FIELD_TYPE_DATE = 'date';
 
   static accept(schema: any) {
-    const type: FieldType = (Field as any)[`FIELD_TYPE_${schema.type && schema.type.toUpperCase()}`];
+    const type: FieldType = schema.type ? (Field as any)[`FIELD_TYPE_${schema.type.toUpperCase()}`] : Field.FIELD_TYPE_STRING;
 
     const { identified, sv } = indentifySchema(schema, type);
 
@@ -92,7 +90,7 @@ export default class Field extends Element {
       }
 
       if (sv.valid) {
-        schema.__is__ = type;
+        schema.__is__ = schema.type = type;
       }
     }
 
@@ -111,7 +109,9 @@ export default class Field extends Element {
   readonly error!: string | null;
   readonly checked!: boolean;
   readonly validation!: Validation;
-  readonly shaked!: boolean;
+  protected _d!: FieldData;
+
+  shaked!: boolean;
   pending = false;
   raw!: string;
   value!: FieldValue;
@@ -147,7 +147,6 @@ export default class Field extends Element {
     const formatted = ref(null);
     const raw = ref('');
     const typed = ref(null);
-    const shaked = ref(false);
 
     setter(this, 'value', typed, (val: any) => {
       raw.value = '' + val;
@@ -162,22 +161,26 @@ export default class Field extends Element {
       this.value = val;
     });
 
-    reactiveGetter(this, 'formatted', formatted);
-    reactiveGetter(this, 'error', this.getError);
-    reactiveGetter(this, 'checked', this.isChecked);
-    reactiveGetter(this, 'shaked', shaked);
+    setter(this, 'shaked', false, (val: boolean) => {
+      this._d.error = val && this.validation.errors ? this.validation.errors[0] : null;
+
+      return val;
+    });
+
+    getter(this, 'formatted', formatted);
+    getter(this, 'error', this.getError);
+    getter(this, 'checked', this.isChecked);
 
     if (value !== undefined) {
       this.value = value;
     }
 
-    _privateData.raw = raw;
-    _privateData.typed = typed;
-    _privateData.shaked = shaked;
+    this._d.raw = raw;
+    this._d.typed = typed;
   }
 
   getError() {
-    return _privateData.shaked && _privateData.error;
+    return this.shaked ? this._d.error : null;
   }
 
   isChecked() {
@@ -189,41 +192,35 @@ export default class Field extends Element {
   }
 
   invalidate(error?: string) {
-    _privateData.invalidated = true;
-    _privateData.error = error ? error : (this.validation.errors ? this.validation.errors[0] : null);
+    this._d.invalidated = true;
+    this._d.error = error ? error : (this.validation.errors ? this.validation.errors[0] : null);
   }
 
   reset() {
-    _privateData.raw.value = this.default !== null ? this.default : '';
-    _privateData.typed.value = null;
+    this.clear();
 
-    this.validation.reset();
-
-    this.clean()
+    this._d.raw.value = this.default !== null ? this.default : '';
   }
 
   clear() {
-    this.raw = '';
+    this._d.raw.value = '';
+    this._d.typed.value = null;
+
+    this.validation.reset();
 
     this.clean();
   }
 
   clean() {
-    _privateData.shaked.value = false;
-    _privateData.error = null;
+    this.shaked = false;
   }
 
   shake() {
-    _privateData.error = this.validation.errors ? this.validation.errors[0] : null;
-    _privateData.shaked.value = false;
-  }
-
-  _initialize(schema: FieldSchema, parent: any, data: ElementData) {
-    _privateData = data as FieldData;
+    this.shaked = true
   }
 
   getHtmlName(): string {
-    return genHtmlName(this, _privateData.ancestors);
+    return genHtmlName(this, this._d.ancestors);
   }
 
   async validate(val?: any): Promise<FieldValidationResult> {

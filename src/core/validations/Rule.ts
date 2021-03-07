@@ -1,24 +1,24 @@
-import { RuleSchema, RuleResult, Validator, ValidationMessage } from './types';
+import { RuleSchema, Validator, ValidationMessage, ValidationMessageGenerator } from './types';
 
-import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isNonEmptyString } from '../../utils';
+import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isNonEmptyString, Ref, ref } from '../../utils';
 import { Objeto } from '../Objeto';
 import { getPlug, emit } from '../../helpers';
 import { LOCALIZER } from '../../constants';
 
 let count = 0;
 
-type Data = {};
-let _storage: WeakMap<Rule, Data>;
-
 export type RuleOptions = {
   data?: any;
 };
+
+function normalizeError(error?: ValidationMessage | null): ValidationMessageGenerator | null {
+  return error ? (isCallable(error) ? error : () => error) : null;
+}
 
 export default class Rule extends Objeto {
   readonly props!: Record<string, any>;
   readonly name!: string;
   readonly data!: Record<string, any>;
-  message!: ValidationMessage | null;
   validator!: Validator;
   valid!: boolean;
   error!: string | null;
@@ -27,7 +27,7 @@ export default class Rule extends Objeto {
     super();
 
     let vProps;
-    let message = null;
+    const error = ref(() => null);
 
     if (isCallable(rule)) {
       this.validator = rule;
@@ -42,7 +42,7 @@ export default class Rule extends Objeto {
 
       vProps = rule.props;
 
-      message = isCallable(rule.message) ? rule.message : (isNonEmptyString(rule.message) ? rule.message : null);
+      error.value = normalizeError(rule.error);
     } else {
       throw new Error(logMessage('Missing rule\'s validator'));
     }
@@ -50,67 +50,52 @@ export default class Rule extends Objeto {
     def(this, 'data', options.data || {}, { writable: true });
     def(this, 'name', rule.name || `r${count++}`);
     def(this, 'props', vProps || {});
-    def(this, 'message', message, { writable: true });
-    setter(this, 'error', null, this.setError);
+    def(this, 'valid', true, { writable: true });
+    setter(this, 'error', error, this.setError);
+
+    this._d.error = error;
   }
 
-  setError(error: any) {
-    if (isNonEmptyString(error)) {
-      const localizer = getPlug(LOCALIZER)
+  setError(error?: ValidationMessage) {
+    let _error = normalizeError(error);
+    const localizer = getPlug(LOCALIZER);
 
-      if (localizer) {
-        return localizer(error, this.props, this.data)
-      }
-
-      return error
+    if (_error) {
+      this._d.error.value = _error;
+    } else {
+      _error = this._d.error.value;
     }
 
-    return null;
+    const template = (_error as ValidationMessageGenerator).call(this, this.props, this.data);
+
+    return localizer ? localizer(template, this.props, this.data) : template;
   }
 
   reset() {
     this.valid = true;
-    this.error = null;
-  }
-
-  _setup(storage: any) {
-    _storage = storage;
-    _storage.set(this, {} as Data);
+    this.setError(null);
   }
 
   addData(key: string, value: any) {
     this.data[key] = value;
   }
 
-  async validate(value: any): Promise<RuleResult> {
-    const message = this.message;
-
-
+  async validate(value: any): Promise<Rule> {
     const result = await this.validator(value, this.props, this.data);
-    let error = null;
-    let valid = true;
+
+    this.reset();
 
     if (result === false) {
-      if (message) {
-        error = isCallable(message) ? message(value, this.props, this.data) : message;
-      }
+      this.setError();
 
-      valid = false;
+      this.valid = false;
     } else if (isNonEmptyString(result)) {
-      error = result;
-      valid = false;
+      this.setError(result);
+      this.valid = false;
     }
 
-    this.error = error;
-    this.valid = valid;
+    emit(this, 'validated', this)
 
-    const ret = {
-      error,
-      valid
-    };
-
-    emit(this, 'validated', ret)
-
-    return ret;
+    return this;
   }
 }

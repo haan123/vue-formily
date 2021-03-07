@@ -1,5 +1,5 @@
 import { ValidationResult } from '../validations/types';
-import { ElementData, GroupSchema } from './types';
+import { GroupSchema } from './types';
 
 import {
   cascadeRules,
@@ -13,8 +13,6 @@ import { genFields } from '../../helpers/elements';
 import Element from './Element';
 import { def, logMessage } from '../../utils';
 import Validation from '../validations/Validation';
-
-let _privateData: ElementData;
 
 export default class Group extends Element {
   static FORM_TYPE = 'group';
@@ -70,12 +68,8 @@ export default class Group extends Element {
     def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this, { field: this })));
   }
 
-  _initialize(schema: GroupSchema, parent: any, data: ElementData) {
-    _privateData = data;
-  }
-
   getHtmlName(): string {
-    return genHtmlName(this, _privateData.ancestors);
+    return genHtmlName(this, this._d.ancestors);
   }
 
   invalidate() {
