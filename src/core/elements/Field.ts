@@ -1,28 +1,24 @@
-import { ValidationResult } from '../validations/types';
 import { ElementData, FieldSchema, FieldType, FieldValue, Format } from './types';
 
 import Element from './Element';
-import { def, logMessage, isCallable, setter, getter, ref, Ref } from '../../utils';
+import { def, logMessage, isCallable, setter, getter, ref, Ref, isUndefined } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
 import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName, getPlug } from '../../helpers';
 import { numeric, dateTime } from '../../rules';
 import { Rule } from '../validations';
 import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER, NUMBER_FORMATTER } from '../../constants';
 
-type FieldValidationResult = ValidationResult & {
-  value: FieldValue;
-};
-
 type FieldData = ElementData & {
   error: string | null;
   raw: Ref<any>;
   typed: Ref<FieldValue>;
+  checkedValue: Exclude<any, undefined>;
 };
 
 const dumpRule = new Rule(() => true);
 
 const typing: Record<string, {
-  cast: (value: any) => FieldValue;
+  cast: (value: any, ...args: any[]) => FieldValue;
   formatter?: string;
   rule?: Rule;
 }> = {
@@ -40,7 +36,11 @@ const typing: Record<string, {
     formatter: NUMBER_FORMATTER
   },
   boolean: {
-    cast(value: any) {
+    cast(value: any, checkedValue: Exclude<any, undefined>) {
+      if (!isUndefined(checkedValue)) {
+        return value === checkedValue;
+      }
+
       return value === true || value === 'true' ? true : false;
     }
   },
@@ -125,7 +125,7 @@ export default class Field extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    const { type, rules, inputType = 'text', format, formatOptions, default: defu } = schema;
+    const { type, rules, inputType = 'text', format, formatOptions, default: defu, checkedValue } = schema;
 
     def(this, 'formType', Field.FORM_TYPE);
     def(this, 'type', type);
@@ -139,10 +139,10 @@ export default class Field extends Element {
       this.validation.addRule(typi.rule)
     }
 
-    const hasDefault = defu !== undefined;
+    const hasDefault = !isUndefined(defu);
     def(this, 'default', hasDefault ? defu : null);
 
-    const value = schema.value !== undefined ? schema.value : defu
+    const value = !isUndefined(schema.value) ? schema.value : defu
 
     const formatted = ref(null);
     const raw = ref('');
@@ -151,8 +151,7 @@ export default class Field extends Element {
     setter(this, 'value', typed, (val: any) => {
       raw.value = '' + val;
 
-      this.validate(raw.value).then(({ value }) => {
-        typed.value = value;
+      this.validate(raw.value).then(() => {
         formatted.value = formatter(this, format, formatOptions);
       });
     });
@@ -164,19 +163,20 @@ export default class Field extends Element {
     setter(this, 'shaked', false, (val: boolean) => {
       this._d.error = val && this.validation.errors ? this.validation.errors[0] : null;
 
-      return val;
+      return !!val;
     });
 
     getter(this, 'formatted', formatted);
     getter(this, 'error', this.getError);
     getter(this, 'checked', this.isChecked);
 
-    if (value !== undefined) {
-      this.value = value;
-    }
-
     this._d.raw = raw;
     this._d.typed = typed;
+    this._d.checkedValue = checkedValue;
+
+    if (!isUndefined(value)) {
+      this.value = value;
+    }
   }
 
   getError() {
@@ -184,35 +184,42 @@ export default class Field extends Element {
   }
 
   isChecked() {
-    return this.value === true;
+    const { checkedValue } = this._d;
+
+    if (!isUndefined(checkedValue)) {
+      return this.value === checkedValue;
+    }
+
+    return this.type === Field.FIELD_TYPE_BOOLEAN ? this.value === true : false;
   }
 
   isValid() {
-    return this.validation.valid;
+    return !this._d.invalidated && !this.validation.errors;
   }
 
   invalidate(error?: string) {
+    this.shake();
+
     this._d.invalidated = true;
-    this._d.error = error ? error : (this.validation.errors ? this.validation.errors[0] : null);
+
+    if (!isUndefined(error)) {
+      this._d.error = '' + error;
+    }
   }
 
   reset() {
-    this.clear();
-
-    this._d.raw.value = this.default !== null ? this.default : '';
+    this.raw = this.default !== null ? this.default : '';
+    this.cleanUp();
   }
 
   clear() {
-    this._d.raw.value = '';
-    this._d.typed.value = null;
-
-    this.validation.reset();
-
-    this.clean();
+    this.raw = '';
+    this.cleanUp();
   }
 
-  clean() {
+  cleanUp() {
     this.shaked = false;
+    this._d.invalidated = false;
   }
 
   shake() {
@@ -223,11 +230,11 @@ export default class Field extends Element {
     return genHtmlName(this, this._d.ancestors);
   }
 
-  async validate(val?: any): Promise<FieldValidationResult> {
-    const raw = val !== undefined ? val : this.raw;
+  async validate(val?: any): Promise<Field> {
+    const raw = !isUndefined(val) ? val : this.raw;
     const typi = typing[this.type];
     let castingRule: Rule = dumpRule;
-    let typed: FieldValue = null;
+    const typed = this._d.typed;
 
     this.pending = true;
 
@@ -235,22 +242,19 @@ export default class Field extends Element {
       castingRule = (this.validation as ExtValidation<any>)[typi.rule.name];
     }
 
-    let { valid, error } = await castingRule.validate(raw);
-    let errors: string[] | null = [];
+    let { error } = await castingRule.validate(raw);
 
-    if (valid) {
-      typed = typi.cast(raw);
-      ({ valid, errors } = await this.validation.validate(typed, { excluded: [castingRule.name] }));
-    } else if (error) {
-      errors.push(error)
+    if (!error) {
+      const value = typi.cast(raw);
+      const { errors } = await this.validation.validate(value, { excluded: [castingRule.name] });
+
+      typed.value = !errors ? value : null;
+    } else {
+      typed.value = null;
     }
 
     this.pending = false;
 
-    return {
-      errors,
-      valid,
-      value: valid ? typed : null
-    };
+    return this;
   }
 }

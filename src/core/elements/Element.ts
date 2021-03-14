@@ -57,7 +57,5 @@ export default abstract class Element extends Objeto {
   }
 
   reset() {
-    const data = this._d.get(this) as ElementData;
-    data.invalidated = false;
   }
 }

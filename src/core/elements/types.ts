@@ -38,7 +38,7 @@ export interface FieldSchema extends ElementSchema {
   default?: any;
   value?: any;
   rules?: ValidationRuleSchema[];
-  checkedValue?: string;
+  checkedValue?: Exclude<any, undefined>;
   locale?: string;
   formatOptions?: Record<string, any>;
 }

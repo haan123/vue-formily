@@ -1,8 +1,7 @@
-import { RuleSchema, ValidationResult, Validator } from './types';
+import { RuleSchema, Validator } from './types';
 import { findIndex, getter } from '../../utils';
 import Rule, { RuleOptions } from './Rule';
 import { Objeto } from '../Objeto';
-import { emit } from '../../helpers';
 
 type ValitionRuleSchema = Validator | RuleSchema;
 
@@ -17,7 +16,6 @@ export type ValidationOptions = {
 
 export default class Validation extends Objeto {
   readonly errors!: string[] | null;
-  readonly valid!: boolean;
   rules: Rule[] = [];
 
   constructor(rules?: ValitionRuleSchema[], options: ValidationOptions = {}) {
@@ -28,15 +26,12 @@ export default class Validation extends Objeto {
     }
 
     getter(this, 'errors', this.getErrors);
-    getter(this, 'valid', this.isValid);
   }
 
   getErrors() {
-    return !this.isValid() ? this.rules.map(({ error }) => error).filter((error) => error) : null;
-  }
+    const errors = this.rules.map(({ error }) => error).filter((error) => error);
 
-  isValid() {
-    return !this.rules.length || !this.rules.find(({ valid }) => !valid);
+    return errors.length ? errors : null;
   }
 
   addRules(rulesOrSchemas: (Rule | ValitionRuleSchema)[], options: ValidationOptions = {}): Rule[] {
@@ -80,12 +75,11 @@ export default class Validation extends Objeto {
     this.rules.forEach((rule) => rule.reset());
   }
 
-  async validate(value: any, options: { excluded?: string[], picks?: string[] } = {}): Promise<ValidationResult> {
+  async validate(value: any, options: { excluded?: string[], picks?: string[] } = {}): Promise<Validation> {
     const errors: string[] = [];
     const { excluded, picks } = options;
-    let valid = true;
 
-    emit(this, 'validating');
+    this.emit('validate', value, this);
 
     if (this.rules) {
       let rules = picks ? this.rules.filter(({ name }) => picks.includes(name)) : this.rules;
@@ -95,24 +89,15 @@ export default class Validation extends Objeto {
         rules.map(async rule => {
           const result = await rule.validate(value);
 
-          if (!result.valid) {
-            if (result.error) {
-              errors.push(result.error);
-            }
-
-            valid = false;
+          if (result.error) {
+            errors.push(result.error);
           }
         })
       );
     }
 
-    const ret = {
-      errors: errors.length ? errors : null,
-      valid
-    };
+    this.emit('validated',  value, this);
 
-    emit(this, 'validated', ret);
-
-    return ret;
+    return this;
   }
 }

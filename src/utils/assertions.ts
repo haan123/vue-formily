@@ -39,6 +39,9 @@ export function isNumber(value: any) {
   return isPlainNumber(value) || rnumber.test(value);
 }
 
+export function isUndefined(value: unknown): value is undefined {
+  return value === undefined;
+}
 
 export function isCallable(fn: unknown): fn is Function {
   return typeof fn === 'function';
@@ -66,6 +69,6 @@ export function isEmpty(value: any): value is (null | undefined | false) {
   return empty;
 }
 
-export function isNonEmptyString(value: any): value is string {
+export function isNotEmptyString(value: any): value is string {
   return typeof value === 'string' && value.trim().length > 0;
 }

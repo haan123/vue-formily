@@ -1,8 +1,8 @@
-import { RuleSchema, Validator, ValidationMessage, ValidationMessageGenerator } from './types';
+import { RuleSchema, Validator, ValidationMessage } from './types';
 
-import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isNonEmptyString, Ref, ref } from '../../utils';
+import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isString, ref, Ref, isNotEmptyString } from '../../utils';
 import { Objeto } from '../Objeto';
-import { getPlug, emit } from '../../helpers';
+import { getPlug } from '../../helpers';
 import { LOCALIZER } from '../../constants';
 
 let count = 0;
@@ -11,68 +11,80 @@ export type RuleOptions = {
   data?: any;
 };
 
-function normalizeError(error?: ValidationMessage | null): ValidationMessageGenerator | null {
-  return error ? (isCallable(error) ? error : () => error) : null;
+type RuleData = {
+  error: Ref<string | null>;
+  message: Ref<ValidationMessage>;
+};
+
+function genMessage(rule: Rule) {
+  return `${rule.name}_invalid`;
 }
 
 export default class Rule extends Objeto {
   readonly props!: Record<string, any>;
   readonly name!: string;
   readonly data!: Record<string, any>;
+  readonly error!: string | null;
+  protected _d!: RuleData;
+  message!: ValidationMessage;
   validator!: Validator;
-  valid!: boolean;
-  error!: string | null;
 
   constructor(rule: Rule | RuleSchema | Validator, options: RuleOptions = {}) {
     super();
 
     let vProps;
-    const error = ref(() => null);
+
+    def(this, 'name', rule.name || `r${count++}`);
+
+    const error = ref(null)
+    const message = ref(genMessage(this));
+    let validator = null;
+
+    this._d.error = error;
+    this._d.message = message;
 
     if (isCallable(rule)) {
-      this.validator = rule;
-    } else if (isPlainObject(rule) && rule.validator) {
-      if (!('allowEmpty' in rule) || rule.allowEmpty) {
-        this.validator = rule.validator;
-      } else if (!rule.allowEmpty) {
-        this.validator = (value: any, props: Record<string, any>, data: Record<string, any> = {}) => {
+      validator = rule;
+    } else if (isPlainObject(rule)) {
+      validator = rule.validator || null;
+
+      if ('allowEmpty' in rule && !rule.allowEmpty) {
+        validator = (value: any, props: Record<string, any>, data: Record<string, any> = {}) => {
           return !isEmpty(value) && (!rule.validator || (rule.validator as Validator).call(this, value, props, data));
         };
       }
 
       vProps = rule.props;
 
-      error.value = normalizeError(rule.error);
-    } else {
-      throw new Error(logMessage('Missing rule\'s validator'));
+      this.setMessage(rule.message);
     }
 
-    def(this, 'data', options.data || {}, { writable: true });
-    def(this, 'name', rule.name || `r${count++}`);
-    def(this, 'props', vProps || {});
-    def(this, 'valid', true, { writable: true });
-    setter(this, 'error', error, this.setError);
+    if (!validator) {
+      throw new Error(logMessage('Missing validator for rule'));
+    }
 
-    this._d.error = error;
+    this.validator = validator;
+
+    def(this, 'props', vProps || {});
+    def(this, 'data', options.data || {}, { writable: true });
+
+    setter(this, 'message', message, this.setMessage)
+    setter(this, 'error', error, this.setError);
   }
 
-  setError(error?: ValidationMessage) {
-    let _error = normalizeError(error);
+  setMessage(message?: ValidationMessage) {
+    this._d.message.value = isCallable(message) || isNotEmptyString(message) ? message : genMessage(this);
+  }
+
+  setError(message: string | null) {
     const localizer = getPlug(LOCALIZER);
 
-    if (_error) {
-      this._d.error.value = _error;
-    } else {
-      _error = this._d.error.value;
-    }
+    const error = localizer ? localizer(message, this.props, this.data) : message;
 
-    const template = (_error as ValidationMessageGenerator).call(this, this.props, this.data);
-
-    return localizer ? localizer(template, this.props, this.data) : template;
+    this._d.error.value = error;
   }
 
   reset() {
-    this.valid = true;
     this.setError(null);
   }
 
@@ -82,19 +94,20 @@ export default class Rule extends Objeto {
 
   async validate(value: any): Promise<Rule> {
     const result = await this.validator(value, this.props, this.data);
+    const message = this.message;
+    let error = null;
 
     this.reset();
 
     if (result === false) {
-      this.setError();
-
-      this.valid = false;
-    } else if (isNonEmptyString(result)) {
-      this.setError(result);
-      this.valid = false;
+      error = isCallable(message) ? message.call(this, value, this.props, this.data) : message;
+    } else if (isString(result)) {
+      error = result
     }
 
-    emit(this, 'validated', this)
+    this.setError(error);
+
+    this.emit('validated', this)
 
     return this;
   }

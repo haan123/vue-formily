@@ -1,4 +1,3 @@
-import { ValidationResult } from '../validations/types';
 import { GroupSchema } from './types';
 
 import {
@@ -84,7 +83,7 @@ export default class Group extends Element {
     return traverseFields(path, this.fields);
   }
 
-  async validate(val: any): Promise<ValidationResult> {
+  async validate(val: any): Promise<Validation> {
     const result = await this.validation.validate(val);
 
     return result;
