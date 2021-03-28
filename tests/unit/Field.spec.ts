@@ -224,6 +224,7 @@ describe('Field', () => {
     expect(f.error).toBe(null);
 
     f.invalidate('test');
+    f.shake();
 
     expect(f.valid).toBe(false);
     expect(f.error).toBe('test');
@@ -232,5 +233,35 @@ describe('Field', () => {
 
     expect(f.valid).toBe(true);
     expect(f.error).toBe(null);
+  });
+
+  it('Should has checked property', async () => {
+    const f = new Field({
+      formId: 'field_name',
+      checkValue: 'test'
+    });
+
+    expect(f.checked).toBe(false);
+
+    f.raw = 'test'
+
+    await flushPromises();
+
+    expect(f.checked).toBe(true);
+
+    const f2 = new Field({
+      formId: 'field_name',
+      checkValue() {
+        return 'test'
+      }
+    });
+
+    expect(f2.checked).toBe(false);
+
+    f2.raw = 'test'
+
+    await flushPromises();
+
+    expect(f2.checked).toBe(true);
   });
 });

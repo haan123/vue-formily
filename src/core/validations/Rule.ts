@@ -1,6 +1,6 @@
 import { RuleSchema, Validator, ValidationMessage } from './types';
 
-import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isString, ref, Ref, isNotEmptyString } from '../../utils';
+import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isString, isNotEmptyString, getter, Ref, ref } from '../../utils';
 import { Objeto } from '../Objeto';
 import { getPlug } from '../../helpers';
 import { LOCALIZER } from '../../constants';
@@ -13,19 +13,17 @@ export type RuleOptions = {
 
 type RuleData = {
   error: Ref<string | null>;
-  message: Ref<ValidationMessage>;
+  valid: Ref<boolean>;
+  data: Record<string, any>;
 };
-
-function genMessage(rule: Rule) {
-  return `${rule.name}_invalid`;
-}
 
 export default class Rule extends Objeto {
   readonly props!: Record<string, any>;
   readonly name!: string;
   readonly data!: Record<string, any>;
-  readonly error!: string | null;
   protected _d!: RuleData;
+  valid!: boolean;
+  error!: string | null;
   message!: ValidationMessage;
   validator!: Validator;
 
@@ -36,12 +34,7 @@ export default class Rule extends Objeto {
 
     def(this, 'name', rule.name || `r${count++}`);
 
-    const error = ref(null)
-    const message = ref(genMessage(this));
     let validator = null;
-
-    this._d.error = error;
-    this._d.message = message;
 
     if (isCallable(rule)) {
       validator = rule;
@@ -65,47 +58,49 @@ export default class Rule extends Objeto {
 
     this.validator = validator;
 
-    def(this, 'props', vProps || {});
-    def(this, 'data', options.data || {}, { writable: true });
+    this._d.data = options.data || {};
+    this._d.error = ref(null)
+    this._d.valid = ref(true)
 
-    setter(this, 'message', message, this.setMessage)
-    setter(this, 'error', error, this.setError);
+    def(this, 'props', vProps || {});
+
+    getter(this, 'data', this._d.data);
+    getter(this, 'error', this._d.error);
+    getter(this, 'valid', this._d.valid);
+
+    setter(this, 'message', null, this.setMessage)
   }
 
   setMessage(message?: ValidationMessage) {
-    this._d.message.value = isCallable(message) || isNotEmptyString(message) ? message : genMessage(this);
-  }
-
-  setError(message: string | null) {
-    const localizer = getPlug(LOCALIZER);
-
-    const error = localizer ? localizer(message, this.props, this.data) : message;
-
-    this._d.error.value = error;
+    return isCallable(message) || isNotEmptyString(message) ? message : null;
   }
 
   reset() {
-    this.setError(null);
+    this._d.error.value = null;
+    this._d.valid.value = true;
   }
 
   addData(key: string, value: any) {
-    this.data[key] = value;
+    this._d.data[key] = value;
   }
 
   async validate(value: any): Promise<Rule> {
+    const localizer = getPlug(LOCALIZER);
     const result = await this.validator(value, this.props, this.data);
-    const message = this.message;
     let error = null;
-
-    this.reset();
+    let valid = true;
 
     if (result === false) {
+      const message = this.message;
       error = isCallable(message) ? message.call(this, value, this.props, this.data) : message;
+      valid = false;
     } else if (isString(result)) {
       error = result
+      valid = false;
     }
 
-    this.setError(error);
+    this._d.error.value = localizer ? localizer(error, this.props, this.data) : error;
+    this._d.valid.value = valid;
 
     this.emit('validated', this)
 

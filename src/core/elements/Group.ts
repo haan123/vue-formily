@@ -1,4 +1,4 @@
-import { GroupSchema } from './types';
+import { ElementData, GroupSchema } from './types';
 
 import {
   cascadeRules,
@@ -6,12 +6,15 @@ import {
   normalizeRules,
   indentifySchema,
   invalidateSchemaValidation,
-  traverseFields
 } from '../../helpers';
 import { genFields } from '../../helpers/elements';
 import Element from './Element';
-import { def, logMessage } from '../../utils';
+import { def, getter, isUndefined, logMessage, setter } from '../../utils';
 import Validation from '../validations/Validation';
+
+type GroupData = ElementData & {
+
+};
 
 export default class Group extends Element {
   static FORM_TYPE = 'group';
@@ -37,6 +40,8 @@ export default class Group extends Element {
 
   readonly formType!: string;
   readonly type!: 'enum';
+  readonly error!: string | null;
+  protected _d!: GroupData;
 
   validation!: Validation;
 
@@ -65,22 +70,42 @@ export default class Group extends Element {
     this.fields.forEach((field) => def(this, field.model, field));
 
     def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this, { field: this })));
+
+    getter(this, 'error', this.getError);
+  }
+
+  shake() {
+    super.shake();
+
+    this.fields.forEach((field) => field.shake());
+  }
+
+  getError() {
+    if (!this.shaked || this.valid) {
+      return null;
+    }
+
+    return this._d.error || (this.validation.errors ? this.validation.errors[0] : null);
   }
 
   getHtmlName(): string {
     return genHtmlName(this, this._d.ancestors);
   }
 
-  invalidate() {
-
-  }
-
   isValid(): boolean {
     return !this.invalidated() && !this.fields.find(f => !f.valid);
   }
 
-  getField(path: string | string[] = []): Element | null {
-    return traverseFields(path, this.fields);
+  reset() {
+    this.cleanUp();
+
+    this.fields.forEach((field: any) => field.reset());
+  }
+
+  clear() {
+    this.cleanUp();
+
+    this.fields.forEach((field: any) => field.clear());
   }
 
   async validate(val: any): Promise<Validation> {

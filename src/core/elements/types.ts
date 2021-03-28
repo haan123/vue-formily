@@ -8,8 +8,8 @@ export interface ElementSchema {
 
 export interface ElementData {
   ancestors: any[] | null;
-  timer: number | null;
   invalidated: boolean;
+  error: string | null;
 }
 
 export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
@@ -38,7 +38,7 @@ export interface FieldSchema extends ElementSchema {
   default?: any;
   value?: any;
   rules?: ValidationRuleSchema[];
-  checkedValue?: Exclude<any, undefined>;
+  checkValue?: PropValue<any>;
   locale?: string;
   formatOptions?: Record<string, any>;
 }

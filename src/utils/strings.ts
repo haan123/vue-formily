@@ -24,3 +24,7 @@ export function zeroPad(input: string | number, targetLength: number) {
 
   return targetLength > length ? `${sign}${Array(targetLength).concat([Math.abs(num)]).join('0').slice(-targetLength)}` : ('' + input);
 }
+
+export function toString(value: any) {
+  return '' + value;
+}

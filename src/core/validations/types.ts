@@ -2,7 +2,7 @@ export interface ValidationMessageGenerator {
   (value: any, props?: Record<string, any>, data?: Record<string, any> | null): string | null;
 }
 
-export type ValidationMessage = string | ValidationMessageGenerator;
+export type ValidationMessage = string | ValidationMessageGenerator | null;
 
 export type Validator = (
   value: any,

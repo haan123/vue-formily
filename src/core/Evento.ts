@@ -1,6 +1,6 @@
 export type EventHandler = (...args: any[]) => any;
 
-export default class Events {
+export default class Evento {
   events: Record<string, EventHandler[]>;
 
   constructor() {

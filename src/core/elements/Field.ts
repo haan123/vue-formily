@@ -1,18 +1,18 @@
 import { ElementData, FieldSchema, FieldType, FieldValue, Format } from './types';
 
 import Element from './Element';
-import { def, logMessage, isCallable, setter, getter, ref, Ref, isUndefined } from '../../utils';
+import { def, logMessage, isCallable, setter, getter, ref, Ref, isUndefined, toString, isPlainObject } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
-import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName, getPlug } from '../../helpers';
+import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName, getPlug, genProp } from '../../helpers';
 import { numeric, dateTime } from '../../rules';
 import { Rule } from '../validations';
-import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER, NUMBER_FORMATTER } from '../../constants';
+import { DATE_TIME_FORMATTER, LOCALIZER,  STRING_FORMATTER, NUMBER_FORMATTER } from '../../constants';
 
 type FieldData = ElementData & {
   error: string | null;
   raw: Ref<any>;
   typed: Ref<FieldValue>;
-  checkedValue: Exclude<any, undefined>;
+  checkValue: any;
 };
 
 const dumpRule = new Rule(() => true);
@@ -21,10 +21,11 @@ const typing: Record<string, {
   cast: (value: any, ...args: any[]) => FieldValue;
   formatter?: string;
   rule?: Rule;
+  checkValue?: any;
 }> = {
   string: {
     cast(value: any) {
-      return value !== null ? '' + value : null;
+      return value !== null ? toString(value) : null;
     },
     formatter: STRING_FORMATTER
   },
@@ -36,11 +37,7 @@ const typing: Record<string, {
     formatter: NUMBER_FORMATTER
   },
   boolean: {
-    cast(value: any, checkedValue: Exclude<any, undefined>) {
-      if (!isUndefined(checkedValue)) {
-        return value === checkedValue;
-      }
-
+    cast(value: any) {
       return value === true || value === 'true' ? true : false;
     }
   },
@@ -111,7 +108,6 @@ export default class Field extends Element {
   readonly validation!: Validation;
   protected _d!: FieldData;
 
-  shaked!: boolean;
   pending = false;
   raw!: string;
   value!: FieldValue;
@@ -125,7 +121,7 @@ export default class Field extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    const { type, rules, inputType = 'text', format, formatOptions, default: defu, checkedValue } = schema;
+    const { type, rules, inputType = 'text', format, formatOptions, default: defu } = schema;
 
     def(this, 'formType', Field.FORM_TYPE);
     def(this, 'type', type);
@@ -149,7 +145,7 @@ export default class Field extends Element {
     const typed = ref(null);
 
     setter(this, 'value', typed, (val: any) => {
-      raw.value = '' + val;
+      raw.value = toString(val);
 
       this.validate(raw.value).then(() => {
         formatted.value = formatter(this, format, formatOptions);
@@ -160,19 +156,14 @@ export default class Field extends Element {
       this.value = val;
     });
 
-    setter(this, 'shaked', false, (val: boolean) => {
-      this._d.error = val && this.validation.errors ? this.validation.errors[0] : null;
-
-      return !!val;
-    });
-
     getter(this, 'formatted', formatted);
     getter(this, 'error', this.getError);
     getter(this, 'checked', this.isChecked);
 
     this._d.raw = raw;
     this._d.typed = typed;
-    this._d.checkedValue = checkedValue;
+
+    this.setCheckValue(schema);
 
     if (!isUndefined(value)) {
       this.value = value;
@@ -180,31 +171,29 @@ export default class Field extends Element {
   }
 
   getError() {
-    return this.shaked ? this._d.error : null;
+    if (!this.shaked || this.valid) {
+      return null;
+    }
+
+    return this._d.error || (this.validation.errors ? this.validation.errors[0] : null);
+  }
+
+  setCheckValue(checkValue: any) {
+    genProp(this._d, isPlainObject(checkValue) ? checkValue : { checkValue }, 'checkValue', this);
   }
 
   isChecked() {
-    const { checkedValue } = this._d;
+    const { checkValue } = this._d;
 
-    if (!isUndefined(checkedValue)) {
-      return this.value === checkedValue;
+    if (this.type === Field.FIELD_TYPE_BOOLEAN) {
+      return this.value;
     }
 
-    return this.type === Field.FIELD_TYPE_BOOLEAN ? this.value === true : false;
+    return  !isUndefined(checkValue) && toString(this.value) === checkValue;
   }
 
   isValid() {
     return !this._d.invalidated && !this.validation.errors;
-  }
-
-  invalidate(error?: string) {
-    this.shake();
-
-    this._d.invalidated = true;
-
-    if (!isUndefined(error)) {
-      this._d.error = '' + error;
-    }
   }
 
   reset() {
@@ -215,15 +204,6 @@ export default class Field extends Element {
   clear() {
     this.raw = '';
     this.cleanUp();
-  }
-
-  cleanUp() {
-    this.shaked = false;
-    this._d.invalidated = false;
-  }
-
-  shake() {
-    this.shaked = true
   }
 
   getHtmlName(): string {

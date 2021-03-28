@@ -1,7 +1,7 @@
 import { PropValue } from '../../types';
 import { ElementData, ElementSchema } from './types';
 import { genProps } from '../../helpers/elements';
-import { def, getter, logMessage, valueOrNull } from '../../utils';
+import { def, getter, isUndefined, logMessage, toString, valueOrNull } from '../../utils';
 import { Objeto } from '../Objeto';
 
 let uid = 0;
@@ -29,9 +29,10 @@ export default abstract class Element extends Objeto {
   readonly props: Record<string, PropValue<any>> | null;
   protected _d!: ElementData;
 
+  shaked!: boolean;
+
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
-  abstract invalidate(error?: string): void;
 
   constructor(schema: ElementSchema, parent?: Element, ...args: any[]) {
     super();
@@ -42,8 +43,8 @@ export default abstract class Element extends Objeto {
 
     this._d = {
       ancestors: genElementAncestors(this),
-      timer: null,
-      invalidated: false
+      invalidated: false,
+      error: null
     };
 
     def(this, '_uid', uid++);
@@ -52,10 +53,25 @@ export default abstract class Element extends Objeto {
     def(this, 'model', schema.model || this.formId, { writable: true });
     this.props = genProps([schema.props], this);
 
-    getter(this, 'htmlName', () => this.getHtmlName());
-    getter(this, 'valid', () => this.isValid());
+    getter(this, 'htmlName', this.getHtmlName);
+    getter(this, 'valid', this.isValid);
   }
 
-  reset() {
+  shake() {
+    this.shaked = true
+  }
+
+  invalidate(error?: string) {
+    this._d.invalidated = true;
+
+    if (!isUndefined(error)) {
+      this._d.error = toString(error);
+    }
+  }
+
+  cleanUp() {
+    this.shaked = false;
+    this._d.invalidated = false;
+    this._d.error = null;
   }
 }
