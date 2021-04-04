@@ -4,8 +4,6 @@ import { genProps } from '../../helpers/elements';
 import { def, getter, isUndefined, logMessage, toString, valueOrNull } from '../../utils';
 import { Objeto } from '../Objeto';
 
-let uid = 0;
-
 function genElementAncestors(elem: Element): any[] | null {
   const path = [];
 
@@ -24,7 +22,6 @@ export default abstract class Element extends Objeto {
   readonly formId!: string;
   readonly model!: string;
   readonly htmlName!: string;
-  readonly _uid!: number;
   readonly valid!: boolean;
   readonly props: Record<string, PropValue<any>> | null;
   protected _d!: ElementData;
@@ -34,7 +31,7 @@ export default abstract class Element extends Objeto {
   abstract getHtmlName(): string | null;
   abstract isValid(): boolean;
 
-  constructor(schema: ElementSchema, parent?: Element, ...args: any[]) {
+  constructor(schema: ElementSchema, parent?: Element) {
     super();
 
     if (!schema.formId) {
@@ -47,7 +44,6 @@ export default abstract class Element extends Objeto {
       error: null
     };
 
-    def(this, '_uid', uid++);
     def(this, 'parent', valueOrNull(parent));
     getter(this, 'formId', schema.formId);
     def(this, 'model', schema.model || this.formId, { writable: true });

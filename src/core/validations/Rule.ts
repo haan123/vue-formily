@@ -15,6 +15,7 @@ type RuleData = {
   error: Ref<string | null>;
   valid: Ref<boolean>;
   data: Record<string, any>;
+  message: Ref<ValidationMessage>;
 };
 
 export default class Rule extends Objeto {
@@ -35,6 +36,8 @@ export default class Rule extends Objeto {
     def(this, 'name', rule.name || `r${count++}`);
 
     let validator = null;
+
+    let message = this._d.message = ref(null);
 
     if (isCallable(rule)) {
       validator = rule;
@@ -59,8 +62,8 @@ export default class Rule extends Objeto {
     this.validator = validator;
 
     this._d.data = options.data || {};
-    this._d.error = ref(null)
-    this._d.valid = ref(true)
+    this._d.error = ref(null);
+    this._d.valid = ref(true);
 
     def(this, 'props', vProps || {});
 
@@ -68,11 +71,11 @@ export default class Rule extends Objeto {
     getter(this, 'error', this._d.error);
     getter(this, 'valid', this._d.valid);
 
-    setter(this, 'message', null, this.setMessage)
+    setter(this, 'message', message, this.setMessage)
   }
 
   setMessage(message?: ValidationMessage) {
-    return isCallable(message) || isNotEmptyString(message) ? message : null;
+    this._d.message.value = isCallable(message) || isNotEmptyString(message) ? message : null;
   }
 
   reset() {

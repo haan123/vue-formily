@@ -9,7 +9,7 @@ import {
 } from '../../helpers';
 import { genFields } from '../../helpers/elements';
 import Element from './Element';
-import { def, getter, isUndefined, logMessage, setter } from '../../utils';
+import { def, getter, logMessage } from '../../utils';
 import Validation from '../validations/Validation';
 
 type GroupData = ElementData & {
@@ -67,11 +67,34 @@ export default class Group extends Element {
 
     this.fields = genFields(schema.fields, this) as Element[];
 
-    this.fields.forEach((field) => def(this, field.model, field));
+    this.fields.forEach((field) => {
+      def(this, field.model, field);
+
+      this.on('validated', () => {
+        this.validate()
+      })
+    });
 
     def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this, { field: this })));
 
     getter(this, 'error', this.getError);
+  }
+
+  copyTo(obj: Record<string, any>): Record<string, any> {
+    return this.fields.reduce((acc: Record<string, any>, field: any) => {
+      const value = obj[field.formId];
+
+      if (field.type === 'set' || field.type === 'enum') {
+        this.copyTo(value)
+      }
+      obj[field.formId] = field.value;
+
+      return obj;
+    }, obj);
+  }
+
+  copyFrom(obj: Record<string, any>) {
+
   }
 
   shake() {
@@ -93,7 +116,7 @@ export default class Group extends Element {
   }
 
   isValid(): boolean {
-    return !this.invalidated() && !this.fields.find(f => !f.valid);
+    return !this._d.invalidated && this.validation.valid && !this.fields.some((field) => !field.valid);
   }
 
   reset() {
@@ -108,8 +131,8 @@ export default class Group extends Element {
     this.fields.forEach((field: any) => field.clear());
   }
 
-  async validate(val: any): Promise<Validation> {
-    const result = await this.validation.validate(val);
+  async validate(): Promise<Validation> {
+    const result = await this.validation.validate();
 
     return result;
   }

@@ -171,7 +171,10 @@ describe('Field', () => {
       formId: 'field_name',
       value: '',
       rules: [
-        required
+        {
+          ...required,
+          message: 'abc'
+        }
       ]
     });
 
@@ -193,7 +196,10 @@ describe('Field', () => {
       formId: 'field_name',
       value: '',
       rules: [
-        required
+        {
+          ...required,
+          message: 'abc'
+        }
       ]
     });
 

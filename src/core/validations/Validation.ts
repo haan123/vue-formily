@@ -15,6 +15,7 @@ export type ValidationOptions = {
 };
 
 export default class Validation extends Objeto {
+  readonly valid!: boolean;
   readonly errors!: string[] | null;
   rules: Rule[] = [];
 
@@ -25,11 +26,20 @@ export default class Validation extends Objeto {
       this.addRules(rules, options);
     }
 
+    getter(this, 'valid', this.isValid);
     getter(this, 'errors', this.getErrors);
   }
 
+  isValid() {
+    return !this.rules.some((rule) => !rule.valid)
+  }
+
   getErrors() {
-    const errors = this.rules.map(({ error }) => error).filter((error) => error);
+    if (this.isValid()) {
+      return null;
+    }
+
+    const errors = this.rules.map((rule) => rule.error).filter((error) => error)
 
     return errors.length ? errors : null;
   }
@@ -76,7 +86,6 @@ export default class Validation extends Objeto {
   }
 
   async validate(value: any, options: { excluded?: string[], picks?: string[] } = {}): Promise<Validation> {
-    const errors: string[] = [];
     const { excluded, picks } = options;
 
     this.emit('validate', value, this);
@@ -86,13 +95,7 @@ export default class Validation extends Objeto {
       rules = excluded ? rules.filter(({ name }) => !excluded.includes(name)) : rules;
 
       await Promise.all(
-        rules.map(async rule => {
-          const result = await rule.validate(value);
-
-          if (result.error) {
-            errors.push(result.error);
-          }
-        })
+        rules.map(async rule => await rule.validate(value))
       );
     }
 

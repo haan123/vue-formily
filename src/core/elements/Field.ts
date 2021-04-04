@@ -147,8 +147,10 @@ export default class Field extends Element {
     setter(this, 'value', typed, (val: any) => {
       raw.value = toString(val);
 
-      this.validate(raw.value).then(() => {
+      this.validate().then(() => {
         formatted.value = formatter(this, format, formatOptions);
+
+        this.emit('validated', this);
       });
     });
 
@@ -193,7 +195,7 @@ export default class Field extends Element {
   }
 
   isValid() {
-    return !this._d.invalidated && !this.validation.errors;
+    return !this._d.invalidated && this.validation.valid;
   }
 
   reset() {
@@ -210,8 +212,8 @@ export default class Field extends Element {
     return genHtmlName(this, this._d.ancestors);
   }
 
-  async validate(val?: any): Promise<Field> {
-    const raw = !isUndefined(val) ? val : this.raw;
+  async validate(): Promise<Field> {
+    const raw = this.raw;
     const typi = typing[this.type];
     let castingRule: Rule = dumpRule;
     const typed = this._d.typed;
@@ -226,9 +228,9 @@ export default class Field extends Element {
 
     if (!error) {
       const value = typi.cast(raw);
-      const { errors } = await this.validation.validate(value, { excluded: [castingRule.name] });
+      const { valid } = await this.validation.validate(value, { excluded: [castingRule.name] });
 
-      typed.value = !errors ? value : null;
+      typed.value = valid ? value : null;
     } else {
       typed.value = null;
     }
