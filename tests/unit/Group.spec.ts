@@ -1,5 +1,5 @@
 import { Collection, Field, Group } from '@/core/elements';
-import { FieldSchema } from '@/core/elements/types';
+import { FieldSchema, GroupSchema } from '@/core/elements/types';
 import { registerElement } from '@/helpers';
 import { required } from '@/rules';
 import flushPromises from 'flush-promises';
@@ -40,6 +40,46 @@ describe('Group', () => {
 
     expect(group).toHaveProperty('a');
     expect(group.a).toBeInstanceOf(Field);
+  });
+
+  it('Can set value', async () => {
+    schema.fields = [{
+      formId: 'a',
+      rules: [
+        {
+          ...required,
+          message: 'abc'
+        }
+      ]
+    } as FieldSchema, {
+      formId: 'b',
+      fields: [
+        {
+          formId: 'c',
+        }
+      ]
+    } as GroupSchema];
+
+    const group = new Group(schema);
+
+    expect(group.setValue('test' as any)).rejects.toThrowError();
+
+    await group.setValue({
+      a: 'test',
+      b: {
+        c: 'abc'
+      }
+    })
+
+    expect(JSON.stringify(group.value)).toBe(JSON.stringify({
+      a: 'test',
+      b: {
+        c: 'abc'
+      }
+    }));
+    expect(group.a.value).toBe('test');
+
+
   });
 
   // it('Can reset', async () => {

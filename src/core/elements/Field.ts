@@ -13,6 +13,8 @@ type FieldData = ElementData & {
   raw: Ref<any>;
   typed: Ref<FieldValue>;
   checkValue: any;
+  formatted: Ref<string | null>;
+  schema: FieldSchema;
 };
 
 const dumpRule = new Rule(() => true);
@@ -121,7 +123,7 @@ export default class Field extends Element {
       throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
     }
 
-    const { type, rules, inputType = 'text', format, formatOptions, default: defu } = schema;
+    const { type, rules, inputType = 'text', default: defu } = schema;
 
     def(this, 'formType', Field.FORM_TYPE);
     def(this, 'type', type);
@@ -144,15 +146,7 @@ export default class Field extends Element {
     const raw = ref('');
     const typed = ref(null);
 
-    setter(this, 'value', typed, (val: any) => {
-      raw.value = toString(val);
-
-      this.validate().then(() => {
-        formatted.value = formatter(this, format, formatOptions);
-
-        this.emit('validated', this);
-      });
-    });
+    setter(this, 'value', typed, this.setValue);
 
     setter(this, 'raw', raw, (val: any) => {
       this.value = val;
@@ -164,12 +158,28 @@ export default class Field extends Element {
 
     this._d.raw = raw;
     this._d.typed = typed;
+    this._d.formatted = formatted;
+    this._d.schema = schema;
 
     this.setCheckValue(schema);
 
     if (!isUndefined(value)) {
       this.value = value;
     }
+  }
+
+  async setValue(val: any) {
+    const { format, formatOptions } = this._d.schema;
+
+    this._d.raw.value = toString(val);
+
+    await this.validate()
+
+    this._d.formatted.value = formatter(this, format, formatOptions);
+
+    this.emit('validated', this);
+
+    return this.value;
   }
 
   getError() {
@@ -212,7 +222,7 @@ export default class Field extends Element {
     return genHtmlName(this, this._d.ancestors);
   }
 
-  async validate(): Promise<Field> {
+  async validate() {
     const raw = this.raw;
     const typi = typing[this.type];
     let castingRule: Rule = dumpRule;
@@ -236,7 +246,5 @@ export default class Field extends Element {
     }
 
     this.pending = false;
-
-    return this;
   }
 }

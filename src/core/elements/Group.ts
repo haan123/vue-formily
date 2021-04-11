@@ -9,11 +9,11 @@ import {
 } from '../../helpers';
 import { genFields } from '../../helpers/elements';
 import Element from './Element';
-import { def, getter, logMessage } from '../../utils';
+import { def, getter, isPlainObject, logMessage, Ref, ref, setter } from '../../utils';
 import Validation from '../validations/Validation';
 
 type GroupData = ElementData & {
-
+  value: Ref<Record<string, any> | null>;
 };
 
 export default class Group extends Element {
@@ -42,6 +42,7 @@ export default class Group extends Element {
   readonly type!: 'enum';
   readonly error!: string | null;
   protected _d!: GroupData;
+  value!: Record<string, any> | null;
 
   validation!: Validation;
 
@@ -70,31 +71,46 @@ export default class Group extends Element {
     this.fields.forEach((field) => {
       def(this, field.model, field);
 
-      this.on('validated', () => {
-        this.validate()
+      field.on('validated', async (element: any) => {
+        if (element.valid) {
+          const valueRef = this._d.value;
+
+          if (!valueRef.value) {
+            valueRef.value = {}
+          }
+
+          valueRef.value[element.model] = element.value
+        }
+
+        await this.validate({ cascade: false })
       })
     });
 
+    const value = ref(null);
+
     def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this, { field: this })));
-
     getter(this, 'error', this.getError);
+    setter(this, 'value', value, this.setValue);
+
+    this._d.value = value;
   }
 
-  copyTo(obj: Record<string, any>): Record<string, any> {
-    return this.fields.reduce((acc: Record<string, any>, field: any) => {
-      const value = obj[field.formId];
+  async setValue(obj: Record<string, any>) {
+    if (!isPlainObject(obj)) {
+      throw new Error(logMessage('Invalid value, Group value must be an object'));
+    }
 
-      if (field.type === 'set' || field.type === 'enum') {
-        this.copyTo(value)
+    await Promise.all(Object.keys(obj).map(async (model) => {
+      const element = this[model];
+
+      if (model) {
+        await element.setValue(obj[model]);
       }
-      obj[field.formId] = field.value;
+    }))
 
-      return obj;
-    }, obj);
-  }
+    this.emit('validated', this);
 
-  copyFrom(obj: Record<string, any>) {
-
+    return this.value
   }
 
   shake() {
@@ -131,9 +147,13 @@ export default class Group extends Element {
     this.fields.forEach((field: any) => field.clear());
   }
 
-  async validate(): Promise<Validation> {
-    const result = await this.validation.validate();
+  async validate({ cascade = true}: { cascade?: boolean } = {}) {
+    if (cascade) {
+      await Promise.all(
+        this.fields.filter((field: any) => 'validate' in field).map(async (field: any) => await field.validate())
+      );
+    }
 
-    return result;
+    await this.validation.validate(this.value);
   }
 }
