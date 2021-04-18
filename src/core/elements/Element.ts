@@ -44,6 +44,7 @@ export default abstract class Element extends Objeto {
       error: null
     };
 
+    def(this._d, 'schema', schema);
     def(this, 'parent', valueOrNull(parent));
     getter(this, 'formId', schema.formId);
     def(this, 'model', schema.model || this.formId, { writable: true });

@@ -1,6 +1,6 @@
 import { ElementConstructor, ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, valueOrNull, isString, getter } from '../utils';
+import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, isString, getter, findIndex } from '../utils';
 
 const _Elements: ElementConstructor[] = [];
 
@@ -96,19 +96,22 @@ export function genProps(
 
 export function cascadeRules(parentRules: ValidationRuleSchema[], fields: any[]) {
   return parentRules ? fields.map(fieldSchema => {
-    const { rules = {} } = fieldSchema;
+    const { rules } = fieldSchema;
 
-    each(parentRules, (parentRule, key) => {
-      const rule = rules[key];
+    if (rules) {
+      each(parentRules, (parentRule, key) => {
+        const index = findIndex(rules, (rule: any) => rule.key === key);;
+        const rule = rules[index]
 
-      if (isCallable(parentRule) || !parentRule.cascade || (rule && rule.inherit === false)) {
-        return;
-      }
+        if (isCallable(parentRule) || !parentRule.cascade || (rule && rule.inherit === false)) {
+          return;
+        }
 
-      rules[key] = merge({}, parentRule, rule);
-    });
+        rules[index] = merge({}, parentRule, rule);
+      });
 
-    fieldSchema.rules = rules;
+      fieldSchema.rules = rules;
+    }
 
     return fieldSchema;
   }) : fields;

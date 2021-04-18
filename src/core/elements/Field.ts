@@ -128,7 +128,6 @@ export default class Field extends Element {
     def(this, 'formType', Field.FORM_TYPE);
     def(this, 'type', type);
     def(this, 'inputType', inputType);
-
     def(this, 'validation', new Validation(normalizeRules(rules, this.props, this.type, this, { field: this })));
 
     const typi = typing[this.type];
@@ -148,9 +147,7 @@ export default class Field extends Element {
 
     setter(this, 'value', typed, this.setValue);
 
-    setter(this, 'raw', raw, (val: any) => {
-      this.value = val;
-    });
+    setter(this, 'raw', raw, this.setRaw);
 
     getter(this, 'formatted', formatted);
     getter(this, 'error', this.getError);
@@ -159,13 +156,16 @@ export default class Field extends Element {
     this._d.raw = raw;
     this._d.typed = typed;
     this._d.formatted = formatted;
-    this._d.schema = schema;
 
     this.setCheckValue(schema);
 
     if (!isUndefined(value)) {
       this.value = value;
     }
+  }
+
+  async setRaw(val: any) {
+    await this.setValue(val);
   }
 
   async setValue(val: any) {
@@ -209,12 +209,13 @@ export default class Field extends Element {
   }
 
   reset() {
-    this.raw = this.default !== null ? this.default : '';
+    this._d.raw = this.default !== null ? this.default : '';
     this.cleanUp();
+    this.validation.reset();
   }
 
-  clear() {
-    this.raw = '';
+  async clear() {
+    await this.setRaw('')
     this.cleanUp();
   }
 
@@ -234,9 +235,9 @@ export default class Field extends Element {
       castingRule = (this.validation as ExtValidation<any>)[typi.rule.name];
     }
 
-    let { error } = await castingRule.validate(raw);
+    let { valid } = await castingRule.validate(raw);
 
-    if (!error) {
+    if (valid) {
       const value = typi.cast(raw);
       const { valid } = await this.validation.validate(value, { excluded: [castingRule.name] });
 

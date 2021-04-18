@@ -95,6 +95,7 @@ export default class Rule extends Objeto {
 
     if (result === false) {
       const message = this.message;
+
       error = isCallable(message) ? message.call(this, value, this.props, this.data) : message;
       valid = false;
     } else if (isString(result)) {

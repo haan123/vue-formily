@@ -71,15 +71,15 @@ export default class Group extends Element {
     this.fields.forEach((field) => {
       def(this, field.model, field);
 
-      field.on('validated', async (element: any) => {
-        if (element.valid) {
+      field.on('validated', async (field: any) => {
+        if (field.valid) {
           const valueRef = this._d.value;
 
           if (!valueRef.value) {
             valueRef.value = {}
           }
 
-          valueRef.value[element.model] = element.value
+          valueRef.value[field.model] = field.value
         }
 
         await this.validate({ cascade: false })
@@ -101,10 +101,10 @@ export default class Group extends Element {
     }
 
     await Promise.all(Object.keys(obj).map(async (model) => {
-      const element = this[model];
+      const field = this[model];
 
       if (model) {
-        await element.setValue(obj[model]);
+        await field.setValue(obj[model]);
       }
     }))
 
@@ -113,10 +113,12 @@ export default class Group extends Element {
     return this.value
   }
 
-  shake() {
+  shake({ cascade = true }: { cascade?: boolean } = {}) {
     super.shake();
 
-    this.fields.forEach((field) => field.shake());
+    if (cascade) {
+      this.fields.forEach((field) => field.shake());
+    }
   }
 
   getError() {
@@ -139,6 +141,8 @@ export default class Group extends Element {
     this.cleanUp();
 
     this.fields.forEach((field: any) => field.reset());
+
+    this.validation.reset();
   }
 
   clear() {
@@ -147,7 +151,7 @@ export default class Group extends Element {
     this.fields.forEach((field: any) => field.clear());
   }
 
-  async validate({ cascade = true}: { cascade?: boolean } = {}) {
+  async validate({ cascade = true }: { cascade?: boolean } = {}) {
     if (cascade) {
       await Promise.all(
         this.fields.filter((field: any) => 'validate' in field).map(async (field: any) => await field.validate())
