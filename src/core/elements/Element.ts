@@ -41,7 +41,8 @@ export default abstract class Element extends Objeto {
     this._d = {
       ancestors: genElementAncestors(this),
       invalidated: false,
-      error: null
+      error: null,
+      schema: null
     };
 
     def(this._d, 'schema', schema);

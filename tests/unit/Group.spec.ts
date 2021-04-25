@@ -6,20 +6,18 @@ import flushPromises from 'flush-promises';
 
 [Field, Group, Collection].forEach(F => registerElement(F));
 
-describe('Group', () => {
+describe('Collection', () => {
   const schema: any = { formId: 'group_test' }
 
   it('Throw error with undefined `fields`', () => {
     expect(function () {
       new Group(schema)
-    }).toThrowError('[Schema error] \'fields\' is empty or missing');
-  });
+    }).toThrowError('invalid schema, \'fields\' is empty or missing');
 
-  it('Throw error with empty `fields`', () => {
     expect(function () {
       schema.fields = [];
       new Group(schema)
-    }).toThrowError('[Schema error] \'fields\' is empty or missing');
+    }).toThrowError('invalid schema, \'fields\' is empty or missing');
   });
 
   it('Can access field from index signature', () => {

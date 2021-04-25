@@ -9,7 +9,7 @@ import {
 } from '../../helpers';
 import { genFields } from '../../helpers/elements';
 import Element from './Element';
-import { def, getter, isPlainObject, logMessage, Ref, ref, setter } from '../../utils';
+import { def, getter, isPlainObject, logMessage, Ref, ref } from '../../utils';
 import Validation from '../validations/Validation';
 
 type GroupData = ElementData & {
@@ -41,8 +41,8 @@ export default class Group extends Element {
   readonly formType!: string;
   readonly type!: 'enum';
   readonly error!: string | null;
+  readonly value!: Record<string, any> | null;
   protected _d!: GroupData;
-  value!: Record<string, any> | null;
 
   validation!: Validation;
 
@@ -56,7 +56,7 @@ export default class Group extends Element {
     const accepted = Group.accept(schema);
 
     if (!accepted.valid) {
-      throw new Error(logMessage(`[Schema error] ${accepted.reason}`, accepted.infos));
+      throw new Error(logMessage(`invalid schema, ${accepted.reason}`, accepted.infos));
     }
 
     def(this, 'formType', Group.FORM_TYPE);
@@ -83,14 +83,14 @@ export default class Group extends Element {
         }
 
         await this.validate({ cascade: false })
-      })
+      });
     });
 
     const value = ref(null);
 
     def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this, { field: this })));
     getter(this, 'error', this.getError);
-    setter(this, 'value', value, this.setValue);
+    getter(this, 'value', value);
 
     this._d.value = value;
   }
@@ -106,11 +106,11 @@ export default class Group extends Element {
       if (model) {
         await field.setValue(obj[model]);
       }
-    }))
+    }));
 
     this.emit('validated', this);
 
-    return this.value
+    return this.value;
   }
 
   shake({ cascade = true }: { cascade?: boolean } = {}) {

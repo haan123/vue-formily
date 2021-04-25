@@ -10,6 +10,7 @@ export interface ElementData {
   ancestors: any[] | null;
   invalidated: boolean;
   error: string | null;
+  schema: any;
 }
 
 export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
