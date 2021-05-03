@@ -1,9 +1,7 @@
 import { Collection, Field, Group } from '@/core/elements';
-import { CollectionItem } from '@/core/elements/Collection';
-import { FieldSchema, GroupSchema } from '@/core/elements/types';
+import { GroupSchema } from '@/core/elements/types';
 import { registerElement } from '@/helpers';
 import { required } from '@/rules';
-import flushPromises from 'flush-promises';
 
 [Field, Group, Collection].forEach(F => registerElement(F));
 
@@ -65,141 +63,145 @@ describe('Group', () => {
 
     collection.addGroup();
 
-    await collection.validate();
+    expect(collection.valid).toBe(true);
+    expect(collection.error).toBe(null);
 
-    collection.shake();
+    await collection.validate({ cascade: false })
 
     expect(collection.valid).toBe(false);
-    expect(collection.error).toBe(null);
-    expect((collection.groups as any)[0].a.error).toBe('abc');
 
-    collection.reset();
-    await collection.validate({ cascade: false })
+    await collection.validate()
+
+    expect((collection.groups as any)[0].valid).toBe(false);
+  });
+
+  it('Can shake', async () => {
+    let collection = new Collection(schema);
+
+    collection.addGroup();
+
+    await collection.validate()
 
     collection.shake();
 
     expect(collection.valid).toBe(false);
     expect(collection.error).toBe('test');
-    expect((collection.groups as any)[0].valid).toBe(true);
+    expect((collection.groups as any)[0].a.error).toBe('abc');
+
+    collection = new Collection(schema);
+
+    collection.addGroup();
+
+    await collection.validate()
+
+    collection.shake({ cascade: false });
+
+    expect(collection.valid).toBe(false);
+    expect(collection.error).toBe('test');
+    expect((collection.groups as any)[0].a.error).toBe(null);
   });
 
-  // it('Can shake', async () => {
-  //   const group = new Group(schema);
+  it('Can reset', async () => {
+    const collection = new Collection(schema);
 
-  //   await group.validate()
+    collection.addGroup();
 
-  //   group.shake();
+    expect(collection.valid).toBe(true);
 
-  //   expect(group.valid).toBe(false);
-  //   expect(group.error).toBe('test');
-  //   expect(group.a.error).toBe('abc');
+    await collection.validate();
 
-  //   group.reset();
+    expect(collection.valid).toBe(false);
 
-  //   await group.validate()
+    collection.shake();
 
-  //   group.shake({ cascade: false });
+    expect((collection.groups as any)[0].a.valid).toBe(false);
+    expect((collection.groups as any)[0].a.error).toBe('abc');
 
-  //   expect(group.valid).toBe(false);
-  //   expect(group.error).toBe('test');
-  //   expect(group.a.error).toBe(null);
-  // });
+    collection.reset();
 
-  // it('Can reset', async () => {
-  //   schema.fields = [{
-  //     formId: 'a',
-  //     rules: [
-  //       {
-  //         ...required,
-  //         message: 'abc'
-  //       }
-  //     ]
-  //   } as FieldSchema];
+    expect(collection.valid).toBe(true);
+    expect((collection.groups as any)[0].a.valid).toBe(true);
+  });
 
-  //   const group = new Group(schema);
+  it('Can invalidate', () => {
+    const collection = new Collection(schema);
 
-  //   expect(group.valid).toBe(true);
+    collection.addGroup();
 
-  //   await flushPromises();
+    collection.invalidate();
 
-  //   await group.validate();
+    collection.shake();
 
-  //   expect(group.valid).toBe(false);
+    expect(collection.valid).toBe(false);
+    expect(collection.error).toBe(null);
 
-  //   group.a.shake();
+    collection.reset();
 
-  //   expect(group.a.valid).toBe(false);
-  //   expect(group.a.error).toBe('abc');
+    collection.invalidate('test');
 
-  //   group.reset();
+    collection.shake();
 
-  //   expect(group.valid).toBe(true);
-  //   expect(group.a.valid).toBe(true);
-  // });
+    expect(collection.valid).toBe(false);
+    expect(collection.error).toBe('test');
+  });
 
-  // it('Can invalidate', () => {
-  //   const group = new Group(schema);
+  it('Can set value', async () => {
+    schema.group.fields.push({
+      formId: 'b',
+      fields: [
+        {
+          formId: 'c',
+        }
+      ]
+    } as GroupSchema);
 
-  //   group.invalidate();
+    const collection = new Collection(schema);
 
-  //   expect(group.valid).toBe(false);
-  //   expect(group.error).toBe(null);
+    expect(collection.value).toBe(null);
+    expect(collection.setValue('test' as any)).rejects.toThrowError();
 
-  //   group.reset();
-  //   group.invalidate('test');
-  //   group.shake();
+    const value = [
+      {
+        a: 'abc'
+      },
+      {
+        b: {
+          c: 'sss'
+        }
+      },
+    ]
 
-  //   expect(group.valid).toBe(false);
-  //   expect(group.error).toBe('test');
-  // });
+    await collection.setValue(value);
 
-  // it('Can set value', async () => {
-  //   schema.fields.push({
-  //     formId: 'b',
-  //     fields: [
-  //       {
-  //         formId: 'c',
-  //       }
-  //     ]
-  //   } as GroupSchema);
+    expect(collection.groups).toBeInstanceOf(Array);
+    expect(collection.groups?.length).toBe(2);
+    expect(collection.value).toEqual(value);
 
-  //   const group = new Group(schema);
+    await collection.setValue([
+      { a: 'eee' }
+    ], { from: 1 });
 
-  //   expect(group.value).toBe(null);
-  //   expect(group.setValue('test' as any)).rejects.toThrowError();
+    expect((collection.value as any)[1]).toEqual({
+      b: {
+        c: 'sss'
+      },
+      a: 'eee'
+    });
+  });
 
-  //   await group.setValue({
-  //     a: 'test',
-  //     b: {
-  //       c: 'abc'
-  //     }
-  //   })
+  it('Can clear', async () => {
+    const collection = new Collection(schema);
 
-  //   expect(group.value).toEqual({
-  //     a: 'test',
-  //     b: {
-  //       c: 'abc'
-  //     }
-  //   });
-  //   expect(group.a.value).toBe('test');
-  //   expect(group.b.c.value).toBe('abc');
-  // });
+    await collection.validate();
 
-  // it('Can clear', async () => {
-  //   const group = new Group(schema);
+    collection.shake();
 
-  //   await group.validate();
+    expect(collection.valid).toBe(false);
+    expect(collection.error).toBe('test');
 
-  //   group.a.shake();
+    collection.clear();
 
-  //   expect(group.a.valid).toBe(false);
-  //   expect(group.a.error).toBe('abc');
-
-  //   group.clear();
-
-  //   expect(group.valid).toBe(false);
-  //   expect(group.value).toBe(null);
-  //   expect(group.a.raw).toBe('');
-  //   expect(group.a.value).toBe(null);
-  // });
+    expect(collection.valid).toBe(false);
+    expect(collection.value).toBe(null);
+  });
 });

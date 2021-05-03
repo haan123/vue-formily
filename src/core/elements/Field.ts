@@ -169,15 +169,9 @@ export default class Field extends Element {
   }
 
   async setValue(val: any) {
-    const { format, formatOptions } = this._d.schema;
-
     this._d.raw.value = toString(val);
 
     await this.validate()
-
-    this._d.formatted.value = formatter(this, format, formatOptions);
-
-    this.emit('validated', this);
 
     return this.value;
   }
@@ -209,7 +203,7 @@ export default class Field extends Element {
   }
 
   reset() {
-    this._d.raw = this.default !== null ? this.default : '';
+    this._d.raw.value = this.default !== null ? this.default : '';
     this.cleanUp();
     this.validation.reset();
   }
@@ -228,6 +222,7 @@ export default class Field extends Element {
     const typi = typing[this.type];
     let castingRule: Rule = dumpRule;
     const typed = this._d.typed;
+    const { format, formatOptions } = this._d.schema;
 
     this.pending = true;
 
@@ -246,6 +241,10 @@ export default class Field extends Element {
       typed.value = null;
     }
 
+    this._d.formatted.value = formatter(this, format, formatOptions);
+
     this.pending = false;
+
+    this.emit('validated', this);
   }
 }

@@ -94,6 +94,7 @@ export default class Collection extends Element {
     if (!Array.isArray(value)) {
       throw new Error(logMessage('Invalid value, Group value must be an object'));
     }
+
     const groups = this.groups ? this.groups.slice(from) : [];
 
     await Promise.all(value.slice(0, autoAdd ? value.length : groups.length).map(async (val: Record<string, any>, index: number) => {
@@ -105,8 +106,6 @@ export default class Collection extends Element {
         await group.setValue(val);
       }
     }));
-
-    this.emit('validated', this);
 
     return this.value;
   }
@@ -168,6 +167,8 @@ export default class Collection extends Element {
       this
     );
 
+    this.groups.push(groupItem);
+
     groupItem.on('validated', async (group: CollectionItem) => {
       if (group.valid) {
         const valueRef = this._d.value;
@@ -186,8 +187,6 @@ export default class Collection extends Element {
       await groupItem.setValue(value);
     }
 
-    this.groups.push(groupItem);
-
     return groupItem;
   }
 
@@ -199,5 +198,7 @@ export default class Collection extends Element {
     }
 
     await this.validation.validate(this.value);
+
+    this.emit('validated', this);
   }
 }

@@ -108,8 +108,6 @@ export default class Group extends Element {
       }
     }));
 
-    this.emit('validated', this);
-
     return this.value;
   }
 
@@ -159,5 +157,7 @@ export default class Group extends Element {
     }
 
     await this.validation.validate(this.value);
+
+    this.emit('validated', this);
   }
 }

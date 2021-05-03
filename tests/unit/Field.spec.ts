@@ -162,7 +162,7 @@ describe('Field', () => {
     f.reset();
 
     expect(f.error).toBe(null);
-    expect(f.validation.errors).toBeInstanceOf(Array);
+    expect(f.validation.errors).toBe(null);
     expect(f.raw).toBe('test');
   });
 
@@ -210,7 +210,7 @@ describe('Field', () => {
     expect(f.valid).toBe(false);
     expect(typeof f.error).toBe('string');
 
-    f.clear();
+    await f.clear();
 
     expect(f.valid).toBe(false);
     expect(f.error).toBe(null);

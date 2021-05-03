@@ -106,9 +106,9 @@ export function findIndex(arr: any[], fn: (...args: any[]) => boolean) {
 
   if (arr) {
     arr.some((...args) => {
-      if (fn(...args)) {
-        i += 1;
+      i += 1;
 
+      if (fn(...args)) {
         return true;
       }
 

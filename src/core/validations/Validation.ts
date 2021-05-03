@@ -1,5 +1,5 @@
 import { RuleSchema, Validator } from './types';
-import { findIndex, getter } from '../../utils';
+import { findIndex, getter, isNumber } from '../../utils';
 import Rule, { RuleOptions } from './Rule';
 import { Objeto } from '../Objeto';
 
@@ -10,8 +10,9 @@ export type ExtValidation<K extends string> = Validation & {
 }
 
 
-export type ValidationOptions = {
+export type ValidationOptions = RuleOptions & {
   data?: any;
+  from?: number;
 };
 
 export default class Validation extends Objeto {
@@ -44,15 +45,19 @@ export default class Validation extends Objeto {
     return errors.length ? errors : null;
   }
 
-  addRules(rulesOrSchemas: (Rule | ValitionRuleSchema)[], options: ValidationOptions = {}): Rule[] {
-    return rulesOrSchemas.map((schema: Rule | ValitionRuleSchema) => this.addRule(schema, { data: options.data } ));
+  addRules(rulesOrSchemas: (Rule | ValitionRuleSchema)[], { from, ...options }: ValidationOptions = {}): Rule[] {
+    from = isNumber(from) ? from++ : -Infinity;
+
+    return rulesOrSchemas.map((schema: Rule | ValitionRuleSchema, index: number) => {
+      return this.addRule(schema, { from: (from as number)++, ...options })
+    });
   }
 
   removeRules(removes: (Rule | string)[]): Rule[] {
     return removes.map((remove) => this.removeRule(remove));
   }
 
-  addRule(ruleOrSchema: Rule | ValitionRuleSchema, options: RuleOptions= {}): Rule {
+  addRule(ruleOrSchema: Rule | ValitionRuleSchema, { from, ...options }: ValidationOptions = {}): Rule {
     const rule = new Rule(ruleOrSchema, options);
     const currentRule = (this as ExtValidation<any>)[rule.name]
 
@@ -60,7 +65,9 @@ export default class Validation extends Objeto {
       this.removeRule(currentRule)
     }
 
-    this.rules = this.rules ? [...this.rules, rule] : [rule];
+    const length = this.rules.length;
+
+    this.rules.splice(isNumber(from) && from >= 0 && from <= length ? from : length, 0, rule);
 
     getter(this, rule.name, rule, { configurable: true })
 

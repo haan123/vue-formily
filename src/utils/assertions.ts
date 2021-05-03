@@ -35,7 +35,7 @@ export function isString(value: any): value is string {
 }
 
 const rnumber = /^\d+$/;
-export function isNumber(value: any) {
+export function isNumber(value: any): value is number {
   return isPlainNumber(value) || rnumber.test(value);
 }
 
