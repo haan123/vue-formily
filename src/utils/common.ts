@@ -1,4 +1,4 @@
-import { isPlainNumber, isPlainObject, isString } from "./assertions";
+import { isPlainObject, isString } from "./assertions";
 
 export function getLength(value: any): number {
   if (Array.isArray(value)) {

@@ -1,4 +1,4 @@
-import { zeroPad, Calendar, CalendarOptions, parseTime } from '../utils';
+import { zeroPad, Calendar, CalendarOptions, parseTime, isPlainObject } from '../utils';
 
 const formattingTokensRegExp = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g
 const escapedStringRegExp = /^'([^]*?)'?$/
@@ -124,7 +124,7 @@ export const formatters: Record<string, any> = {
   z(cal: Calendar, token: string) {
     const length = token.length;
     const isShort = length < 4;
-    let format = isShort ? 'short' : 'long';
+    let format: 'long' | 'short' = isShort ? 'short' : 'long';
     let name = cal.getTimeZoneName({ format });
 
     if (cal.timeZone === 'UTC' && isShort) {
@@ -165,7 +165,9 @@ export const formatters: Record<string, any> = {
   }
 }
 
-export default function dateTimeFormatter(date: Date, format: string, options?: CalendarOptions){
+export default function dateTimeFormatter(format: string, input: any, options?: CalendarOptions){
+  const value = isPlainObject(input) ? input.value : input;
+
   return format
     .replace(formattingTokensRegExp, (token: string, formatType: string) => {
       if (token === "''") {
@@ -179,7 +181,7 @@ export default function dateTimeFormatter(date: Date, format: string, options?: 
       const formatter = formatters[formatType]
 
       if (formatter) {
-        return formatter(new Calendar(date, options), token);
+        return formatter(new Calendar(value, options), token);
       }
 
       return token;

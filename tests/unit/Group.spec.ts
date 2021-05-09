@@ -55,8 +55,9 @@ describe('Collection', () => {
     expect(group.error).toBe('test');
     expect(group.a.error).toBe('abc');
 
-    group.reset()
-    await group.validate({ cascade: false })
+    group.reset();
+
+    await group.validate({ cascade: false });
 
     group.shake();
 
@@ -177,7 +178,7 @@ describe('Collection', () => {
     expect(group.a.valid).toBe(false);
     expect(group.a.error).toBe('abc');
 
-    group.clear();
+    await group.clear();
 
     expect(group.valid).toBe(false);
     expect(group.value).toBe(null);

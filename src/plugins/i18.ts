@@ -13,11 +13,11 @@ export type I18 = {
 const _resources: Record<string, Resource> = {};
 
 export default {
-  translate(value: string, props: Record<string, any> = {}, data: Record<string, any> = {}) {
-    const ressource = _resources[data.locale || 'en-US'];
+  translate(format: string, data: Record<string, any> = {}, options: Record<string, any> = {}) {
+    const ressource = _resources[options.locale || 'en-US'];
     const stringFormatter = getPlug(STRING_FORMATTER);
 
-    return stringFormatter(value, merge(ressource, props));
+    return stringFormatter(format, merge(ressource, data));
   },
 
   setResource(locale: string, resource: Record<string, string | string[]>) {

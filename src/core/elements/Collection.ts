@@ -55,8 +55,8 @@ export default class Collection extends Element {
   readonly formType!: string;
   readonly type!: 'set';
   readonly value!: any[] | null;
-
   readonly error!: string | null;
+
   protected _d!: CollectionData;
 
   validation!: Validation;
@@ -144,11 +144,11 @@ export default class Collection extends Element {
     this.validation.reset();
   }
 
-  clear() {
+  async clear() {
     this.cleanUp();
 
     if (this.groups) {
-      this.groups.forEach((group: any) => group.clear());
+      await Promise.all(this.groups.map(async (group: any) => await group.clear()));
     }
   }
 
@@ -198,6 +198,10 @@ export default class Collection extends Element {
     }
 
     await this.validation.validate(this.value);
+
+    if (!this.valid) {
+      this._d.value.value = null;
+    }
 
     this.emit('validated', this);
   }

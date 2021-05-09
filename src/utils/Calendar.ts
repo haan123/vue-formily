@@ -73,7 +73,7 @@ function gregorianToWeek(cal: Calendar) {
   return { weekYear, weekInYear };
 }
 
-function dtfFormat({ date, timeZoneName, locale = 'en-US', timeZone }: { date?: Date; timeZoneName?: string; locale?: string, timeZone?: string } = {}) {
+function dtfFormat({ date, timeZoneName, locale = 'en-US', timeZone }: { date?: Date; timeZoneName?: 'long' | 'short'; locale?: string, timeZone?: string } = {}) {
   return new Intl.DateTimeFormat(locale, {
     timeZoneName,
     timeZone
@@ -226,7 +226,7 @@ export class Calendar {
     return map[utcDay === 0 ? 6 : utcDay - 1]
   }
 
-  getTimeZoneName({ format, locale = 'en-US' }: { format?: string; locale?: string } = {}) {
+  getTimeZoneName({ format, locale = 'en-US' }: { format?: 'long' | 'short'; locale?: string } = {}) {
     const { instance: date, timeZone } = this;
 
     const short = dtfFormat({ date, timeZone });

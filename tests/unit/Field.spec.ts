@@ -43,9 +43,9 @@ describe('Field', () => {
     const date = new Date();
 
     f1.raw = '3';
-    f2.value = date
+    f2.setValue(date);
     f3.raw = 'aaa';
-    f4.value = date
+    f4.setValue(date);
 
     await flushPromises();
 
@@ -106,7 +106,7 @@ describe('Field', () => {
       message: 'test message'
     });
 
-    f.value = '1a';
+    f.setValue('1a');
 
     await flushPromises();
 

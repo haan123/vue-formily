@@ -143,10 +143,10 @@ export default class Group extends Element {
     this.validation.reset();
   }
 
-  clear() {
+  async clear() {
     this.cleanUp();
 
-    this.fields.forEach((field: any) => field.clear());
+    await Promise.all(this.fields.map(async (field: any) => await field.clear()));
   }
 
   async validate({ cascade = true }: { cascade?: boolean } = {}) {
@@ -157,6 +157,10 @@ export default class Group extends Element {
     }
 
     await this.validation.validate(this.value);
+
+    if (!this.valid) {
+      this._d.value.value = null;
+    }
 
     this.emit('validated', this);
   }

@@ -61,12 +61,9 @@ function formatter(field: Field, format?: Format, options?: Record<string, any>)
   }
 
   const localizer = getPlug(LOCALIZER);
-  const args = [props, {
-    field
-  }];
-  const result = _formatter(value, isCallable(format) ? format.call(field, value) : format, options, ...args);
+  const result = _formatter(isCallable(format) ? format.call(field, value) : format, field, options);
 
-  return localizer ? localizer(result, ...args) : result;
+  return localizer ? localizer(result, field, options) : result;
 }
 
 export default class Field extends Element {
@@ -108,11 +105,12 @@ export default class Field extends Element {
   readonly error!: string | null;
   readonly checked!: boolean;
   readonly validation!: Validation;
+  readonly value!: FieldValue;
+
   protected _d!: FieldData;
 
   pending = false;
   raw!: string;
-  value!: FieldValue;
 
   constructor(schema: FieldSchema, parent?: Element) {
     super(schema, parent);
@@ -145,7 +143,7 @@ export default class Field extends Element {
     const raw = ref('');
     const typed = ref(null);
 
-    setter(this, 'value', typed, this.setValue);
+    getter(this, 'value', typed);
 
     setter(this, 'raw', raw, this.setRaw);
 
@@ -160,7 +158,7 @@ export default class Field extends Element {
     this.setCheckValue(schema);
 
     if (!isUndefined(value)) {
-      this.value = value;
+      this.setValue(value);
     }
   }
 
@@ -209,8 +207,9 @@ export default class Field extends Element {
   }
 
   async clear() {
-    await this.setRaw('')
     this.cleanUp();
+
+    await this.setRaw('')
   }
 
   getHtmlName(): string {
