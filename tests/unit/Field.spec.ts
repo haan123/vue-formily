@@ -70,7 +70,7 @@ describe('Field', () => {
     const f1 = new Field({
       formId: 'field_name',
       type: 'string',
-      format: '{abc} {obj.aaa} {arr[0]} {arr[1].ddd} {field.value} {field.raw}',
+      format: '{props.abc} {props.obj.aaa} {props.arr[0]} {props.arr[1].ddd} {value} {raw}',
       value: 'test',
       props: {
         abc: 12,

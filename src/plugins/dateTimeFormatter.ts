@@ -1,4 +1,5 @@
-import { zeroPad, Calendar, CalendarOptions, parseTime, isPlainObject } from '../utils';
+import { zeroPad, isPlainObject } from '../utils';
+import { Calendar, CalendarOptions, parseTime } from '../utils/Calendar';
 
 const formattingTokensRegExp = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g
 const escapedStringRegExp = /^'([^]*?)'?$/

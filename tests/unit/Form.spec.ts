@@ -55,7 +55,7 @@ describe('Form', () => {
     const i1d0 = b0.d.addGroup();
 
     expect(i1d0.htmlName).toBe('form[b][0][d][0]');
-    expect(i1d0.getField('e')?.htmlName).toBe('form[b][0][d][0][e]');
+    expect(i1d0.e.htmlName).toBe('form[b][0][d][0][e]');
 
     // group item 2
     const b2 = form.b.addGroup();

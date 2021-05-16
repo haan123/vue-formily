@@ -14,7 +14,6 @@ type FieldData = ElementData & {
   typed: Ref<FieldValue>;
   checkValue: any;
   formatted: Ref<string | null>;
-  schema: FieldSchema;
 };
 
 const dumpRule = new Rule(() => true);
@@ -53,7 +52,7 @@ const typing: Record<string, {
 }
 
 function formatter(field: Field, format?: Format, options?: Record<string, any>): string {
-  const { type, props, raw, value } = field;
+  const { type, raw, value } = field;
   const _formatter = getPlug(typing[type].formatter || '');
 
   if (!format || !_formatter) {

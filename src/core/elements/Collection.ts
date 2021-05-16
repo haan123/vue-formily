@@ -101,7 +101,7 @@ export default class Collection extends Element {
       const group = groups[index]
 
       if (!group) {
-        await this.addGroup(val);
+        await this.addGroup().setValue(val);
       } else {
         await group.setValue(val);
       }
@@ -152,7 +152,7 @@ export default class Collection extends Element {
     }
   }
 
-  async addGroup(value?: Record<string, any>): Promise<CollectionItem> {
+  addGroup(): CollectionItem {
     if (!this.groups) {
       this.groups = [];
     }
@@ -182,10 +182,6 @@ export default class Collection extends Element {
 
       await this.validate({ cascade: false })
     });
-
-    if (value) {
-      await groupItem.setValue(value);
-    }
 
     return groupItem;
   }

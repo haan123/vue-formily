@@ -4,7 +4,7 @@ import dateTimeFormatter from "@/plugins/dateTimeFormatter";
 import i18, { I18 } from "@/plugins/i18";
 import stringFormatter from "@/plugins/stringFormatter";
 import en from '@/resources/en-US';
-import { Calendar } from "@/utils";
+import { Calendar } from "@/utils/Calendar";
 
 plug(LOCALIZER, i18);
 plug(DATE_TIME_FORMATTER, dateTimeFormatter);

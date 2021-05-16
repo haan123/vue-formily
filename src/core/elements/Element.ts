@@ -38,17 +38,18 @@ export default abstract class Element extends Objeto {
       throw new Error(logMessage('"formId" can not be null or undefined'));
     }
 
-    this._d = {
-      ancestors: genElementAncestors(this),
-      invalidated: false,
-      error: null,
-      schema: null
-    };
-
     def(this._d, 'schema', schema);
     def(this, 'parent', valueOrNull(parent));
     getter(this, 'formId', schema.formId);
     def(this, 'model', schema.model || this.formId, { writable: true });
+
+    this._d = {
+      ancestors: genElementAncestors(this),
+      invalidated: false,
+      error: null,
+      schema
+    };
+
     this.props = genProps([schema.props], this);
 
     getter(this, 'htmlName', this.getHtmlName);

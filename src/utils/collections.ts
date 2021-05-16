@@ -44,41 +44,29 @@ export function each(obj: any, fn: (propValue: any, propName: string, index: num
   }
 }
 
-const rindex = /\[(\d+)\]/g;
+const rkey = /([^[\]]+)/g;
 
-export function pick(path: string | string[], obj: any) {
+export function pick(path: string | string[], source: any) {
   const _path = isString(path) ? path.split('.') : path;
-  let found = true;
-  const value = _path.reduce((acc, fullName: string) => {
-    if (acc) {
-      let name = fullName.split('[')[0];
+  let found = false;
 
-      if (!(name in acc)) {
-        found = false;
-      }
-
-      acc = acc[name];
-
-      // matches name[0], name[0][1]
-      let m = rindex.exec(fullName)
+  const value = _path.reduce((src, fullName: string) => {
+    if (src) {
+      let m = null;
 
       do {
+        m = rkey.exec(fullName)
+
         if (m) {
-          name = m[1];
-
-          if (!(name in acc)) {
-            found = false;
-          }
-
-          acc = acc[name]
+          const name = m[1];
+          found = name in src;
+          src = src[name]
         }
-
-        m = rindex.exec(acc);
-      } while (m)
+      } while (m && found && src)
     }
 
-    return acc
-  }, obj);
+    return src
+  }, source);
 
   return {
     found,
@@ -98,7 +86,7 @@ export function picks(path: string | string[], ...args: any[]) {
     }
   }
 
-  return result;
+  return result ? result.value : result;
 }
 
 export function findIndex(arr: any[], fn: (...args: any[]) => boolean) {

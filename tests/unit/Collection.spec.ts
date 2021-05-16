@@ -49,7 +49,7 @@ describe('Group', () => {
 
     expect(collection.groups?.length).toBe(1);
 
-    await collection.addGroup({
+    await collection.addGroup().setValue({
       a: 'test'
     });
 
