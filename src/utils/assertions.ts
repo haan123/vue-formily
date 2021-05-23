@@ -7,7 +7,7 @@ export function isObject(obj: any) {
 export function isDateObject(date: any) {
   try {
     if (_toString.call(date) !== '[object Date]' || isNaN(date.getTime())) {
-      return false
+      return false;
     }
   } catch (error) {
     return false;
@@ -41,7 +41,7 @@ export function isUndefined(value: unknown): value is undefined {
   return value === undefined;
 }
 
-export function isCallable(fn: unknown): fn is Function {
+export function isCallable(fn: unknown): fn is (...args: any[]) => any {
   return typeof fn === 'function';
 }
 

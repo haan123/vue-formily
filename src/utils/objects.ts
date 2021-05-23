@@ -5,7 +5,11 @@ export function def(
   obj: any,
   key: string,
   val: any,
-  { initValue, configurable = false, writable = false }: { configurable?: boolean; writable?: boolean; initValue?: any } = {}
+  {
+    initValue,
+    configurable = false,
+    writable = false
+  }: { configurable?: boolean; writable?: boolean; initValue?: any } = {}
 ) {
   Object.defineProperty(obj, key, {
     value: val,
@@ -28,7 +32,7 @@ export function ref(value?: any): Ref<any> {
     },
     set value(val: any) {
       value = val;
-      each(fns, (fn) => fn(this, value))
+      each(fns, fn => fn(this, value));
     },
     on(name: 'updated', fn: () => void, context: any) {
       fns[name] = fn.bind(context || this);

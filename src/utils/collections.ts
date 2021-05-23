@@ -55,23 +55,23 @@ export function pick(path: string | string[], source: any) {
       let m = null;
 
       do {
-        m = rkey.exec(fullName)
+        m = rkey.exec(fullName);
 
         if (m) {
           const name = m[1];
           found = name in src;
-          src = src[name]
+          src = src[name];
         }
-      } while (m && found && src)
+      } while (m && found && src);
     }
 
-    return src
+    return src;
   }, source);
 
   return {
     found,
     value
-  }
+  };
 }
 
 export function picks(path: string | string[], ...args: any[]) {
@@ -101,7 +101,7 @@ export function findIndex(arr: any[], fn: (...args: any[]) => boolean) {
       }
 
       return false;
-    })
+    });
   }
 
   return i;

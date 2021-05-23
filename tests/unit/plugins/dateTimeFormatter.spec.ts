@@ -1,10 +1,10 @@
-import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from "@/constants";
-import { getPlug, plug } from "@/helpers";
-import dateTimeFormatter from "@/plugins/dateTimeFormatter";
-import i18, { I18 } from "@/plugins/i18";
-import stringFormatter from "@/plugins/stringFormatter";
+import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from '@/constants';
+import { getPlug, plug } from '@/helpers';
+import dateTimeFormatter from '@/plugins/dateTimeFormatter';
+import i18, { I18 } from '@/plugins/i18';
+import stringFormatter from '@/plugins/stringFormatter';
 import en from '@/resources/en-US';
-import { Calendar } from "@/utils/Calendar";
+import { Calendar } from '@/utils/Calendar';
 
 plug(LOCALIZER, i18);
 plug(DATE_TIME_FORMATTER, dateTimeFormatter);
@@ -19,11 +19,15 @@ describe('dateTimeFormatter', () => {
   const date = new Date('2020-12-27T08:06:10.941Z');
 
   it('Should output `G GG GGG GGGG GGGGG` as keys', async () => {
-    expect(formatter('G GG GGG GGGG GGGGG', date)).toBe('{era_narrow[0]} {era_short[0]} {era_long[0]} {era_long[0]} {era_long[0]}');
+    expect(formatter('G GG GGG GGGG GGGGG', date)).toBe(
+      '{era_narrow[0]} {era_short[0]} {era_long[0]} {era_long[0]} {era_long[0]}'
+    );
   });
 
   it('Should output `G GG GGG GGGG GGGGG` as localized strings', async () => {
-    expect(localizer.translate(formatter('G GG GGG GGGG GGGGG', date))).toBe('A AD Anno Domini Anno Domini Anno Domini');
+    expect(localizer.translate(formatter('G GG GGG GGGG GGGGG', date))).toBe(
+      'A AD Anno Domini Anno Domini Anno Domini'
+    );
   });
 
   it('y yy yyy yyyy yyyyy', async () => {
@@ -44,16 +48,22 @@ describe('dateTimeFormatter', () => {
     // default ISO 8601
     expect(formatter('w ww www wwww wwwww', new Date('2021-01-06'))).toBe('1 01 001 0001 00001');
     // gregorian
-    expect(formatter('w ww www wwww wwwww', new Date('2021-01-06'), {
-      minimalDaysInFirstWeek: 1
-    })).toBe('2 02 002 0002 00002');
-    expect(formatter('w ww www wwww wwwww', new Date('2020-02-29'), {
-      minimalDaysInFirstWeek: 1
-    })).toBe('9 09 009 0009 00009');
-    expect(formatter('w ww www wwww wwwww', new Date('2020-02-29'), {
-      minimalDaysInFirstWeek: 1,
-      firstDayOfWeek: Calendar.SUNDAY,
-    })).toBe('9 09 009 0009 00009');
+    expect(
+      formatter('w ww www wwww wwwww', new Date('2021-01-06'), {
+        minimalDaysInFirstWeek: 1
+      })
+    ).toBe('2 02 002 0002 00002');
+    expect(
+      formatter('w ww www wwww wwwww', new Date('2020-02-29'), {
+        minimalDaysInFirstWeek: 1
+      })
+    ).toBe('9 09 009 0009 00009');
+    expect(
+      formatter('w ww www wwww wwwww', new Date('2020-02-29'), {
+        minimalDaysInFirstWeek: 1,
+        firstDayOfWeek: Calendar.SUNDAY
+      })
+    ).toBe('9 09 009 0009 00009');
   });
 
   it('W WW WWW WWWW WWWWW', async () => {
@@ -72,9 +82,11 @@ describe('dateTimeFormatter', () => {
     expect(formatter('F FF FFF FFFF FFFFF', date)).toBe('4 04 004 0004 00004');
     expect(formatter('F FF FFF FFFF FFFFF', new Date('2020-12-07'))).toBe('1 01 001 0001 00001');
     expect(formatter('F FF FFF FFFF FFFFF', new Date('2020-08-06'))).toBe('1 01 001 0001 00001');
-    expect(formatter('F FF FFF FFFF FFFFF', new Date('2020-08-04'), {
-      firstDayOfWeek: Calendar.SUNDAY
-    })).toBe('1 01 001 0001 00001');
+    expect(
+      formatter('F FF FFF FFFF FFFFF', new Date('2020-08-04'), {
+        firstDayOfWeek: Calendar.SUNDAY
+      })
+    ).toBe('1 01 001 0001 00001');
   });
 
   it('E EE EEE EEEE EEEEE', async () => {
@@ -83,9 +95,11 @@ describe('dateTimeFormatter', () => {
 
   it('u uu uuu uuuu uuuuu', async () => {
     expect(formatter('u uu uuu uuuu uuuuu', date)).toBe('7 07 007 0007 00007');
-    expect(formatter('u uu uuu uuuu uuuuu', date, {
-      firstDayOfWeek: Calendar.SUNDAY
-    })).toBe('1 01 001 0001 00001');
+    expect(
+      formatter('u uu uuu uuuu uuuuu', date, {
+        firstDayOfWeek: Calendar.SUNDAY
+      })
+    ).toBe('1 01 001 0001 00001');
   });
 
   it('a aa aaa aaaa aaaaa', async () => {
@@ -127,12 +141,16 @@ describe('dateTimeFormatter', () => {
 
   it('z zz zzz zzzz zzzzz', async () => {
     expect(formatter('z zz zzz zzzz zzzzz', date)).toBe('GMT+7 GMT+7 GMT+7 Indochina Time Indochina Time');
-    expect(formatter('z zz zzz zzzz zzzzz', date, {
-      timeZone: 'UTC'
-    })).toBe('UTC+0 UTC+0 UTC+0 Coordinated Universal Time Coordinated Universal Time');
-    expect(formatter('z zz zzz zzzz zzzzz', date, {
-      timeZone: 25200000
-    })).toBe('UTC+7 UTC+7 UTC+7 Coordinated Universal Time Coordinated Universal Time');
+    expect(
+      formatter('z zz zzz zzzz zzzzz', date, {
+        timeZone: 'UTC'
+      })
+    ).toBe('UTC+0 UTC+0 UTC+0 Coordinated Universal Time Coordinated Universal Time');
+    expect(
+      formatter('z zz zzz zzzz zzzzz', date, {
+        timeZone: 25200000
+      })
+    ).toBe('UTC+7 UTC+7 UTC+7 Coordinated Universal Time Coordinated Universal Time');
   });
 
   it('Z ZZ ZZZ ZZZZ ZZZZZ', async () => {

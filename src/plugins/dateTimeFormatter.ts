@@ -1,9 +1,9 @@
 import { zeroPad, isPlainObject } from '../utils';
 import { Calendar, CalendarOptions, parseTime } from '../utils/Calendar';
 
-const formattingTokensRegExp = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g
-const escapedStringRegExp = /^'([^]*?)'?$/
-const doubleQuoteRegExp = /''/g
+const formattingTokensRegExp = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g;
+const escapedStringRegExp = /^'([^]*?)'?$/;
+const doubleQuoteRegExp = /''/g;
 
 function cleanEscapedString(input: string) {
   const match = input.match(escapedStringRegExp);
@@ -19,14 +19,14 @@ function formatYear(input: number, token: string) {
 const _lengthNames = ['narrow', 'short', 'long'];
 
 function getLengthName(length: number) {
-  return _lengthNames[Math.min(2, length > 0 ? length - 1 : 0)]
+  return _lengthNames[Math.min(2, length > 0 ? length - 1 : 0)];
 }
 
 function weekInMonth(cal: Calendar) {
   const dow = cal.getDayOfWeek();
   const remain = cal.day - dow;
 
-  return Math.floor(remain > 0 ? 1 + (remain / 7) + (remain % 7 !== 0 ? 1 : 0) : 1)
+  return Math.floor(remain > 0 ? 1 + remain / 7 + (remain % 7 !== 0 ? 1 : 0) : 1);
 }
 
 export const formatters: Record<string, any> = {
@@ -125,7 +125,7 @@ export const formatters: Record<string, any> = {
   z(cal: Calendar, token: string) {
     const length = token.length;
     const isShort = length < 4;
-    let format: 'long' | 'short' = isShort ? 'short' : 'long';
+    const format: 'long' | 'short' = isShort ? 'short' : 'long';
     let name = cal.getTimeZoneName({ format });
 
     if (cal.timeZone === 'UTC' && isShort) {
@@ -164,27 +164,26 @@ export const formatters: Record<string, any> = {
 
     throw new RangeError(`invalid ISO 8601 format: length=${length}`);
   }
-}
+};
 
-export default function dateTimeFormatter(format: string, input: any, options?: CalendarOptions){
+export default function dateTimeFormatter(format: string, input: any, options?: CalendarOptions) {
   const value = isPlainObject(input) ? input.value : input;
 
-  return format
-    .replace(formattingTokensRegExp, (token: string, formatType: string) => {
-      if (token === "''") {
-        return "'"
-      }
+  return format.replace(formattingTokensRegExp, (token: string, formatType: string) => {
+    if (token === "''") {
+      return "'";
+    }
 
-      if (formatType === "'") {
-        return cleanEscapedString(token)
-      }
+    if (formatType === "'") {
+      return cleanEscapedString(token);
+    }
 
-      const formatter = formatters[formatType]
+    const formatter = formatters[formatType];
 
-      if (formatter) {
-        return formatter(new Calendar(value, options), token);
-      }
+    if (formatter) {
+      return formatter(new Calendar(value, options), token);
+    }
 
-      return token;
-    });
+    return token;
+  });
 }

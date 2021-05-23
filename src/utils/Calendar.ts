@@ -1,5 +1,5 @@
-import { isNullOrUndefined, isPlainNumber } from "./assertions";
-import { ref, setter, getter } from "./objects";
+import { isNullOrUndefined, isPlainNumber } from './assertions';
+import { ref, setter, getter } from './objects';
 
 const ladder = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 /**
@@ -13,7 +13,7 @@ const ladder = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
  * 3 4 5 6 7 1 2
  * 2 3 4 5 6 7 1
  */
-const weeksMap = [1, 7, 6, 5, 4 ,3, 2];
+const weeksMap = [1, 7, 6, 5, 4, 3, 2];
 const rsep = /^[, \u200e]+/;
 const rtimezone = /([+-])(\d{1,2})(?::(\d{1,2}))?/;
 const MINUTE = 60000;
@@ -43,7 +43,7 @@ function computeWeeksInYear(year: number) {
   return 52 + (wiy1 === 4 || wiy2 === 3 ? 1 : 0);
 }
 
-function computeOrdinal({ year, month, day }: { year: number, month: number, day: number }) {
+function computeOrdinal({ year, month, day }: { year: number; month: number; day: number }) {
   return day + ladder[month - 1] + (isLeapYear(year) && month > 2 ? 1 : 0);
 }
 
@@ -57,12 +57,12 @@ function gregorianToWeek(cal: Calendar) {
    * where
    * doy = 1 → 365/366, dow = 1 → 7 og div means integer division (i.e. the remainder after a division is discarded).
    */
-  let weekInYear = Math.floor(((14 - minimalDaysInFirstWeek) + ordinal - cal.getDayOfWeek()) / 7);
+  let weekInYear = Math.floor((14 - minimalDaysInFirstWeek + ordinal - cal.getDayOfWeek()) / 7);
   let weekYear;
 
   if (weekInYear < 1) {
     weekYear = year - 1;
-    weekInYear = computeWeeksInYear(weekYear)
+    weekInYear = computeWeeksInYear(weekYear);
   } else if (weekInYear > computeWeeksInYear(year)) {
     weekYear = year + 1;
     weekInYear = 1;
@@ -73,11 +73,16 @@ function gregorianToWeek(cal: Calendar) {
   return { weekYear, weekInYear };
 }
 
-function dtfFormat({ date, timeZoneName, locale = 'en-US', timeZone }: { date?: Date; timeZoneName?: 'long' | 'short'; locale?: string, timeZone?: string } = {}) {
+function dtfFormat({
+  date,
+  timeZoneName,
+  locale = 'en-US',
+  timeZone
+}: { date?: Date; timeZoneName?: 'long' | 'short'; locale?: string; timeZone?: string } = {}) {
   return new Intl.DateTimeFormat(locale, {
     timeZoneName,
     timeZone
-  }).format(date)
+  }).format(date);
 }
 
 export type CalendarOptions = {
@@ -86,17 +91,17 @@ export type CalendarOptions = {
   // 1 -> 7
   minimalDaysInFirstWeek?: number;
   timeZone?: any;
-}
+};
 
 function extractTimeZoneOffset(timeZone: string): number | null {
   const match = timeZone.match(rtimezone);
 
   if (match) {
     const [, sign, hours, minutes] = match;
-    return ((+hours * HOUR) + (minutes ? +minutes * MINUTE : 0)) * (sign === '+' ? 1 :- 1);
+    return (+hours * HOUR + (minutes ? +minutes * MINUTE : 0)) * (sign === '+' ? 1 : -1);
   }
 
-  return null
+  return null;
 }
 
 export function parseTime(offset: number) {
@@ -110,7 +115,7 @@ export function parseTime(offset: number) {
     minutes,
     seconds,
     sign
-  }
+  };
 }
 
 export class Calendar {
@@ -157,10 +162,10 @@ export class Calendar {
         } else if (this.isValidTimeZone(val)) {
           tz = val;
         } else {
-          throw new Error('invalid timezone format')
+          throw new Error('invalid timezone format');
         }
 
-        const formatted = dtfFormat({ date: this.instance, timeZoneName: 'short', timeZone: val })
+        const formatted = dtfFormat({ date: this.instance, timeZoneName: 'short', timeZone: val });
         os = extractTimeZoneOffset(formatted);
       }
 
@@ -206,24 +211,24 @@ export class Calendar {
     let diy = ladder[this.month - 1] + this.day;
 
     if (this.month > 2 && isLeapYear(this.year)) {
-      diy += 1
+      diy += 1;
     }
 
-    return diy
+    return diy;
   }
 
   getDayOfWeek() {
-    const utcDay = this.instance.getUTCDay()
+    const utcDay = this.instance.getUTCDay();
     let i = weeksMap[this.firstDayOfWeek];
     const map = weeksMap.map(() => {
       if (i > 7) {
-        i = 1
+        i = 1;
       }
 
-      return i++
+      return i++;
     });
 
-    return map[utcDay === 0 ? 6 : utcDay - 1]
+    return map[utcDay === 0 ? 6 : utcDay - 1];
   }
 
   getTimeZoneName({ format, locale = 'en-US' }: { format?: 'long' | 'short'; locale?: string } = {}) {

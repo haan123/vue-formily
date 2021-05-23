@@ -1,7 +1,7 @@
 import VueFormily from './VueFormily';
 
-export * from './core/elements';
-export * from './core/validations';
+export { Form, Field, Group, Collection } from './core/elements';
+export { Validation, Rule } from './core/validations';
 
 export default VueFormily;
 

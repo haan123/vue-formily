@@ -1,4 +1,4 @@
-import { isPlainObject, isString } from "./assertions";
+import { isPlainObject, isString } from './assertions';
 
 export function getLength(value: any): number {
   if (Array.isArray(value)) {
@@ -24,4 +24,6 @@ export function now() {
   return Date.now();
 }
 
-export function noop(value: any) { return value; }
+export function noop(value: any) {
+  return value;
+}

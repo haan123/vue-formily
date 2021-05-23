@@ -7,17 +7,19 @@ import flushPromises from 'flush-promises';
 [Field, Group, Collection].forEach(F => registerElement(F));
 
 describe('Collection', () => {
-  const schema: any = { formId: 'group_test' }
+  const schema: any = { formId: 'group_test' };
 
   it('Throw error with undefined `fields`', () => {
     expect(function () {
-      new Group(schema)
-    }).toThrowError('invalid schema, \'fields\' is empty or missing');
+      // eslint-disable-next-line no-new
+      new Group(schema);
+    }).toThrowError("invalid schema, 'fields' is empty or missing");
 
     expect(function () {
       schema.fields = [];
-      new Group(schema)
-    }).toThrowError('invalid schema, \'fields\' is empty or missing');
+      // eslint-disable-next-line no-new
+      new Group(schema);
+    }).toThrowError("invalid schema, 'fields' is empty or missing");
   });
 
   it('Can access field from index signature', () => {
@@ -36,7 +38,7 @@ describe('Collection', () => {
           message: 'abc'
         }
       ]
-    } as FieldSchema, );
+    } as FieldSchema);
 
     const group = new Group(schema);
 
@@ -47,7 +49,7 @@ describe('Collection', () => {
   it('Can validate', async () => {
     const group = new Group(schema);
 
-    await group.validate()
+    await group.validate();
 
     group.shake();
 
@@ -69,7 +71,7 @@ describe('Collection', () => {
   it('Can shake', async () => {
     const group = new Group(schema);
 
-    await group.validate()
+    await group.validate();
 
     group.shake();
 
@@ -79,7 +81,7 @@ describe('Collection', () => {
 
     group.reset();
 
-    await group.validate()
+    await group.validate();
 
     group.shake({ cascade: false });
 
@@ -89,15 +91,17 @@ describe('Collection', () => {
   });
 
   it('Can reset', async () => {
-    schema.fields = [{
-      formId: 'a',
-      rules: [
-        {
-          ...required,
-          message: 'abc'
-        }
-      ]
-    } as FieldSchema];
+    schema.fields = [
+      {
+        formId: 'a',
+        rules: [
+          {
+            ...required,
+            message: 'abc'
+          }
+        ]
+      } as FieldSchema
+    ];
 
     const group = new Group(schema);
 
@@ -141,7 +145,7 @@ describe('Collection', () => {
       formId: 'b',
       fields: [
         {
-          formId: 'c',
+          formId: 'c'
         }
       ]
     } as GroupSchema);
@@ -149,14 +153,14 @@ describe('Collection', () => {
     const group = new Group(schema);
 
     expect(group.value).toBe(null);
-    expect(group.setValue('test' as any)).rejects.toThrowError();
+    await expect(group.setValue('test' as any)).rejects.toThrowError();
 
     await group.setValue({
       a: 'test',
       b: {
         c: 'abc'
       }
-    })
+    });
 
     expect(group.value).toEqual({
       a: 'test',

@@ -1,6 +1,18 @@
 import { RuleSchema, Validator, ValidationMessage } from './types';
 
-import { def, isCallable, isPlainObject, logMessage, isEmpty, setter, isString, isNotEmptyString, getter, Ref, ref } from '../../utils';
+import {
+  def,
+  isCallable,
+  isPlainObject,
+  logMessage,
+  isEmpty,
+  setter,
+  isString,
+  isNotEmptyString,
+  getter,
+  Ref,
+  ref
+} from '../../utils';
 import { Objeto } from '../Objeto';
 import { getPlug } from '../../helpers';
 import { LOCALIZER } from '../../constants';
@@ -37,7 +49,7 @@ export default class Rule extends Objeto {
 
     let validator = null;
 
-    let message = this._d.message = ref(null);
+    const message = (this._d.message = ref(null));
 
     if (isCallable(rule)) {
       validator = rule;
@@ -71,7 +83,7 @@ export default class Rule extends Objeto {
     getter(this, 'error', this._d.error);
     getter(this, 'valid', this._d.valid);
 
-    setter(this, 'message', message, this.setMessage)
+    setter(this, 'message', message, this.setMessage);
   }
 
   setMessage(message?: ValidationMessage) {
@@ -99,14 +111,14 @@ export default class Rule extends Objeto {
       error = isCallable(message) ? message.call(this, value, this.props, this.data) : message;
       valid = false;
     } else if (isString(result)) {
-      error = result
+      error = result;
       valid = false;
     }
 
     this._d.error.value = localizer ? localizer(error, this.props, this.data) : error;
     this._d.valid.value = valid;
 
-    this.emit('validated', this)
+    this.emit('validated', this);
 
     return this;
   }

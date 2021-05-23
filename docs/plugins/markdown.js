@@ -1,21 +1,21 @@
-import marked from 'marked'
+import marked from 'marked';
 
-export default function ({ app }, inject) {
-  const renderer = new marked.Renderer()
+export default function (_, inject) {
+  const renderer = new marked.Renderer();
 
   renderer.link = function (href, title, text) {
     return title
       ? '<a target="_blank" href="' + href + '" title="' + title + '">' + text + '</a>'
-      : '<a target="_blank" href="' + href + '">' + text + '</a>'
-  }
+      : '<a target="_blank" href="' + href + '">' + text + '</a>';
+  };
 
-  const compile = (markdown) => {
+  const compile = markdown => {
     if (!markdown) {
-      return
+      return;
     }
 
-    return marked(markdown, { renderer })
-  }
+    return marked(markdown, { renderer });
+  };
 
-  inject('markdown', compile)
+  inject('markdown', compile);
 }

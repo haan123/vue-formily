@@ -1,12 +1,30 @@
 import { ElementData, FieldSchema, FieldType, FieldValue, Format } from './types';
 
 import Element from './Element';
-import { def, logMessage, isCallable, setter, getter, ref, Ref, isUndefined, toString, isPlainObject } from '../../utils';
+import {
+  def,
+  logMessage,
+  isCallable,
+  setter,
+  getter,
+  ref,
+  Ref,
+  isUndefined,
+  toString,
+  isPlainObject
+} from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
-import { normalizeRules, indentifySchema, invalidateSchemaValidation, genHtmlName, getPlug, genProp } from '../../helpers';
+import {
+  normalizeRules,
+  indentifySchema,
+  invalidateSchemaValidation,
+  genHtmlName,
+  getPlug,
+  genProp
+} from '../../helpers';
 import { numeric, dateTime } from '../../rules';
 import { Rule } from '../validations';
-import { DATE_TIME_FORMATTER, LOCALIZER,  STRING_FORMATTER, NUMBER_FORMATTER } from '../../constants';
+import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER, NUMBER_FORMATTER } from '../../constants';
 
 type FieldData = ElementData & {
   error: string | null;
@@ -18,12 +36,15 @@ type FieldData = ElementData & {
 
 const dumpRule = new Rule(() => true);
 
-const typing: Record<string, {
-  cast: (value: any, ...args: any[]) => FieldValue;
-  formatter?: string;
-  rule?: Rule;
-  checkValue?: any;
-}> = {
+const typing: Record<
+  string,
+  {
+    cast: (value: any, ...args: any[]) => FieldValue;
+    formatter?: string;
+    rule?: Rule;
+    checkValue?: any;
+  }
+> = {
   string: {
     cast(value: any) {
       return value !== null ? toString(value) : null;
@@ -39,7 +60,7 @@ const typing: Record<string, {
   },
   boolean: {
     cast(value: any) {
-      return value === true || value === 'true' ? true : false;
+      return !!(value === true || value === 'true');
     }
   },
   date: {
@@ -49,7 +70,7 @@ const typing: Record<string, {
     },
     formatter: DATE_TIME_FORMATTER
   }
-}
+};
 
 function formatter(field: Field, format?: Format, options?: Record<string, any>): string {
   const { type, raw, value } = field;
@@ -73,7 +94,9 @@ export default class Field extends Element {
   static FIELD_TYPE_DATE = 'date';
 
   static accept(schema: any) {
-    const type: FieldType = schema.type ? (Field as any)[`FIELD_TYPE_${schema.type.toUpperCase()}`] : Field.FIELD_TYPE_STRING;
+    const type: FieldType = schema.type
+      ? (Field as any)[`FIELD_TYPE_${schema.type.toUpperCase()}`]
+      : Field.FIELD_TYPE_STRING;
 
     const { identified, sv } = indentifySchema(schema, type);
 
@@ -130,13 +153,13 @@ export default class Field extends Element {
     const typi = typing[this.type];
 
     if (typi.rule && !(typi.rule.name in this.validation)) {
-      this.validation.addRule(typi.rule)
+      this.validation.addRule(typi.rule);
     }
 
     const hasDefault = !isUndefined(defu);
     def(this, 'default', hasDefault ? defu : null);
 
-    const value = !isUndefined(schema.value) ? schema.value : defu
+    const value = !isUndefined(schema.value) ? schema.value : defu;
 
     const formatted = ref(null);
     const raw = ref('');
@@ -168,7 +191,7 @@ export default class Field extends Element {
   async setValue(val: any) {
     this._d.raw.value = toString(val);
 
-    await this.validate()
+    await this.validate();
 
     return this.value;
   }
@@ -192,7 +215,7 @@ export default class Field extends Element {
       return this.value;
     }
 
-    return  !isUndefined(checkValue) && toString(this.value) === checkValue;
+    return !isUndefined(checkValue) && toString(this.value) === checkValue;
   }
 
   isValid() {
@@ -208,7 +231,7 @@ export default class Field extends Element {
   async clear() {
     this.cleanUp();
 
-    await this.setRaw('')
+    await this.setRaw('');
   }
 
   getHtmlName(): string {
@@ -228,7 +251,7 @@ export default class Field extends Element {
       castingRule = (this.validation as ExtValidation<any>)[typi.rule.name];
     }
 
-    let { valid } = await castingRule.validate(raw);
+    const { valid } = await castingRule.validate(raw);
 
     if (valid) {
       const value = typi.cast(raw);

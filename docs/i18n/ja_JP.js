@@ -8,4 +8,4 @@ export default {
   article: {
     github: 'このページをGitHubで編集する'
   }
-}
+};

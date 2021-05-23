@@ -1,12 +1,6 @@
 import { ElementData, GroupSchema } from './types';
 
-import {
-  cascadeRules,
-  genHtmlName,
-  normalizeRules,
-  indentifySchema,
-  invalidateSchemaValidation,
-} from '../../helpers';
+import { cascadeRules, genHtmlName, normalizeRules, indentifySchema, invalidateSchemaValidation } from '../../helpers';
 import { genFields } from '../../helpers/elements';
 import Element from './Element';
 import { def, getter, isPlainObject, logMessage, Ref, ref } from '../../utils';
@@ -68,7 +62,7 @@ export default class Group extends Element {
 
     this.fields = genFields(schema.fields, this) as Element[];
 
-    this.fields.forEach((field) => {
+    this.fields.forEach(field => {
       def(this, field.model, field);
 
       field.on('validated', async (field: any) => {
@@ -76,13 +70,13 @@ export default class Group extends Element {
           const valueRef = this._d.value;
 
           if (!valueRef.value) {
-            valueRef.value = {}
+            valueRef.value = {};
           }
 
-          valueRef.value[field.model] = field.value
+          valueRef.value[field.model] = field.value;
         }
 
-        await this.validate({ cascade: false })
+        await this.validate({ cascade: false });
       });
     });
 
@@ -100,13 +94,15 @@ export default class Group extends Element {
       throw new Error(logMessage('Invalid value, Group value must be an object'));
     }
 
-    await Promise.all(Object.keys(obj).map(async (model) => {
-      const field = this[model];
+    await Promise.all(
+      Object.keys(obj).map(async model => {
+        const field = this[model];
 
-      if (model) {
-        await field.setValue(obj[model]);
-      }
-    }));
+        if (model) {
+          await field.setValue(obj[model]);
+        }
+      })
+    );
 
     return this.value;
   }
@@ -115,7 +111,7 @@ export default class Group extends Element {
     super.shake();
 
     if (cascade) {
-      this.fields.forEach((field) => field.shake());
+      this.fields.forEach(field => field.shake());
     }
   }
 
@@ -132,7 +128,7 @@ export default class Group extends Element {
   }
 
   isValid(): boolean {
-    return !this._d.invalidated && this.validation.valid && !this.fields.some((field) => !field.valid);
+    return !this._d.invalidated && this.validation.valid && !this.fields.some(field => !field.valid);
   }
 
   reset() {

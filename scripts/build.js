@@ -6,7 +6,7 @@ const Terser = require('terser');
 const { createConfig } = require('./rollup.config');
 const { reportSize } = require('./info');
 const { generateDts } = require('./generate-dts');
-const shell = require('shelljs')
+const shell = require('shelljs');
 
 const dist = path.join(__dirname, `../dist`);
 
@@ -58,5 +58,3 @@ async function build(pkg) {
   await build('vue-formily');
   await build('rules');
 })();
-
-

@@ -1,11 +1,11 @@
 import { isDateObject } from '@/utils';
 import { ValidationRuleSchema } from '../types';
 
-export const validator = (value: any) => isDateObject(new Date(value))
+export const validator = (value: any) => isDateObject(new Date(value));
 
 const schema: ValidationRuleSchema = {
   validator,
-  name: 'dateTime',
+  name: 'dateTime'
 };
 
 export default schema;

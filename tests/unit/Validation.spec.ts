@@ -6,10 +6,7 @@ describe('Validation', () => {
   const validation = new Validation() as ExtValidation<'numeric' | 'required'>;
 
   it('Can add multiple rules', () => {
-    validation.addRules([
-      numeric,
-      required
-    ]);
+    validation.addRules([numeric, required]);
 
     expect(validation.rules.length).toBe(2);
     expect(validation.numeric).toBeInstanceOf(Rule);
@@ -17,10 +14,7 @@ describe('Validation', () => {
   });
 
   it('Can remove multiple rules', () => {
-    const removes = validation.removeRules([
-      new Rule(numeric),
-      'required'
-    ]);
+    const removes = validation.removeRules([new Rule(numeric), 'required']);
 
     expect(validation.rules.length).toBe(0);
     expect(removes.length).toBe(2);
@@ -31,12 +25,12 @@ describe('Validation', () => {
   });
 
   it('Can add single rule', () => {
-    const rule = validation.addRule(numeric)
+    const rule = validation.addRule(numeric);
 
     expect(rule).toBeInstanceOf(Rule);
     expect(rule.name).toBe('numeric');
 
-    validation.addRule(required)
+    validation.addRule(required);
 
     expect(validation.rules.length).toBe(2);
     expect(validation.rules[0]).toBeInstanceOf(Rule);

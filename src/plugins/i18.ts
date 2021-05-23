@@ -1,7 +1,7 @@
-import { Localizer } from "@/types";
-import { STRING_FORMATTER } from "../constants";
-import { getPlug } from "../helpers";
-import { merge } from "../utils";
+import { Localizer } from '@/types';
+import { STRING_FORMATTER } from '../constants';
+import { getPlug } from '../helpers';
+import { merge } from '../utils';
 
 export type Resource = Record<string, string | string[]>;
 
@@ -23,5 +23,4 @@ export default {
   setResource(locale: string, resource: Record<string, string | string[]>) {
     _resources[locale] = resource;
   }
-}
-
+};

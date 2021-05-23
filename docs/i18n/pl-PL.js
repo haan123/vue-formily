@@ -8,4 +8,4 @@ export default {
   article: {
     github: 'Edytuj stronę na GitHub'
   }
-}
+};

@@ -36,7 +36,10 @@ export default class Collection extends Element {
         const accepted = Group.accept(schema.group);
 
         if (!accepted.valid) {
-          invalidateSchemaValidation(sv, `invalid schema.group, ${accepted.reason}`, { ...accepted.infos, formId: schema.formId });
+          invalidateSchemaValidation(sv, `invalid schema.group, ${accepted.reason}`, {
+            ...accepted.infos,
+            formId: schema.formId
+          });
         }
       }
 
@@ -90,22 +93,24 @@ export default class Collection extends Element {
     }
   }
 
-  async setValue(value: any[], { from = 0, autoAdd = true }: { from?: number; autoAdd?: boolean; } = {}) {
+  async setValue(value: any[], { from = 0, autoAdd = true }: { from?: number; autoAdd?: boolean } = {}) {
     if (!Array.isArray(value)) {
       throw new Error(logMessage('Invalid value, Group value must be an object'));
     }
 
     const groups = this.groups ? this.groups.slice(from) : [];
 
-    await Promise.all(value.slice(0, autoAdd ? value.length : groups.length).map(async (val: Record<string, any>, index: number) => {
-      const group = groups[index]
+    await Promise.all(
+      value.slice(0, autoAdd ? value.length : groups.length).map(async (val: Record<string, any>, index: number) => {
+        const group = groups[index];
 
-      if (!group) {
-        await this.addGroup().setValue(val);
-      } else {
-        await group.setValue(val);
-      }
-    }));
+        if (!group) {
+          await this.addGroup().setValue(val);
+        } else {
+          await group.setValue(val);
+        }
+      })
+    );
 
     return this.value;
   }
@@ -114,7 +119,7 @@ export default class Collection extends Element {
     super.shake();
 
     if (cascade && this.groups) {
-      this.groups.forEach((group) => group.shake());
+      this.groups.forEach(group => group.shake());
     }
   }
 
@@ -174,13 +179,13 @@ export default class Collection extends Element {
         const valueRef = this._d.value;
 
         if (!valueRef.value) {
-          valueRef.value = []
+          valueRef.value = [];
         }
 
-        valueRef.value[group.index] = group.value
+        valueRef.value[group.index] = group.value;
       }
 
-      await this.validate({ cascade: false })
+      await this.validate({ cascade: false });
     });
 
     return groupItem;
@@ -188,9 +193,7 @@ export default class Collection extends Element {
 
   async validate({ cascade = true }: { cascade?: boolean } = {}) {
     if (cascade && this.groups) {
-      await Promise.all(
-        this.groups.map(async (group: any) => await group.validate())
-      );
+      await Promise.all(this.groups.map(async (group: any) => await group.validate()));
     }
 
     await this.validation.validate(this.value);

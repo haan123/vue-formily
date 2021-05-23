@@ -22,7 +22,12 @@ export function zeroPad(input: string | number, targetLength: number) {
   const sign = num < 0 ? '-' : '';
   const length = ('' + Math.abs(num)).length;
 
-  return targetLength > length ? `${sign}${Array(targetLength).concat([Math.abs(num)]).join('0').slice(-targetLength)}` : ('' + input);
+  return targetLength > length
+    ? `${sign}${Array(targetLength)
+        .concat([Math.abs(num)])
+        .join('0')
+        .slice(-targetLength)}`
+    : '' + input;
 }
 
 export function toString(value: any) {

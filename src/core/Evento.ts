@@ -11,7 +11,7 @@ export default class Evento {
     const handlers = this.events[name];
 
     if (handlers) {
-      handlers.forEach((h) => h.call(this, ...args));
+      handlers.forEach(h => h.call(this, ...args));
     }
   }
 
@@ -29,7 +29,7 @@ export default class Evento {
     const handlers = this.events[name];
 
     if (handler) {
-      handlers.splice(handlers.indexOf(handler), 1)
+      handlers.splice(handlers.indexOf(handler), 1);
     } else {
       delete this.events[name];
     }

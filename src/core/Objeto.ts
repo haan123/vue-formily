@@ -6,6 +6,6 @@ export abstract class Objeto extends Evento {
   constructor() {
     super();
 
-    this._d = {}
+    this._d = {};
   }
 }

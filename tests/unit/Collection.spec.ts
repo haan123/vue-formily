@@ -6,17 +6,19 @@ import { required } from '@/rules';
 [Field, Group, Collection].forEach(F => registerElement(F));
 
 describe('Group', () => {
-  const schema: any = { formId: 'collection_test' }
+  const schema: any = { formId: 'collection_test' };
 
   it('Throw error with invalid schema', () => {
     expect(function () {
-      new Collection(schema)
-    }).toThrowError('invalid schema, \'group\' is empty or missing');
+      // eslint-disable-next-line no-new
+      new Collection(schema);
+    }).toThrowError("invalid schema, 'group' is empty or missing");
 
     expect(function () {
       schema.group = {};
-      new Collection(schema)
-    }).toThrowError('invalid schema.group, \'fields\' is empty or missing');
+      // eslint-disable-next-line no-new
+      new Collection(schema);
+    }).toThrowError("invalid schema.group, 'fields' is empty or missing");
   });
 
   it('Can add group', async () => {
@@ -66,11 +68,11 @@ describe('Group', () => {
     expect(collection.valid).toBe(true);
     expect(collection.error).toBe(null);
 
-    await collection.validate({ cascade: false })
+    await collection.validate({ cascade: false });
 
     expect(collection.valid).toBe(false);
 
-    await collection.validate()
+    await collection.validate();
 
     expect((collection.groups as any)[0].valid).toBe(false);
   });
@@ -80,7 +82,7 @@ describe('Group', () => {
 
     collection.addGroup();
 
-    await collection.validate()
+    await collection.validate();
 
     collection.shake();
 
@@ -92,7 +94,7 @@ describe('Group', () => {
 
     collection.addGroup();
 
-    await collection.validate()
+    await collection.validate();
 
     collection.shake({ cascade: false });
 
@@ -150,7 +152,7 @@ describe('Group', () => {
       formId: 'b',
       fields: [
         {
-          formId: 'c',
+          formId: 'c'
         }
       ]
     } as GroupSchema);
@@ -158,7 +160,7 @@ describe('Group', () => {
     const collection = new Collection(schema);
 
     expect(collection.value).toBe(null);
-    expect(collection.setValue('test' as any)).rejects.toThrowError();
+    await expect(collection.setValue('test' as any)).rejects.toThrowError();
 
     const value = [
       {
@@ -168,8 +170,8 @@ describe('Group', () => {
         b: {
           c: 'sss'
         }
-      },
-    ]
+      }
+    ];
 
     await collection.setValue(value);
 
@@ -177,9 +179,7 @@ describe('Group', () => {
     expect(collection.groups?.length).toBe(2);
     expect(collection.value).toEqual(value);
 
-    await collection.setValue([
-      { a: 'eee' }
-    ], { from: 1 });
+    await collection.setValue([{ a: 'eee' }], { from: 1 });
 
     expect((collection.value as any)[1]).toEqual({
       b: {

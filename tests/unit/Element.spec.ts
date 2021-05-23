@@ -2,15 +2,10 @@ import { Element } from '@/core/elements';
 
 describe('Element', () => {
   class A extends Element {
-    constructor(schema: any) {
-      super(schema);
-    }
-
-    _initialize() {}
     isValid() {
       return true;
     }
-    invalidate() {}
+
     getHtmlName() {
       return '';
     }
@@ -18,6 +13,7 @@ describe('Element', () => {
 
   it('Throw error with undefined `formId`', () => {
     expect(() => {
+      // eslint-disable-next-line no-new
       new A({} as any);
     }).toThrowError('"formId" can not be null or undefined');
   });

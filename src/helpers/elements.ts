@@ -48,9 +48,8 @@ export function genProp(obj: any, props: Record<string, any>, key: string, conte
   getter(
     obj,
     key,
-    _getter
-      ? _getter
-      : function () {
+    _getter ||
+      function () {
         const value = props[key];
 
         return isCallable(value) ? value.call(context, ...args) : value;
@@ -95,33 +94,35 @@ export function genProps(
 }
 
 export function cascadeRules(parentRules: ValidationRuleSchema[], fields: any[]) {
-  return parentRules ? fields.map(fieldSchema => {
-    const { rules } = fieldSchema;
+  return parentRules
+    ? fields.map(fieldSchema => {
+        const { rules } = fieldSchema;
 
-    if (rules) {
-      each(parentRules, (parentRule, key) => {
-        const index = findIndex(rules, (rule: any) => rule.key === key);;
-        const rule = rules[index]
+        if (rules) {
+          each(parentRules, (parentRule, key) => {
+            const index = findIndex(rules, (rule: any) => rule.key === key);
+            const rule = rules[index];
 
-        if (isCallable(parentRule) || !parentRule.cascade || (rule && rule.inherit === false)) {
-          return;
+            if (isCallable(parentRule) || !parentRule.cascade || (rule && rule.inherit === false)) {
+              return;
+            }
+
+            rules[index] = merge({}, parentRule, rule);
+          });
+
+          fieldSchema.rules = rules;
         }
 
-        rules[index] = merge({}, parentRule, rule);
-      });
-
-      fieldSchema.rules = rules;
-    }
-
-    return fieldSchema;
-  }) : fields;
+        return fieldSchema;
+      })
+    : fields;
 }
 
 export function genHtmlName(Element: any, ancestors: any[] | null): string {
   const keysPath = ancestors
     ? ancestors.reduce((acc: string[], fe) => {
-      return 'index' in fe ? [...acc, '' + fe.index] : [...acc, fe.formId];
-    }, [])
+        return 'index' in fe ? [...acc, '' + fe.index] : [...acc, fe.formId];
+      }, [])
     : [];
   const [root, ...rest] = [...keysPath, 'index' in Element ? '' + Element.index : Element.formId];
   const htmlName = rest ? `${root}[${rest.join('][')}]` : root;

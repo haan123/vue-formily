@@ -8,4 +8,4 @@ export default {
   article: {
     github: 'यस पृष्ठलाई GitHub मा सम्पादन गर्नुहोस'
   }
-}
+};

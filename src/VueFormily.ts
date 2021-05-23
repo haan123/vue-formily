@@ -10,12 +10,11 @@ const defaultOptions: VueFormilyOptions = {
   alias: 'forms'
 };
 
-
 export default class VueFormily {
   static version = '__VERSION__';
 
   readonly alias: string;
-  readonly rules?: Record<string, ValidationRuleSchema>;
+  readonly rules?: ValidationRuleSchema[];
 
   vm: any;
 
@@ -33,7 +32,7 @@ export default class VueFormily {
   }
 
   add(schema: FormSchema) {
-    schema.rules = merge({}, this.rules, schema.rules);
+    schema.rules = merge([], this.rules, schema.rules);
 
     const form = new Form(schema);
 

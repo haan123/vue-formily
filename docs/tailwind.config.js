@@ -1,14 +1,14 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 /*
-** TailwindCSS Configuration File
-**
-** Docs: https://tailwindcss.com/docs/configuration
-** Default: https://github.com/tailwindcss/tailwindcss/blob/master/stubs/defaultConfig.stub.js
-*/
-const path = require('path')
-const plugin = require('tailwindcss/plugin')
-const defaultTheme = require('tailwindcss/defaultTheme')
-const selectorParser = require('postcss-selector-parser')
-const { getColors } = require('theme-colors')
+ ** TailwindCSS Configuration File
+ **
+ ** Docs: https://tailwindcss.com/docs/configuration
+ ** Default: https://github.com/tailwindcss/tailwindcss/blob/master/stubs/defaultConfig.stub.js
+ */
+const plugin = require('tailwindcss/plugin');
+const defaultTheme = require('tailwindcss/defaultTheme');
+const selectorParser = require('postcss-selector-parser');
+const { getColors } = require('theme-colors');
 
 module.exports = ({ primaryColor }) => ({
   future: {
@@ -163,53 +163,51 @@ module.exports = ({ primaryColor }) => ({
     plugin(function ({ addVariant, prefix, e }) {
       addVariant('dark', ({ modifySelectors, separator }) => {
         modifySelectors(({ selector }) => {
-          return selectorParser((selectors) => {
-            selectors.walkClasses((sel) => {
-              sel.value = `dark${separator}${sel.value}`
-              sel.parent.insertBefore(sel, selectorParser().astSync(prefix('.dark-mode ')))
-            })
-          }).processSync(selector)
-        })
-      })
+          return selectorParser(selectors => {
+            selectors.walkClasses(sel => {
+              sel.value = `dark${separator}${sel.value}`;
+              sel.parent.insertBefore(sel, selectorParser().astSync(prefix('.dark-mode ')));
+            });
+          }).processSync(selector);
+        });
+      });
 
       addVariant('dark-hover', ({ modifySelectors, separator }) => {
         modifySelectors(({ className }) => {
-          return `.dark-mode .${e(`dark-hover${separator}${className}`)}:hover`
-        })
-      })
+          return `.dark-mode .${e(`dark-hover${separator}${className}`)}:hover`;
+        });
+      });
 
       addVariant('dark-focus', ({ modifySelectors, separator }) => {
         modifySelectors(({ className }) => {
-          return `.dark-mode .${e(`dark-focus${separator}${className}`)}:focus`
-        })
-      })
+          return `.dark-mode .${e(`dark-focus${separator}${className}`)}:focus`;
+        });
+      });
     }),
     require('@tailwindcss/typography'),
-    require('tailwind-css-variables')(
-      {
-        colors: 'color',
-        screens: false,
-        fontFamily: false,
-        fontSize: false,
-        fontWeight: false,
-        lineHeight: false,
-        letterSpacing: false,
-        backgroundSize: false,
-        borderWidth: false,
-        borderRadius: false,
-        width: false,
-        height: false,
-        minWidth: false,
-        minHeight: false,
-        maxWidth: false,
-        maxHeight: false,
-        padding: false,
-        margin: false,
-        boxShadow: false,
-        zIndex: false,
-        opacity: false
-      }
-    )
+    require('tailwind-css-variables')({
+      colors: 'color',
+      screens: false,
+      fontFamily: false,
+      fontSize: false,
+      fontWeight: false,
+      lineHeight: false,
+      letterSpacing: false,
+      backgroundSize: false,
+      borderWidth: false,
+      borderRadius: false,
+      width: false,
+      height: false,
+      minWidth: false,
+      minHeight: false,
+      maxWidth: false,
+      maxHeight: false,
+      padding: false,
+      margin: false,
+      boxShadow: false,
+      zIndex: false,
+      opacity: false
+    })
   ],
   purge: {
     // Learn more on https://tailwindcss.com/docs/controlling-file-size/#removing-unused-css
@@ -220,10 +218,10 @@ module.exports = ({ primaryColor }) => ({
       'pages/**/*.vue',
       'plugins/**/*.js',
       'nuxt.config.js',
-      'content/**/*.md',
+      'content/**/*.md'
     ],
     options: {
       whitelist: ['dark-mode']
     }
   }
-})
+});

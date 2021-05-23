@@ -29,7 +29,7 @@ describe('Rule', () => {
     expect((await rule.validate('4a')).error).toBe('Value is not a number');
 
     rule.message = (val: any) => {
-      return `${val} is not a number`
+      return `${val} is not a number`;
     };
 
     expect((await rule.validate('4a')).error).toBe('4a is not a number');

@@ -1,4 +1,4 @@
-import { Form, Field, Group, Collection } from  '@/core/elements';
+import { Form, Field, Group, Collection } from '@/core/elements';
 import { registerElement } from '@/helpers';
 
 [Field, Group, Collection].forEach(F => registerElement(F));

@@ -4,8 +4,8 @@ const replace = require('rollup-plugin-replace');
 
 const dirMap = {
   'vue-formily': path.resolve(__dirname, `../src/index.ts`),
-  rules: path.resolve(__dirname, `../src/rules/index.ts`),
-}
+  rules: path.resolve(__dirname, `../src/rules/index.ts`)
+};
 
 const formatNameMap = {
   'vue-formily': 'VueFormily',

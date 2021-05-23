@@ -56,7 +56,7 @@ describe('Field', () => {
     expect(f4.value).toBeInstanceOf(Date);
 
     f1.raw = '3a';
-    f4.raw = 'abc'
+    f4.raw = 'abc';
 
     await flushPromises();
 
@@ -64,7 +64,7 @@ describe('Field', () => {
     expect(f1.valid).toBe(false);
     expect(f4.value).toBe(null);
     expect(f4.valid).toBe(false);
-  })
+  });
 
   it('Can format', async () => {
     const f1 = new Field({
@@ -77,16 +77,19 @@ describe('Field', () => {
         obj: {
           aaa: '123'
         },
-        arr: [1, {
-          ddd: '2'
-        }]
+        arr: [
+          1,
+          {
+            ddd: '2'
+          }
+        ]
       }
     });
     const f2 = new Field({
       formId: 'field_name',
       type: 'date',
       format: 'yyyy/MM/dd',
-      value: '2020-01-21',
+      value: '2020-01-21'
     });
 
     await flushPromises();
@@ -98,7 +101,7 @@ describe('Field', () => {
   it('Can override default rules', async () => {
     const f = new Field({
       formId: 'field_name',
-      type: 'number',
+      type: 'number'
     });
 
     f.validation.addRule({
@@ -221,7 +224,7 @@ describe('Field', () => {
   it('Can invalidate manually', async () => {
     const f = new Field({
       formId: 'field_name',
-      value: '',
+      value: ''
     });
 
     f.invalidate();
@@ -249,7 +252,7 @@ describe('Field', () => {
 
     expect(f.checked).toBe(false);
 
-    f.raw = 'test'
+    f.raw = 'test';
 
     await flushPromises();
 
@@ -258,13 +261,13 @@ describe('Field', () => {
     const f2 = new Field({
       formId: 'field_name',
       checkValue() {
-        return 'test'
+        return 'test';
       }
     });
 
     expect(f2.checked).toBe(false);
 
-    f2.raw = 'test'
+    f2.raw = 'test';
 
     await flushPromises();
 

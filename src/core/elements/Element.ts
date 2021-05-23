@@ -57,7 +57,7 @@ export default abstract class Element extends Objeto {
   }
 
   shake() {
-    this.shaked = true
+    this.shaked = true;
   }
 
   invalidate(error?: string) {

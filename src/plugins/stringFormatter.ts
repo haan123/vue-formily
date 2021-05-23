@@ -1,4 +1,4 @@
-import { picks } from "../utils";
+import { picks } from '../utils';
 
 const simplePlaceholderRegex = /\{([^{}]+)\}/g;
 

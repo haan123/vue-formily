@@ -1,22 +1,31 @@
 module.exports = {
   root: true,
   env: {
-    node: true
+    browser: true,
+    commonjs: true,
+    es6: true,
+    node: true,
+    'jest/globals': true
   },
   extends: [
-    'plugin:vue/essential',
+    'standard',
     'eslint:recommended',
-    '@vue/typescript/recommended',
-    '@vue/prettier',
-    '@vue/prettier/@typescript-eslint'
+    'plugin:jest/recommended',
+    'plugin:@typescript-eslint/recommended',
+    'plugin:prettier/recommended'
   ],
+  plugins: ['jest', 'prettier', '@typescript-eslint'],
   parserOptions: {
+    parser: '@typescript-eslint/parser',
     ecmaVersion: 2020
   },
   rules: {
-    'no-console': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    'no-debugger': process.env.NODE_ENV === 'production' ? 'warn' : 'off',
-    '@typescript-eslint/no-explicit-any': 'off'
+    'no-use-before-define': 'off',
+    '@typescript-eslint/no-use-before-define': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/camelcase': 'off'
   },
   overrides: [
     {
