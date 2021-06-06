@@ -91,6 +91,8 @@ export default class Collection extends Element {
     if (schema.rules) {
       schema.group.fields = cascadeRules(schema.rules, schema.group.fields);
     }
+
+    this.emit('created', this);
   }
 
   async setValue(value: any[], { from = 0, autoAdd = true }: { from?: number; autoAdd?: boolean } = {}) {
@@ -192,6 +194,8 @@ export default class Collection extends Element {
   }
 
   async validate({ cascade = true }: { cascade?: boolean } = {}) {
+    this.emit('validate', this);
+
     if (cascade && this.groups) {
       await Promise.all(this.groups.map(async (group: any) => await group.validate()));
     }

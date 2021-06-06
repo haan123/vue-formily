@@ -1,7 +1,7 @@
 import { PropValue } from '../../types';
 import { ElementData, ElementSchema } from './types';
 import { genProps } from '../../helpers/elements';
-import { def, getter, isUndefined, logMessage, toString, valueOrNull } from '../../utils';
+import { def, each, getter, isUndefined, logMessage, toString, valueOrNull } from '../../utils';
 import { Objeto } from '../Objeto';
 
 function genElementAncestors(elem: Element): any[] | null {
@@ -54,6 +54,8 @@ export default abstract class Element extends Objeto {
 
     getter(this, 'htmlName', this.getHtmlName);
     getter(this, 'valid', this.isValid);
+
+    each(schema.on, (handler, name) => this.on(name, handler));
   }
 
   shake() {

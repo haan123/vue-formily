@@ -1,6 +1,5 @@
 const path = require('path');
 const typescript = require('rollup-plugin-typescript2');
-const replace = require('rollup-plugin-replace');
 
 const dirMap = {
   'vue-formily': path.resolve(__dirname, `../src/index.ts`),
@@ -38,7 +37,7 @@ function createConfig(pkg, format) {
     input: {
       input: dirMap[pkg],
       external: ['vue'],
-      plugins: [tsPlugin, replace({ __VERSION__: package.version })]
+      plugins: [tsPlugin]
     },
     output: {
       banner: `/**

@@ -105,6 +105,8 @@ export default class Rule extends Objeto {
     let error = null;
     let valid = true;
 
+    this.emit('validate', this);
+
     if (result === false) {
       const message = this.message;
 

@@ -1,4 +1,5 @@
 import { RuleSchema, Validator } from './core/validations/types';
+import { CalendarOptions } from './utils/Calendar';
 
 export type ValidationRuleSchema =
   | Validator
@@ -22,12 +23,11 @@ export interface ElementConstructor extends Function {
 }
 
 export interface VueFormilyOptions {
-  rules?: Record<string, RuleSchema>;
+  rules?: ValidationRuleSchema[];
   alias?: string;
   localizer?: Localizer;
-  modelizer?: any;
+  stringFormatter?: (format: string, data: Record<string, any>) => string;
+  dateTimeFormatter?: (format: string, input: any, options?: CalendarOptions) => string;
 }
 
 export type Localizer = (value: string, props?: Record<string, any>, data?: Record<string, any>) => string;
-
-export type Modelizer = (this: Element, formId: string) => string;

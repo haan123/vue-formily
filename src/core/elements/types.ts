@@ -1,9 +1,11 @@
 import { PropValue, ValidationRuleSchema } from '../../types';
+import { EventHandler } from '../Evento';
 
 export interface ElementSchema {
   formId: PropValue<string>;
   model?: string;
   props?: Record<string, PropValue<any>>;
+  on?: Record<string, EventHandler>;
 }
 
 export interface ElementData {

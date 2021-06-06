@@ -1,37 +1,28 @@
 import { VueConstructor } from 'vue';
 import { FormSchema } from './core/elements/types';
 import { ValidationRuleSchema, VueFormilyOptions } from './types';
-import { merge, noop } from './utils';
-import { registerElement, plug } from './helpers';
+import { merge } from './utils';
+import { registerElement } from './helpers';
 import { Form, Field, Group, Collection } from './core/elements';
-import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from './constants';
 
 const defaultOptions: VueFormilyOptions = {
   alias: 'forms'
 };
 
 export default class VueFormily {
-  static version = '__VERSION__';
-
   readonly alias: string;
   readonly rules?: ValidationRuleSchema[];
 
   vm: any;
 
   constructor(options: VueFormilyOptions = {}) {
-    const _options = merge({}, defaultOptions, options);
+    const { alias, rules } = merge({}, defaultOptions, options) as VueFormilyOptions;
 
-    const { alias, rules, localizer = noop, stringFormatter = noop, dateTimeFormatter = noop } = _options;
-
-    this.alias = alias;
+    this.alias = alias as string;
     this.rules = rules;
-
-    plug(LOCALIZER, localizer);
-    plug(STRING_FORMATTER, stringFormatter);
-    plug(DATE_TIME_FORMATTER, dateTimeFormatter);
   }
 
-  add(schema: FormSchema) {
+  addForm(schema: FormSchema) {
     schema.rules = merge([], this.rules, schema.rules);
 
     const form = new Form(schema);
@@ -43,6 +34,10 @@ export default class VueFormily {
     return form;
   }
 
+  removeForm(formId: string) {
+    delete this.vm[this.alias][formId];
+  }
+
   setInstance(vm: any) {
     this.vm = vm;
   }
@@ -52,8 +47,14 @@ export default class VueFormily {
       return;
     }
 
-    // _initialize default form elements
-    [Group, Collection, Field].forEach(F => registerElement(F));
+    // initialize default form elements
+    [Group, Collection, Field].forEach(F => {
+      registerElement(F);
+
+      if ('acceptOptions' in F) {
+        F.acceptOptions(options);
+      }
+    });
 
     const vf = new VueFormily(options);
 

@@ -11,7 +11,8 @@ import {
   Ref,
   isUndefined,
   toString,
-  isPlainObject
+  isPlainObject,
+  noop
 } from '../../utils';
 import Validation, { ExtValidation } from '../validations/Validation';
 import {
@@ -20,7 +21,8 @@ import {
   invalidateSchemaValidation,
   genHtmlName,
   getPlug,
-  genProp
+  genProp,
+  plug
 } from '../../helpers';
 import { numeric, dateTime } from '../../rules';
 import { Rule } from '../validations';
@@ -75,15 +77,14 @@ const typing: Record<
 function formatter(field: Field, format?: Format, options?: Record<string, any>): string {
   const { type, raw, value } = field;
   const _formatter = getPlug(typing[type].formatter || '');
+  const localizer = getPlug(LOCALIZER);
+  let result = raw;
 
-  if (!format || !_formatter) {
-    return raw;
+  if (format) {
+    result = _formatter(isCallable(format) ? format.call(field, value) : format, field, options);
   }
 
-  const localizer = getPlug(LOCALIZER);
-  const result = _formatter(isCallable(format) ? format.call(field, value) : format, field, options);
-
-  return localizer ? localizer(result, field, options) : result;
+  return localizer(result, field, options);
 }
 
 export default class Field extends Element {
@@ -92,6 +93,14 @@ export default class Field extends Element {
   static FIELD_TYPE_NUMBER = 'number';
   static FIELD_TYPE_BOOLEAN = 'boolean';
   static FIELD_TYPE_DATE = 'date';
+
+  static acceptOptions(options: Record<string, any> = {}) {
+    const { localizer = noop, stringFormatter = noop, dateTimeFormatter = noop } = options;
+
+    plug(LOCALIZER, localizer);
+    plug(STRING_FORMATTER, stringFormatter);
+    plug(DATE_TIME_FORMATTER, dateTimeFormatter);
+  }
 
   static accept(schema: any) {
     const type: FieldType = schema.type
@@ -131,7 +140,6 @@ export default class Field extends Element {
 
   protected _d!: FieldData;
 
-  pending = false;
   raw!: string;
 
   constructor(schema: FieldSchema, parent?: Element) {
@@ -182,6 +190,8 @@ export default class Field extends Element {
     if (!isUndefined(value)) {
       this.setValue(value);
     }
+
+    this.emit('created', this);
   }
 
   async setRaw(val: any) {
@@ -245,7 +255,7 @@ export default class Field extends Element {
     const typed = this._d.typed;
     const { format, formatOptions } = this._d.schema;
 
-    this.pending = true;
+    this.emit('validate', this);
 
     if (typi.rule) {
       castingRule = (this.validation as ExtValidation<any>)[typi.rule.name];
@@ -263,8 +273,6 @@ export default class Field extends Element {
     }
 
     this._d.formatted.value = formatter(this, format, formatOptions);
-
-    this.pending = false;
 
     this.emit('validated', this);
   }

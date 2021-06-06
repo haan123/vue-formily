@@ -87,6 +87,8 @@ export default class Group extends Element {
     getter(this, 'value', value);
 
     this._d.value = value;
+
+    this.emit('created', this);
   }
 
   async setValue(obj: Record<string, any>) {
@@ -146,6 +148,8 @@ export default class Group extends Element {
   }
 
   async validate({ cascade = true }: { cascade?: boolean } = {}) {
+    this.emit('validate', this);
+
     if (cascade) {
       await Promise.all(
         this.fields.filter((field: any) => 'validate' in field).map(async (field: any) => await field.validate())
