@@ -1,11 +1,8 @@
 import { createLocalVue, mount } from '@vue/test-utils';
-import VueFormily from '@/VueFormily';
-import { Collection, Field, Form, Group } from '@/core/elements';
-import { registerElement } from '@/helpers';
+import VueFormily, { Formily } from '../../src';
+import { Form } from '@/core/elements';
 import { FormSchema } from '@/core/elements/types';
 import { VueFormilyOptions } from '@/types';
-
-[Field, Group, Collection].forEach(F => registerElement(F));
 
 describe('VueFormily', () => {
   let localVue: any;
@@ -26,7 +23,7 @@ describe('VueFormily', () => {
       }
     );
 
-    expect('$vf' in wrapper.vm).toBe(true);
+    expect('$formily' in wrapper.vm).toBe(true);
   });
 
   it('Should add form successfully', () => {
@@ -41,7 +38,7 @@ describe('VueFormily', () => {
       }
     );
 
-    const form = ((wrapper.vm as any).$vf as VueFormily).addForm({
+    const form = ((wrapper.vm as any).$formily as Formily).addForm({
       formId: 'form',
       fields: [
         {
@@ -88,7 +85,7 @@ describe('VueFormily', () => {
       }
     );
 
-    const form = ((wrapper.vm as any).$vf as VueFormily).addForm({
+    const form = ((wrapper.vm as any).$formily as Formily).addForm({
       formId: 'form',
       fields: [
         {
@@ -119,7 +116,8 @@ describe('VueFormily', () => {
       }
     );
 
-    const form = ((wrapper.vm as any).$vf as VueFormily).addForm({
+    const vm = wrapper.vm as any;
+    const form = (vm.$formily as Formily).addForm({
       formId: 'form',
       fields: [
         {
@@ -151,7 +149,7 @@ describe('VueFormily', () => {
       }
     );
 
-    const form = ((wrapper.vm as any).$vf as VueFormily).addForm({
+    const form = ((wrapper.vm as any).$formily as Formily).addForm({
       formId: 'form',
       fields: [
         {

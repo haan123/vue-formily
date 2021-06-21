@@ -1,3 +1,5 @@
+import { def } from '@/utils';
+
 export type EventHandler = (...args: any[]) => any;
 
 export default class Evento {
@@ -22,7 +24,7 @@ export default class Evento {
       handlers.push(handler);
     }
 
-    this.events[name] = handlers;
+    def(this.events, name, handlers);
   }
 
   off(name: string, handler?: EventHandler) {

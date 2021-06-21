@@ -33,11 +33,6 @@ export function ref(value?: any): Ref<any> {
     set value(val: any) {
       value = val;
       each(fns, fn => fn(this, value));
-    },
-    on(name: 'updated', fn: () => void, context: any) {
-      fns[name] = fn.bind(context || this);
-
-      return this;
     }
   };
 }
@@ -48,7 +43,6 @@ export function isRefValue(value: any): value is Ref<any> {
 
 export type Ref<T> = {
   value: T;
-  on: (name: 'updated', fn: () => void, context: any) => void;
 };
 
 export function getter(obj: any, key: string, value: any, { configurable = false }: { configurable?: boolean } = {}) {

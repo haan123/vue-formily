@@ -1,13 +1,13 @@
 import flushPromises from 'flush-promises';
 import { Field } from '@/core/elements';
 import { numeric, required } from '@/rules';
-import { plug } from '@/helpers';
-import { DATE_TIME_FORMATTER, STRING_FORMATTER } from '@/constants';
 import dateTimeFormatter from '@/plugins/dateTimeFormatter';
 import stringFormatter from '@/plugins/stringFormatter';
 
-plug(DATE_TIME_FORMATTER, dateTimeFormatter);
-plug(STRING_FORMATTER, stringFormatter);
+Field.register({
+  stringFormatter,
+  dateTimeFormatter
+});
 
 describe('Field', () => {
   it('Can cast', async () => {

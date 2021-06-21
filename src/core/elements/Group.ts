@@ -1,7 +1,7 @@
 import { ElementData, GroupSchema } from './types';
 
 import { cascadeRules, genHtmlName, normalizeRules, indentifySchema, invalidateSchemaValidation } from '../../helpers';
-import { genFields } from '../../helpers/elements';
+import { genFields, registerElement, unregisterElement } from '../../helpers/elements';
 import Element from './Element';
 import { def, getter, isPlainObject, logMessage, Ref, ref } from '../../utils';
 import Validation from '../validations/Validation';
@@ -12,6 +12,15 @@ type GroupData = ElementData & {
 
 export default class Group extends Element {
   static FORM_TYPE = 'group';
+
+  static register() {
+    registerElement(this);
+  }
+
+  static unregister() {
+    unregisterElement(this);
+  }
+
   static accept(schema: any) {
     const { identified, sv } = indentifySchema(schema, Group.FORM_TYPE);
 

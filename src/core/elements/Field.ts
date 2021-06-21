@@ -22,7 +22,10 @@ import {
   genHtmlName,
   getPlug,
   genProp,
-  plug
+  plug,
+  unplug,
+  registerElement,
+  unregisterElement
 } from '../../helpers';
 import { numeric, dateTime } from '../../rules';
 import { Rule } from '../validations';
@@ -94,12 +97,20 @@ export default class Field extends Element {
   static FIELD_TYPE_BOOLEAN = 'boolean';
   static FIELD_TYPE_DATE = 'date';
 
-  static acceptOptions(options: Record<string, any> = {}) {
+  static register(options: Record<string, any> = {}) {
     const { localizer = noop, stringFormatter = noop, dateTimeFormatter = noop } = options;
+
+    registerElement(this);
 
     plug(LOCALIZER, localizer);
     plug(STRING_FORMATTER, stringFormatter);
     plug(DATE_TIME_FORMATTER, dateTimeFormatter);
+  }
+
+  static unregister() {
+    unregisterElement(this);
+
+    [LOCALIZER, STRING_FORMATTER, DATE_TIME_FORMATTER].forEach((p: any) => unplug(p));
   }
 
   static accept(schema: any) {
@@ -194,8 +205,8 @@ export default class Field extends Element {
     this.emit('created', this);
   }
 
-  async setRaw(val: any) {
-    await this.setValue(val);
+  setRaw(val: any) {
+    this.setValue(val);
   }
 
   async setValue(val: any) {
@@ -241,7 +252,7 @@ export default class Field extends Element {
   async clear() {
     this.cleanUp();
 
-    await this.setRaw('');
+    await this.setValue('');
   }
 
   getHtmlName(): string {

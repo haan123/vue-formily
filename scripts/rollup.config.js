@@ -53,7 +53,10 @@ function createConfig(pkg, format) {
       sourcemap: true,
       globals: {
         vue: 'Vue'
-      }
+      },
+      // Disable warning about mixed named/default exports
+      // We we have handled this in the index file
+      exports: 'named'
     }
   };
 

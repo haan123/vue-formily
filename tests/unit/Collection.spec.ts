@@ -1,9 +1,8 @@
 import { Collection, Field, Group } from '@/core/elements';
 import { GroupSchema } from '@/core/elements/types';
-import { registerElement } from '@/helpers';
 import { required } from '@/rules';
 
-[Field, Group, Collection].forEach(F => registerElement(F));
+[Field, Group, Collection].forEach(F => F.register());
 
 describe('Group', () => {
   const schema: any = { formId: 'collection_test' };

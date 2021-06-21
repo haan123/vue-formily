@@ -18,6 +18,11 @@ function genElementAncestors(elem: Element): any[] | null {
 }
 
 export default abstract class Element extends Objeto {
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  static register() {}
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  static unregister() {}
+
   readonly parent!: Element | null;
   readonly formId!: string;
   readonly model!: string;

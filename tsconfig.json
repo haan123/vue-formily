@@ -11,7 +11,7 @@
     "sourceMap": true,
     "declaration": true,
     "baseUrl": ".",
-    "types": ["jest"],
+    "types": ["jest", "node"],
     "paths": {
       "@/*": [
         "src/*"

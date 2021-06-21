@@ -1,10 +1,9 @@
 import { Collection, Field, Group } from '@/core/elements';
 import { FieldSchema, GroupSchema } from '@/core/elements/types';
-import { registerElement } from '@/helpers';
 import { required } from '@/rules';
 import flushPromises from 'flush-promises';
 
-[Field, Group, Collection].forEach(F => registerElement(F));
+[Field, Group, Collection].forEach(F => F.register());
 
 describe('Collection', () => {
   const schema: any = { formId: 'group_test' };

@@ -2,7 +2,15 @@ import { GroupSchema, CollectionSchema, ElementData } from './types';
 
 import Element from './Element';
 import Group from './Group';
-import { cascadeRules, genHtmlName, indentifySchema, invalidateSchemaValidation, normalizeRules } from '../../helpers';
+import {
+  cascadeRules,
+  genHtmlName,
+  indentifySchema,
+  invalidateSchemaValidation,
+  normalizeRules,
+  registerElement,
+  unregisterElement
+} from '../../helpers';
 import { def, findIndex, getter, logMessage, ref, Ref } from '../../utils';
 import { Validation } from '../validations';
 
@@ -26,6 +34,15 @@ type CollectionData = ElementData & {
 
 export default class Collection extends Element {
   static FORM_TYPE = 'collection';
+
+  static register() {
+    registerElement(this);
+  }
+
+  static unregister() {
+    unregisterElement(this);
+  }
+
   static accept(schema: any) {
     const { identified, sv } = indentifySchema(schema, Collection.FORM_TYPE);
 
