@@ -1,9 +1,23 @@
-import { zeroPad, isPlainObject } from '../utils';
+import { DATE_TIME_FORMATTER } from '@/constants';
+import { isPlainObject } from '../utils';
 import { Calendar, CalendarOptions, parseTime } from '../utils/Calendar';
 
-const formattingTokensRegExp = /[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g;
+const formattingTokensRegExp = /(\w)\1*|''|'(''|[^'])+('|$)|./g;
 const escapedStringRegExp = /^'([^]*?)'?$/;
 const doubleQuoteRegExp = /''/g;
+
+export function zeroPad(input: string | number, targetLength: number) {
+  const num = +input;
+  const sign = num < 0 ? '-' : '';
+  const length = ('' + Math.abs(num)).length;
+
+  return targetLength > length
+    ? `${sign}${Array(targetLength)
+        .concat([Math.abs(num)])
+        .join('0')
+        .slice(-targetLength)}`
+    : '' + input;
+}
 
 function cleanEscapedString(input: string) {
   const match = input.match(escapedStringRegExp);
@@ -166,8 +180,8 @@ export const formatters: Record<string, any> = {
   }
 };
 
-export default function dateTimeFormatter(format: string, input: any, options?: CalendarOptions) {
-  const value = isPlainObject(input) ? input.value : input;
+export function dateTimeFormatter(format: string, data: string | Record<string, any>, options?: CalendarOptions) {
+  const value = isPlainObject(data) ? data.value : data;
 
   return format.replace(formattingTokensRegExp, (token: string, formatType: string) => {
     if (token === "''") {
@@ -187,3 +201,10 @@ export default function dateTimeFormatter(format: string, input: any, options?: 
     return token;
   });
 }
+
+export default {
+  name: DATE_TIME_FORMATTER,
+  install() {
+    return dateTimeFormatter;
+  }
+};

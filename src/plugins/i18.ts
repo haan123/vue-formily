@@ -1,5 +1,5 @@
-import { Localizer } from '@/types';
-import { STRING_FORMATTER } from '../constants';
+import { Localizer, VueFormilyPlugin } from '@/types';
+import { LOCALIZER, STRING_FORMATTER } from '../constants';
 import { getPlug } from '../helpers';
 import { merge } from '../utils';
 
@@ -12,7 +12,7 @@ export type I18 = {
 
 const _resources: Record<string, Resource> = {};
 
-export default {
+export const i18 = {
   translate(format: string, data: Record<string, any> = {}, options: Record<string, any> = {}) {
     const ressource = _resources[options.locale || 'en-US'];
     const stringFormatter = getPlug(STRING_FORMATTER);
@@ -24,3 +24,10 @@ export default {
     _resources[locale] = resource;
   }
 };
+
+export default {
+  name: LOCALIZER,
+  install() {
+    return i18;
+  }
+} as VueFormilyPlugin;

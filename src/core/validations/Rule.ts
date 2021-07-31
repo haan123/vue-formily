@@ -1,55 +1,43 @@
 import { RuleSchema, Validator, ValidationMessage } from './types';
 
 import {
-  def,
+  dumpProp,
   isCallable,
   isPlainObject,
   logMessage,
   isEmpty,
-  setter,
   isString,
   isNotEmptyString,
-  getter,
-  Ref,
-  ref
+  readonlyDumpProp,
+  now
 } from '../../utils';
 import { Objeto } from '../Objeto';
 import { getPlug } from '../../helpers';
 import { LOCALIZER } from '../../constants';
 
-let count = 0;
-
-export type RuleOptions = {
-  data?: any;
-};
-
 type RuleData = {
-  error: Ref<string | null>;
-  valid: Ref<boolean>;
+  error: string | null;
+  valid: boolean;
   data: Record<string, any>;
-  message: Ref<ValidationMessage>;
 };
 
 export default class Rule extends Objeto {
   readonly props!: Record<string, any>;
   readonly name!: string;
-  readonly data!: Record<string, any>;
   protected _d!: RuleData;
-  valid!: boolean;
-  error!: string | null;
   message!: ValidationMessage;
   validator!: Validator;
 
-  constructor(rule: Rule | RuleSchema | Validator, options: RuleOptions = {}) {
+  constructor(rule: Rule | RuleSchema | Validator) {
     super();
 
     let vProps;
 
-    def(this, 'name', rule.name || `r${count++}`);
+    readonlyDumpProp(this, 'name', rule.name || now());
 
     let validator = null;
 
-    const message = (this._d.message = ref(null));
+    dumpProp(this, 'message', null);
 
     if (isCallable(rule)) {
       validator = rule;
@@ -57,8 +45,8 @@ export default class Rule extends Objeto {
       validator = rule.validator || null;
 
       if ('allowEmpty' in rule && !rule.allowEmpty) {
-        validator = (value: any, props: Record<string, any>, data: Record<string, any> = {}) => {
-          return !isEmpty(value) && (!rule.validator || (rule.validator as Validator).call(this, value, props, data));
+        validator = (value: any, props: Record<string, any>) => {
+          return !isEmpty(value) && (!rule.validator || (rule.validator as Validator).call(this, value, props));
         };
       }
 
@@ -73,35 +61,36 @@ export default class Rule extends Objeto {
 
     this.validator = validator;
 
-    this._d.data = options.data || {};
-    this._d.error = ref(null);
-    this._d.valid = ref(true);
+    const data = this._d;
 
-    def(this, 'props', vProps || {});
+    data.error = null;
+    data.valid = true;
 
-    getter(this, 'data', this._d.data);
-    getter(this, 'error', this._d.error);
-    getter(this, 'valid', this._d.valid);
+    readonlyDumpProp(this, 'props', vProps || {});
+  }
 
-    setter(this, 'message', message, this.setMessage);
+  get valid() {
+    return this._d.valid;
+  }
+
+  get error() {
+    return this._d.error;
   }
 
   setMessage(message?: ValidationMessage) {
-    this._d.message.value = isCallable(message) || isNotEmptyString(message) ? message : null;
+    this.message = isCallable(message) || isNotEmptyString(message) ? message : null;
   }
 
   reset() {
-    this._d.error.value = null;
-    this._d.valid.value = true;
+    this._d.error = null;
+    this._d.valid = true;
   }
 
-  addData(key: string, value: any) {
-    this._d.data[key] = value;
-  }
-
-  async validate(value: any): Promise<Rule> {
+  async validate(value: any, ...args: any[]): Promise<Rule> {
     const localizer = getPlug(LOCALIZER);
-    const result = await this.validator(value, this.props, this.data);
+
+    const result = await this.validator(value, this.props, ...args);
+
     let error = null;
     let valid = true;
 
@@ -110,15 +99,15 @@ export default class Rule extends Objeto {
     if (result === false) {
       const message = this.message;
 
-      error = isCallable(message) ? message.call(this, value, this.props, this.data) : message;
+      error = isCallable(message) ? message.call(this, value, this.props, ...args) : message;
       valid = false;
     } else if (isString(result)) {
       error = result;
       valid = false;
     }
 
-    this._d.error.value = localizer ? localizer(error, this.props, this.data) : error;
-    this._d.valid.value = valid;
+    this._d.error = localizer ? localizer(error, this.props) : error;
+    this._d.valid = valid;
 
     this.emit('validated', this);
 

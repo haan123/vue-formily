@@ -1,18 +1,18 @@
-import { PropValue, ValidationRuleSchema } from '../../types';
+import { ValidationRuleSchema } from '../../types';
 import { EventHandler } from '../Evento';
+import { Validation } from '../validations';
 
 export interface ElementSchema {
-  formId: PropValue<string>;
+  formId: string;
   model?: string;
-  props?: Record<string, PropValue<any>>;
+  props?: Record<string, any>;
   on?: Record<string, EventHandler>;
 }
 
 export interface ElementData {
   ancestors: any[] | null;
-  invalidated: boolean;
-  error: string | null;
   schema: any;
+  validation: Validation;
 }
 
 export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
@@ -41,7 +41,7 @@ export interface FieldSchema extends ElementSchema {
   default?: any;
   value?: any;
   rules?: ValidationRuleSchema[];
-  checkValue?: PropValue<any>;
+  checkedValue?: any;
   locale?: string;
   formatOptions?: Record<string, any>;
 }

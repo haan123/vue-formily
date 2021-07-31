@@ -1,4 +1,4 @@
-import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from '@/constants';
+import { DATE_TIME_FORMATTER, LOCALIZER } from '@/constants';
 import { getPlug, plug } from '@/helpers';
 import dateTimeFormatter from '@/plugins/dateTimeFormatter';
 import i18, { I18 } from '@/plugins/i18';
@@ -6,9 +6,9 @@ import stringFormatter from '@/plugins/stringFormatter';
 import en from '@/resources/en-US';
 import { Calendar } from '@/utils/Calendar';
 
-plug(LOCALIZER, i18);
-plug(DATE_TIME_FORMATTER, dateTimeFormatter);
-plug(STRING_FORMATTER, stringFormatter);
+plug(i18);
+plug(dateTimeFormatter);
+plug(stringFormatter);
 
 describe('dateTimeFormatter', () => {
   const formatter = getPlug(DATE_TIME_FORMATTER);

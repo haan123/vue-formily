@@ -1,5 +1,4 @@
 import { isNullOrUndefined, isPlainNumber } from './assertions';
-import { ref, setter, getter } from './objects';
 
 const ladder = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
 /**
@@ -93,7 +92,7 @@ export type CalendarOptions = {
   timeZone?: any;
 };
 
-function extractTimeZoneOffset(timeZone: string): number | null {
+function extractTimeZoneOffset(timeZone: string): number {
   const match = timeZone.match(rtimezone);
 
   if (match) {
@@ -101,7 +100,7 @@ function extractTimeZoneOffset(timeZone: string): number | null {
     return (+hours * HOUR + (minutes ? +minutes * MINUTE : 0)) * (sign === '+' ? 1 : -1);
   }
 
-  return null;
+  return 0;
 }
 
 export function parseTime(offset: number) {
@@ -127,67 +126,90 @@ export class Calendar {
   static SATURDAY = 5;
   static SUNDAY = 6;
 
-  readonly millisecond!: number;
-  readonly second!: number;
-  readonly minute!: number;
-  readonly hour!: number;
-  readonly month!: number;
-  readonly year!: number;
-  readonly day!: number;
-  readonly timeZone!: string;
-  readonly instance!: Date;
-  readonly timestamp!: number;
-  offset!: number;
-  minimalDaysInFirstWeek!: number;
-  firstDayOfWeek!: number;
+  timestamp: number;
+  minimalDaysInFirstWeek: number;
+  firstDayOfWeek: number;
+
+  protected _d!: any;
 
   constructor(timestamp: number | Date, options: CalendarOptions = {}) {
     this.timestamp = (timestamp instanceof Date ? timestamp.getTime() : timestamp) || Date.now();
 
-    const offset = ref();
-    const timeZone = ref();
-    const instance = ref();
-
-    getter(this, 'offset', offset);
-    setter(this, 'timeZone', timeZone, (val?: string | number) => {
-      let os;
-      let tz;
-
-      if (isPlainNumber(val)) {
-        os = val;
-        tz = 'UTC';
-      } else {
-        if (isNullOrUndefined(val)) {
-          tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
-        } else if (this.isValidTimeZone(val)) {
-          tz = val;
-        } else {
-          throw new Error('invalid timezone format');
-        }
-
-        const formatted = dtfFormat({ date: this.instance, timeZoneName: 'short', timeZone: val });
-        os = extractTimeZoneOffset(formatted);
-      }
-
-      offset.value = os;
-      timeZone.value = tz;
-      instance.value = new Date(this.timestamp + this.offset);
-    });
+    this._d = {};
 
     const { minimalDaysInFirstWeek = 4, firstDayOfWeek = Calendar.MONDAY } = options;
 
-    this.timeZone = options.timeZone;
     this.firstDayOfWeek = +firstDayOfWeek;
     this.minimalDaysInFirstWeek = +minimalDaysInFirstWeek;
 
-    getter(this, 'instance', instance);
-    getter(this, 'year', () => this.instance.getUTCFullYear());
-    getter(this, 'month', () => this.instance.getUTCMonth() + 1);
-    getter(this, 'day', () => this.instance.getUTCDate());
-    getter(this, 'hour', () => this.instance.getUTCHours());
-    getter(this, 'minute', () => this.instance.getUTCMinutes());
-    getter(this, 'second', () => this.instance.getUTCSeconds());
-    getter(this, 'millisecond', () => this.instance.getUTCMilliseconds());
+    this.setTimeZone(options.timeZone);
+  }
+
+  get offset() {
+    return this._d.offset;
+  }
+
+  get timeZone(): string {
+    return this._d.timeZone;
+  }
+
+  setTimeZone(val?: string | number) {
+    let os;
+    let tz;
+
+    if (isPlainNumber(val)) {
+      os = val;
+      tz = 'UTC';
+    } else {
+      if (isNullOrUndefined(val)) {
+        tz = new Intl.DateTimeFormat().resolvedOptions().timeZone;
+      } else if (this.isValidTimeZone(val)) {
+        tz = val;
+      } else {
+        throw new Error('invalid timezone format');
+      }
+
+      const formatted = dtfFormat({ date: this.instance, timeZoneName: 'short', timeZone: val });
+      os = extractTimeZoneOffset(formatted);
+    }
+
+    const _d = this._d;
+
+    _d.offset = os;
+    _d.timeZone = tz;
+    _d.instance = new Date(this.timestamp + _d.offset);
+  }
+
+  get instance() {
+    return this._d.instance;
+  }
+
+  get year() {
+    return this.instance.getUTCFullYear();
+  }
+
+  get month() {
+    return this.instance.getUTCMonth() + 1;
+  }
+
+  get day() {
+    return this.instance.getUTCDate();
+  }
+
+  get hour() {
+    return this.instance.getUTCHours();
+  }
+
+  get minute() {
+    return this.instance.getUTCMinutes();
+  }
+
+  get second() {
+    return this.instance.getUTCSeconds();
+  }
+
+  get millisecond() {
+    return this.instance.getUTCMilliseconds();
   }
 
   isValidTimeZone(timeZone: string) {

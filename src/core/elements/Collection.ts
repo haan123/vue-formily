@@ -1,47 +1,50 @@
-import { GroupSchema, CollectionSchema, ElementData } from './types';
+import { CollectionSchema, ElementData } from './types';
 
 import Element from './Element';
 import Group from './Group';
-import {
-  cascadeRules,
-  genHtmlName,
-  indentifySchema,
-  invalidateSchemaValidation,
-  normalizeRules,
-  registerElement,
-  unregisterElement
-} from '../../helpers';
-import { def, findIndex, getter, logMessage, ref, Ref } from '../../utils';
+import { cascadeRules, indentifySchema, invalidateSchemaValidation, normalizeRules } from '../../helpers';
+import { findIndex, logMessage, readonlyDumpProp } from '../../utils';
 import { Validation } from '../validations';
 
 export class CollectionItem extends Group {
-  index!: number;
+  get index() {
+    const { groups } = this.parent as any;
 
-  constructor(schema: GroupSchema, parent: Collection) {
-    super(schema, parent);
+    return findIndex(groups, (group: any) => group === this);
+  }
 
-    getter(this, 'index', () => {
-      const { groups } = this.parent as any;
-
-      return findIndex(groups, (group: any) => group === this);
-    });
+  get formId() {
+    return `${(this.parent as Collection).formId}${this.index}`;
   }
 }
 
 type CollectionData = ElementData & {
-  value: Ref<any[] | null>;
+  value: any[] | null;
+  pending: boolean;
 };
+
+async function onGroupValidate(this: Collection, ...args: any[]) {
+  const [group] = args;
+
+  this._d.pending = true;
+
+  if (group.valid) {
+    let value = this._d.value;
+
+    if (!value) {
+      value = this._d.value = [];
+    }
+
+    value[group.index] = group.value;
+  }
+
+  await this.validate({ cascade: false });
+
+  this.emit('changed', this, ...args);
+}
 
 export default class Collection extends Element {
   static FORM_TYPE = 'collection';
-
-  static register() {
-    registerElement(this);
-  }
-
-  static unregister() {
-    unregisterElement(this);
-  }
 
   static accept(schema: any) {
     const { identified, sv } = indentifySchema(schema, Collection.FORM_TYPE);
@@ -74,17 +77,13 @@ export default class Collection extends Element {
 
   readonly formType!: string;
   readonly type!: 'set';
-  readonly value!: any[] | null;
-  readonly error!: string | null;
 
   protected _d!: CollectionData;
 
-  validation!: Validation;
-
   groups: CollectionItem[] | null;
 
-  constructor(schema: CollectionSchema, ...args: any[]) {
-    super(schema, ...args);
+  constructor(schema: CollectionSchema, parent?: Element | null) {
+    super(schema, parent);
 
     const accepted = Collection.accept(schema);
 
@@ -92,24 +91,26 @@ export default class Collection extends Element {
       throw new Error(logMessage(accepted.reason, accepted.infos));
     }
 
-    def(this, 'formType', Collection.FORM_TYPE);
-    def(this, 'type', 'set');
-    def(this, 'validation', new Validation(normalizeRules(schema.rules, this.props, this.type, this, { field: this })));
-    getter(this, 'error', this.getError);
+    readonlyDumpProp(this, 'formType', Collection.FORM_TYPE);
+    readonlyDumpProp(this, 'type', 'set');
 
-    const value = ref(null);
+    this._d.validation = new Validation(normalizeRules(schema.rules, this.type));
 
-    getter(this, 'value', value);
-
-    this._d.value = value;
+    this._d.value = null;
 
     this.groups = null;
 
     if (schema.rules) {
       schema.group.fields = cascadeRules(schema.rules, schema.group.fields);
     }
+  }
 
-    this.emit('created', this);
+  get pending() {
+    return this._d.pending;
+  }
+
+  get value() {
+    return this._d.value;
   }
 
   async setValue(value: any[], { from = 0, autoAdd = true }: { from?: number; autoAdd?: boolean } = {}) {
@@ -142,20 +143,8 @@ export default class Collection extends Element {
     }
   }
 
-  getError() {
-    if (!this.shaked || this.valid) {
-      return null;
-    }
-
-    return this._d.error || (this.validation.errors ? this.validation.errors[0] : null);
-  }
-
-  getHtmlName(): string {
-    return genHtmlName(this, this._d.ancestors);
-  }
-
   isValid(): boolean {
-    return !this._d.invalidated && this.validation.valid && (!this.groups || !this.groups.some(g => !g.valid));
+    return this.validation.valid && (!this.groups || !this.groups.some(g => !g.valid));
   }
 
   reset() {
@@ -181,31 +170,11 @@ export default class Collection extends Element {
       this.groups = [];
     }
 
-    const groupItem = new CollectionItem(
-      {
-        ...this._d.schema.group,
-        formId(this: CollectionItem) {
-          return `${(this.parent as Collection).formId}${this.index}`;
-        }
-      },
-      this
-    );
+    const groupItem = new CollectionItem(this._d.schema.group, this);
 
     this.groups.push(groupItem);
 
-    groupItem.on('validated', async (group: CollectionItem) => {
-      if (group.valid) {
-        const valueRef = this._d.value;
-
-        if (!valueRef.value) {
-          valueRef.value = [];
-        }
-
-        valueRef.value[group.index] = group.value;
-      }
-
-      await this.validate({ cascade: false });
-    });
+    groupItem.on('changed:formy', (...args: any[]) => onGroupValidate.apply(this, args), { noOff: true });
 
     return groupItem;
   }
@@ -217,11 +186,13 @@ export default class Collection extends Element {
       await Promise.all(this.groups.map(async (group: any) => await group.validate()));
     }
 
-    await this.validation.validate(this.value);
+    await this.validation.validate(this.value, {}, this);
 
     if (!this.valid) {
-      this._d.value.value = null;
+      this._d.value = null;
     }
+
+    this._d.pending = false;
 
     this.emit('validated', this);
   }

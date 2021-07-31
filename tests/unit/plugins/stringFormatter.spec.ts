@@ -1,4 +1,4 @@
-import stringFormatter from '@/plugins/stringFormatter';
+import { stringFormatter } from '@/plugins/stringFormatter';
 
 describe('stringFormatter', () => {
   it('Should format object as bracket correctly', async () => {

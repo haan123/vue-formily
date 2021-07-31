@@ -1,5 +1,5 @@
 import { FormSchema } from './core/elements/types';
-import { ValidationRuleSchema, VueFormilyOptions } from './types';
+import { VueFormilyOptions } from './types';
 import { merge } from './utils';
 import { Form } from './core/elements';
 
@@ -8,30 +8,33 @@ const defaultOptions: VueFormilyOptions = {
 };
 
 export default class Formily {
-  readonly alias: string;
-  readonly rules?: ValidationRuleSchema[];
-
+  options: VueFormilyOptions;
   vm: any;
 
   constructor(options: VueFormilyOptions = {}) {
-    const { alias, rules } = merge({}, defaultOptions, options) as VueFormilyOptions;
-
-    this.alias = alias as string;
-    this.rules = rules;
+    this.options = merge({}, defaultOptions, options) as VueFormilyOptions;
   }
 
   addForm(schema: FormSchema) {
-    schema.rules = merge([], this.rules, schema.rules);
+    const { vm, options } = this;
+
+    schema.rules = merge([], options.rules, schema.rules);
 
     const form = new Form(schema);
 
-    this.vm.$set(this.vm[this.alias], form.formId, form);
+    form.addProp('_formy', {
+      vm() {
+        return this.vm;
+      }
+    });
+
+    vm.$set(this.vm[options.alias as string], form.formId, form);
 
     return form;
   }
 
   removeForm(formId: string) {
-    delete this.vm[this.alias][formId];
+    delete this.vm[this.options.alias as string][formId];
   }
 
   setInstance(vm: any) {

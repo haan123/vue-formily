@@ -1,9 +1,11 @@
 import { Collection, Field, Group } from '@/core/elements';
 import { FieldSchema, GroupSchema } from '@/core/elements/types';
+import { RuleSchema } from '@/core/validations/types';
+import { registerElement } from '@/helpers';
 import { required } from '@/rules';
 import flushPromises from 'flush-promises';
 
-[Field, Group, Collection].forEach(F => F.register());
+[Field, Group, Collection].forEach((F: any) => registerElement(F));
 
 describe('Collection', () => {
   const schema: any = { formId: 'group_test' };
@@ -123,20 +125,35 @@ describe('Collection', () => {
     expect(group.a.valid).toBe(true);
   });
 
-  it('Can invalidate', () => {
+  it('Can invalidate', async () => {
     const group = new Group(schema);
 
-    group.invalidate();
+    group.a.addProp('test', true);
 
-    expect(group.valid).toBe(false);
+    // set value to pass required rule
+    await group.a.setValue('test');
+
+    (group.a as Field).validation.addRule({
+      name: 'test',
+      validator(_a: any, _b: any, field: Field) {
+        return field.props.test;
+      },
+      message: 'invalid field'
+    } as RuleSchema);
+
+    expect(group.valid).toBe(true);
     expect(group.error).toBe(null);
 
-    group.reset();
-    group.invalidate('test');
+    // make the rule to false
+    group.a.props.test = false;
+
+    // trigger update
+    await group.validate();
+
     group.shake();
 
     expect(group.valid).toBe(false);
-    expect(group.error).toBe('test');
+    expect(group.a.error).toBe('invalid field');
   });
 
   it('Can set value', async () => {

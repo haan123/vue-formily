@@ -1,4 +1,4 @@
-import { isNumber } from '@/utils';
+import { isNumber } from '../utils';
 import { ValidationRuleSchema } from '../types';
 
 export const validator = (value: any) => isNumber(value);

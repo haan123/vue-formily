@@ -9,7 +9,3 @@ const VueFormily = { install, Formily };
 export { install, Formily, VueFormily };
 
 export default VueFormily;
-
-if (typeof window !== 'undefined' && window.Vue) {
-  window.Vue.use(VueFormily);
-}

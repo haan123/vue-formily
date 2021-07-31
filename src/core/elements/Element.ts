@@ -1,7 +1,6 @@
-import { PropValue } from '../../types';
 import { ElementData, ElementSchema } from './types';
-import { genProps } from '../../helpers/elements';
-import { def, each, getter, isUndefined, logMessage, toString, valueOrNull } from '../../utils';
+import { genHtmlName, genProps, getProp } from '../../helpers/elements';
+import { dumpProp, each, now, readonlyDumpProp, valueOrNull } from '../../utils';
 import { Objeto } from '../Objeto';
 
 function genElementAncestors(elem: Element): any[] | null {
@@ -24,60 +23,83 @@ export default abstract class Element extends Objeto {
   static unregister() {}
 
   readonly parent!: Element | null;
-  readonly formId!: string;
   readonly model!: string;
-  readonly htmlName!: string;
-  readonly valid!: boolean;
-  readonly props: Record<string, PropValue<any>> | null;
   protected _d!: ElementData;
 
-  shaked!: boolean;
+  props: Record<string, any>;
 
-  abstract getHtmlName(): string | null;
+  shaked = false;
+
   abstract isValid(): boolean;
 
-  constructor(schema: ElementSchema, parent?: Element) {
+  constructor(schema: ElementSchema, parent?: Element | null) {
     super();
 
-    if (!schema.formId) {
-      throw new Error(logMessage('"formId" can not be null or undefined'));
+    const data = this._d;
+
+    readonlyDumpProp(data, 'schema', schema);
+
+    readonlyDumpProp(this, 'parent', valueOrNull(parent));
+
+    dumpProp(this, 'model', schema.model || this.formId);
+    dumpProp(data, 'ancestors', genElementAncestors(this));
+
+    this.props = genProps(schema.props, this);
+
+    each(schema.on, (handler, name) => {
+      this.on(name, handler);
+    });
+  }
+
+  get validation() {
+    return this._d.validation;
+  }
+
+  get error() {
+    if (!this.shaked || this.valid) {
+      return null;
     }
 
-    def(this._d, 'schema', schema);
-    def(this, 'parent', valueOrNull(parent));
-    getter(this, 'formId', schema.formId);
-    def(this, 'model', schema.model || this.formId, { writable: true });
+    return this.validation.errors ? this.validation.errors[0] : null;
+  }
 
-    this._d = {
-      ancestors: genElementAncestors(this),
-      invalidated: false,
-      error: null,
-      schema
-    };
+  getVm() {
+    return this.getProp('_formy.vm', { up: true });
+  }
 
-    this.props = genProps([schema.props], this);
+  getProp(path: string, options?: { up?: boolean }) {
+    return getProp(this, path, options);
+  }
 
-    getter(this, 'htmlName', this.getHtmlName);
-    getter(this, 'valid', this.isValid);
+  removeProp(key: string) {
+    delete this.props[key];
+  }
 
-    each(schema.on, (handler, name) => this.on(name, handler));
+  addProp(key: string, value: any) {
+    this.props[key] = value;
+  }
+
+  get formId(): string {
+    return this._d.schema.formId || now();
+  }
+
+  get htmlName() {
+    return this.getHtmlName();
+  }
+
+  get valid() {
+    return this.isValid();
+  }
+
+  getHtmlName() {
+    return genHtmlName(this, this._d.ancestors);
   }
 
   shake() {
     this.shaked = true;
   }
 
-  invalidate(error?: string) {
-    this._d.invalidated = true;
-
-    if (!isUndefined(error)) {
-      this._d.error = toString(error);
-    }
-  }
-
   cleanUp() {
     this.shaked = false;
-    this._d.invalidated = false;
-    this._d.error = null;
   }
 }

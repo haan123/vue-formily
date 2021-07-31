@@ -1,4 +1,4 @@
-import { isDateObject } from '@/utils';
+import { isDateObject } from '../utils';
 import { ValidationRuleSchema } from '../types';
 
 export const validator = (value: any) => isDateObject(new Date(value));

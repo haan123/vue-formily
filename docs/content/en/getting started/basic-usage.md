@@ -1,14 +1,14 @@
 ---
 title: Basic Usage
-description: 'The fastest way to get started with **nuxt-i18n** is to define the supported `locales` list and to provide some translation messages to **vue-i18n** via the `vueI18n` option:'
+description: ''
 position: 3
-category: Guide
+category: Getting started
 ---
 
 Let's start with a simple login form:
 
 ## Schema
-First thing, we need a **schema** for our form:
+`vue-formily` need a form schema to work with, so let's define one:
 
 ```js
 const loginForm = {
@@ -64,4 +64,4 @@ export default {
 ```
 
 **Result**
-<login-form></login-form>
+<code-sandbox id="flamboyant-tharp-ccf4x"></code-sandbox>

@@ -9,25 +9,26 @@ export type ValidationRuleSchema =
       inherit?: boolean;
     });
 
-export type PropValue<T> = T | ((...args: any[]) => T);
-
 export type SchemaValidation = {
   valid: boolean;
   reason?: string;
   infos?: Record<string, string>;
 };
 
-export interface ElementConstructor extends Function {
-  accept(schema: any): SchemaValidation;
-  create(schema: any, ...args: any[]): unknown;
-}
-
 export interface VueFormilyOptions {
   rules?: ValidationRuleSchema[];
   alias?: string;
   localizer?: Localizer;
-  stringFormatter?: (format: string, data: Record<string, any>) => string;
-  dateTimeFormatter?: (format: string, input: any, options?: CalendarOptions) => string;
+  stringFormatter?: (format: string, data: any, options?: Record<string, any>) => string;
+  dateTimeFormatter?: (format: string, data: any, options?: CalendarOptions) => string;
+  plugins?: any[];
+  elements?: any[];
+}
+
+export interface VueFormilyPlugin {
+  name: string;
+  install(): any;
+  [key: string]: any;
 }
 
 export type Localizer = (value: string, props?: Record<string, any>, data?: Record<string, any>) => string;

@@ -3,6 +3,9 @@ import VueFormily, { Formily } from '../../src';
 import { Form } from '@/core/elements';
 import { FormSchema } from '@/core/elements/types';
 import { VueFormilyOptions } from '@/types';
+import flushPromises from 'flush-promises';
+import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER } from '@/constants';
+import { unplug } from '@/helpers';
 
 describe('VueFormily', () => {
   let localVue: any;
@@ -71,9 +74,16 @@ describe('VueFormily', () => {
 
   it('Should plug localizer successfully', () => {
     localVue.use(VueFormily, {
-      localizer(value) {
-        return `formatted ${value}`;
-      }
+      plugins: [
+        {
+          name: LOCALIZER,
+          install() {
+            return function localizer(value: any) {
+              return `formatted ${value}`;
+            };
+          }
+        }
+      ]
     } as VueFormilyOptions);
 
     const wrapper = mount(
@@ -97,14 +107,23 @@ describe('VueFormily', () => {
 
     form.on('validated', () => {
       expect(form.a.formatted).toBe('formatted test');
+
+      unplug(LOCALIZER);
     });
   });
 
-  it('Should plug stringFormatter successfully', () => {
+  it('Should plug stringFormatter successfully', async () => {
     localVue.use(VueFormily, {
-      stringFormatter(format, field) {
-        return `${format} ${field.value}`;
-      }
+      plugins: [
+        {
+          name: STRING_FORMATTER,
+          install() {
+            return function (format: any, field: any) {
+              return `${format} ${field.value}`;
+            };
+          }
+        }
+      ]
     } as VueFormilyOptions);
 
     const wrapper = mount(
@@ -130,14 +149,24 @@ describe('VueFormily', () => {
 
     form.on('validated', () => {
       expect(form.a.formatted).toBe('format test');
+
+      unplug(STRING_FORMATTER);
     });
   });
 
-  it('Should plug dateTimeFormatter successfully', () => {
+  it('Should plug dateTimeFormatter successfully', async () => {
     localVue.use(VueFormily, {
-      dateTimeFormatter(format, field) {
-        return `${format} ${field.value.getFullYear()}`;
-      }
+      plugins: [
+        {
+          name: DATE_TIME_FORMATTER,
+          install() {
+            return function (format: any, field: any) {
+              console.log(format)
+              return `${format} ${field.value.getFullYear()}`;
+            };
+          }
+        }
+      ]
     } as VueFormilyOptions);
 
     const wrapper = mount(
@@ -161,8 +190,16 @@ describe('VueFormily', () => {
       ]
     } as FormSchema);
 
-    form.on('validated', () => {
+    const mockFn = jest.fn(() => {
       expect(form.a.formatted).toBe('format 2021');
     });
+
+    form.on('validated', mockFn);
+
+    await flushPromises();
+
+    expect(mockFn).toHaveBeenCalled();
+
+    unplug(DATE_TIME_FORMATTER);
   });
 });

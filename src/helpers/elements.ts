@@ -1,19 +1,24 @@
-import { ElementConstructor, ValidationRuleSchema } from '../types';
+import { Element } from '@/core/elements';
+import { ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, isPlainObject, isEmpty, logMessage, isString, getter, findIndex } from '../utils';
+import { each, isCallable, merge, logMessage, findIndex, isObject, def, isUndefined, picks } from '../utils';
 
-const _Elements: ElementConstructor[] = [];
+const _Elements: any[] = [];
 
-export function registerElement(F: ElementConstructor) {
+export function registerElement(F: any, ...args: any[]) {
   if (!_Elements.includes(F)) {
     _Elements.unshift(F);
   }
+
+  F.register(...args);
 }
 
-export function unregisterElement(F: ElementConstructor) {
+export function unregisterElement(F: any, ...args: any[]) {
   const index = _Elements.indexOf(F);
 
   if (index > -1) {
+    F.unregister(...args);
+
     _Elements.splice(index, 1);
   }
 }
@@ -49,56 +54,22 @@ export function genFields(fields: any[], ...args: any[]) {
   });
 }
 
-export function genProp(obj: any, props: Record<string, any>, key: string, context?: any, ...args: any[]) {
-  const property = Object.getOwnPropertyDescriptor(props, key);
-  const _getter = property && property.get;
-
-  getter(
-    obj,
-    key,
-    _getter ||
-      function () {
-        const value = props[key];
-
-        return isCallable(value) ? value.call(context, ...args) : value;
-      }
-  );
-
-  return obj;
-}
-
-export function genProps(
-  properties: (Record<string, any> | any[] | undefined)[],
-  context?: any,
-  ...args: any[]
-): Record<string, any> | null {
-  if (isEmpty(properties)) {
-    return null;
-  }
-
-  const _props: Record<string, any> = {};
-
-  properties.forEach(props => {
-    if (Array.isArray(props)) {
-      if (props.length === 2 && isString(props[0])) {
-        genProp(_props, props[1], props[0], context, ...args);
-      } else {
-        props.forEach(p => {
-          if (!Array.isArray(p)) {
-            genProps(p, context, ...args);
+export function genProps(properties: any = {}, context?: any, ...args: any[]) {
+  if (isObject(properties)) {
+    each(properties, (prop: any, key) => {
+      if (isObject(prop)) {
+        genProps(prop, context, ...args);
+      } else if (isCallable(prop)) {
+        def(properties, key, {
+          get() {
+            return prop.call(context, ...args);
           }
         });
       }
-    } else if (isPlainObject(props)) {
-      const keys = Object.keys(props);
+    });
+  }
 
-      keys.forEach(key => {
-        genProp(_props || {}, props, key, context, ...args);
-      });
-    }
-  });
-
-  return !isEmpty(_props) ? _props : null;
+  return properties;
 }
 
 export function cascadeRules(parentRules: ValidationRuleSchema[], fields: any[]) {
@@ -136,4 +107,15 @@ export function genHtmlName(Element: any, ancestors: any[] | null): string {
   const htmlName = rest ? `${root}[${rest.join('][')}]` : root;
 
   return Element.type === 'set' ? `${htmlName}[]` : htmlName;
+}
+
+export function getProp(element: Element, path: string, options: { up?: boolean } = {}) {
+  let prop = picks(path, element.props);
+  const parent = element.parent;
+
+  if (options.up && isUndefined(prop) && parent) {
+    prop = getProp(parent, path, options);
+  }
+
+  return prop;
 }

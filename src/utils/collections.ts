@@ -1,4 +1,4 @@
-import { isPlainObject, isString } from './assertions';
+import { isObject, isPlainObject, isString } from './assertions';
 
 export function merge(target: any, ...sources: any[]) {
   return sources.reduce((acc: any, source: any) => {
@@ -30,7 +30,7 @@ export function merge(target: any, ...sources: any[]) {
 }
 
 export function each(obj: any, fn: (propValue: any, propName: string, index: number) => void | boolean) {
-  if (isPlainObject(obj)) {
+  if (isObject(obj)) {
     const keys = Object.keys(obj);
     const length = keys.length;
 
@@ -52,20 +52,21 @@ export function pick(path: string | string[], source: any) {
 
   const value = _path.reduce((src, fullName: string) => {
     if (src) {
-      let m = null;
+      const m = fullName.match(rkey);
 
-      do {
-        m = rkey.exec(fullName);
-
-        if (m) {
-          const name = m[1];
-          found = name in src;
-          src = src[name];
-        }
-      } while (m && found && src);
+      if (m) {
+        m.forEach((name: string) => {
+          if (isObject(src) && name in src) {
+            src = src[name];
+            found = true;
+          } else {
+            found = false;
+          }
+        });
+      }
     }
 
-    return src;
+    return found ? src : undefined;
   }, source);
 
   return {

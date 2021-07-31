@@ -1,8 +1,9 @@
 import { Collection, Field, Group } from '@/core/elements';
 import { GroupSchema } from '@/core/elements/types';
+import { registerElement } from '@/helpers';
 import { required } from '@/rules';
 
-[Field, Group, Collection].forEach(F => F.register());
+[Field, Group, Collection].forEach((F: any) => registerElement(F));
 
 describe('Group', () => {
   const schema: any = { formId: 'collection_test' };
@@ -122,28 +123,6 @@ describe('Group', () => {
 
     expect(collection.valid).toBe(true);
     expect((collection.groups as any)[0].a.valid).toBe(true);
-  });
-
-  it('Can invalidate', () => {
-    const collection = new Collection(schema);
-
-    collection.addGroup();
-
-    collection.invalidate();
-
-    collection.shake();
-
-    expect(collection.valid).toBe(false);
-    expect(collection.error).toBe(null);
-
-    collection.reset();
-
-    collection.invalidate('test');
-
-    collection.shake();
-
-    expect(collection.valid).toBe(false);
-    expect(collection.error).toBe('test');
   });
 
   it('Can set value', async () => {

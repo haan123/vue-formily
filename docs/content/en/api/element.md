@@ -19,35 +19,30 @@ Abstract class for other form elements.
 
 ## Constructor
 ```typescript
-Element(schema: ElementSchema, parent?: Element)
+Element(schema: ElementSchema, parent?: Element | null)
 ```
 
 **Parameters**
-- **schema** - an object that define the field, see [ElementSchema](/api/element#schema) for more details. 
-- **parent** - the parent of this element.
-
-## Schema
+- **schema** - the schema object of this element. 
 ```typescript
 interface ElementSchema {
-  formId: PropValue<string>;
+  formId: string;
+  // the model name of the element,
+  // used in Group as a property name in group's value,
+  // if not provided. formId will be used.
   model?: string;
-  props?: Record<string, PropValue<any>>;
+  // used to generate the element properties
+  props?: Record<string, any>;
+  on?: Record<string, EventHandler>;
 }
 ```
-
-**Props**
-- **model** - the property name when generating object from form elements. If not provided, `formId` will be used and transformed to camel case. E.g, `user_name -> userName`.
-- **props** - the properties of this element, a property can has any value or `function` that return the value. See [PropValue]() for more details.
+- **parent** - the parent of this element.
 
 ## Properties
-<alert>
-
-To reduce the burden on the **Vue reactivity system** and inscrease performance, only some picked properties can <prop-infos reactive></prop-infos>
-
-</alert>
-
 | Prop | Type | Default | Description |
 | ---- | ---- | ---------------- | ----------- |
+| *static* **register** | `function` | | This function will be called one time |
+| **parent** <prop-infos readonly></prop-infos> | `Element \| null` | `null` | The parent of this element. |
 | **parent** <prop-infos readonly></prop-infos> | `Element \| null` | `null` | The parent of this element. |
 | **formId** <prop-infos readonly></prop-infos> | `string` | | The unique id of this element in the form |
 | **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. For radio buttons this name is not unique. |

@@ -40,6 +40,14 @@ describe('Form', () => {
     ]
   });
 
+  it('Should get vm succesfully', () => {
+    form.addProp('_formy', {
+      vm: 'Vue instance'
+    });
+
+    expect(form.a.getVm()).toBe('Vue instance');
+  });
+
   it('Field has correct name', () => {
     expect(form.a.htmlName).toBe('form[a]');
     expect(form.b.htmlName).toBe('form[b][]');

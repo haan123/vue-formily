@@ -85,10 +85,5 @@
       "eslint --fix",
       "jest --maxWorkers=1 --bail --findRelatedTests"
     ]
-  },
-  "dependencies": {
-    "@vee-validate/rules": "^4.0.3",
-    "vee-validate": "^3.4.5",
-    "vuetify": "^2.3.19"
   }
 }

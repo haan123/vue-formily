@@ -3,11 +3,10 @@ import { Field } from '@/core/elements';
 import { numeric, required } from '@/rules';
 import dateTimeFormatter from '@/plugins/dateTimeFormatter';
 import stringFormatter from '@/plugins/stringFormatter';
+import { plug } from '@/helpers';
 
-Field.register({
-  stringFormatter,
-  dateTimeFormatter
-});
+plug(stringFormatter);
+plug(dateTimeFormatter);
 
 describe('Field', () => {
   it('Can cast', async () => {
@@ -61,16 +60,16 @@ describe('Field', () => {
     await flushPromises();
 
     expect(f1.value).toBe(null);
-    expect(f1.valid).toBe(false);
+    expect(f1.valid).toBe(true);
     expect(f4.value).toBe(null);
-    expect(f4.valid).toBe(false);
+    expect(f4.valid).toBe(true);
   });
 
   it('Can format', async () => {
     const f1 = new Field({
       formId: 'field_name',
       type: 'string',
-      format: '{props.abc} {props.obj.aaa} {props.arr[0]} {props.arr[1].ddd} {value} {raw}',
+      format: '{props.abc} {props.obj.aaa} {props.arr[0]} {props.arr[1].ddd} {value} {raw} {props.arr[1].aaa}',
       value: 'test',
       props: {
         abc: 12,
@@ -80,7 +79,10 @@ describe('Field', () => {
         arr: [
           1,
           {
-            ddd: '2'
+            ddd: '2',
+            aaa() {
+              return this.value;
+            }
           }
         ]
       }
@@ -94,7 +96,7 @@ describe('Field', () => {
 
     await flushPromises();
 
-    expect(f1.formatted).toBe('12 123 1 2 test test');
+    expect(f1.formatted).toBe('12 123 1 2 test test test');
     expect(f2.formatted).toBe('2020/01/21');
   });
 
@@ -221,33 +223,10 @@ describe('Field', () => {
     expect(f.raw).toBe('');
   });
 
-  it('Can invalidate manually', async () => {
-    const f = new Field({
-      formId: 'field_name',
-      value: ''
-    });
-
-    f.invalidate();
-
-    expect(f.valid).toBe(false);
-    expect(f.error).toBe(null);
-
-    f.invalidate('test');
-    f.shake();
-
-    expect(f.valid).toBe(false);
-    expect(f.error).toBe('test');
-
-    f.cleanUp();
-
-    expect(f.valid).toBe(true);
-    expect(f.error).toBe(null);
-  });
-
   it('Should has checked property', async () => {
     const f = new Field({
       formId: 'field_name',
-      checkValue: 'test'
+      checkedValue: 'test'
     });
 
     expect(f.checked).toBe(false);
@@ -257,20 +236,5 @@ describe('Field', () => {
     await flushPromises();
 
     expect(f.checked).toBe(true);
-
-    const f2 = new Field({
-      formId: 'field_name',
-      checkValue() {
-        return 'test';
-      }
-    });
-
-    expect(f2.checked).toBe(false);
-
-    f2.raw = 'test';
-
-    await flushPromises();
-
-    expect(f2.checked).toBe(true);
   });
 });
