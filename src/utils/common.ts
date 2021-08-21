@@ -1,7 +1,7 @@
-import { isPlainObject, isString } from './assertions';
+import { isArray, isPlainObject, isString, isUndefined } from './assertions';
 
 export function getLength(value: any): number {
-  if (Array.isArray(value)) {
+  if (isArray(value)) {
     return value.length;
   }
 
@@ -17,13 +17,9 @@ export function getLength(value: any): number {
 }
 
 export function valueOrNull(value: any) {
-  return value !== undefined ? value : null;
+  return !isUndefined(value) ? value : null;
 }
 
 export function now() {
   return Date.now();
-}
-
-export function noop(value: any) {
-  return value;
 }

@@ -27,17 +27,6 @@ function themeModule() {
     } else {
       nuxt.options.watch.push(componentsDirPath);
     }
-
-    const globalComponentsDirPath = path.resolve(nuxt.options.rootDir, 'components/global');
-    const globalComponentsDirStat = await fs.stat(globalComponentsDirPath).catch(() => null);
-    if (globalComponentsDirStat && globalComponentsDirStat.isDirectory()) {
-      dirs.push({
-        path: globalComponentsDirPath,
-        global: true
-      });
-    } else {
-      nuxt.options.watch.push(globalComponentsDirPath);
-    }
   });
   // Configure content after each hook
   hook('content:file:beforeInsert', document => {
@@ -59,7 +48,15 @@ function themeModule() {
   });
   // Configure TailwindCSS
   hook('tailwindcss:config', function (defaultTailwindConfig) {
-    Object.assign(defaultTailwindConfig, defu(defaultTailwindConfig, tailwindConfig({ primaryColor })));
+    Object.assign(
+      defaultTailwindConfig,
+      defu(
+        defaultTailwindConfig,
+        tailwindConfig({
+          primaryColor
+        })
+      )
+    );
   });
 }
 
@@ -71,7 +68,15 @@ export default {
     githubToken: process.env.GITHUB_TOKEN
   },
   head: {
-    meta: [{ charset: 'utf-8' }, { name: 'viewport', content: 'width=device-width, initial-scale=1' }]
+    meta: [
+      {
+        charset: 'utf-8'
+      },
+      {
+        name: 'viewport',
+        content: 'width=device-width, initial-scale=1'
+      }
+    ]
   },
   generate: {
     fallback: '404.html',
@@ -90,7 +95,7 @@ export default {
   ],
   buildModules: [themeModule, '@nuxtjs/tailwindcss', '@nuxtjs/color-mode', '@nuxtjs/pwa', '@nuxtjs/google-fonts'],
   modules: ['nuxt-i18n', '@nuxt/content'],
-  components: true,
+  components: [{ path: '~/components', pathPrefix: false }],
   loading: {
     color: primaryColor
   },
@@ -126,5 +131,26 @@ export default {
       'DM+Mono': true
     }
   },
-  tailwindcss: {}
+  tailwindcss: {
+    viewer: false,
+    jit: true
+  },
+  build: {
+    postcss: {
+      plugins: {
+        'postcss-advanced-variables': {},
+        'postcss-nested': {}
+      }
+    },
+    babel: {
+      plugins: [
+        [
+          '@babel/plugin-proposal-private-property-in-object',
+          {
+            loose: true
+          }
+        ]
+      ]
+    }
+  }
 };

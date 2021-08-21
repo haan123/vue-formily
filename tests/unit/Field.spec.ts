@@ -2,11 +2,16 @@ import flushPromises from 'flush-promises';
 import { Field } from '@/core/elements';
 import { numeric, required } from '@/rules';
 import dateTimeFormatter from '@/plugins/dateTimeFormatter';
-import stringFormatter from '@/plugins/stringFormatter';
+import i18 from '@/plugins/i18n';
 import { plug } from '@/helpers';
+import en from '@/locale/en-US';
+import stringFormatter from '@/plugins/stringFormatter';
 
-plug(stringFormatter);
+plug(i18, {
+  locales: [en]
+});
 plug(dateTimeFormatter);
+plug(stringFormatter);
 
 describe('Field', () => {
   it('Can cast', async () => {
@@ -94,10 +99,24 @@ describe('Field', () => {
       value: '2020-01-21'
     });
 
+    (en as any).resource = {
+      key: {
+        nested: "'Today is' yyyy/MM/dd."
+      }
+    };
+
+    const f3 = new Field({
+      formId: 'field_name',
+      type: 'date',
+      format: 'key.nested',
+      value: '2020-01-21'
+    });
+
     await flushPromises();
 
     expect(f1.formatted).toBe('12 123 1 2 test test test');
     expect(f2.formatted).toBe('2020/01/21');
+    expect(f3.formatted).toBe('Today is 2020/01/21.');
   });
 
   it('Can override default rules', async () => {

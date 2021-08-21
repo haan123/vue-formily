@@ -64,4 +64,4 @@ export default {
 ```
 
 **Result**
-<code-sandbox id="flamboyant-tharp-ccf4x"></code-sandbox>
+<code-sandbox id="formily-basic-usage-ccf4x"></code-sandbox>

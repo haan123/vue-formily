@@ -1,19 +1,23 @@
 import { VueFormilyPlugin } from '../types';
 import { STRING_FORMATTER } from '../constants';
-import { picks, toString } from '../utils';
+import { flatArray, picks, toString } from '../utils';
 
 const simplePlaceholderRegex = /\{([^{}]+)\}/g;
 
-export function stringFormatter(format: string, data: Record<string, any>) {
+function formatString(format: string, data: Record<string, any> | Record<string, any>[]) {
   return format.replace(simplePlaceholderRegex, (placeholder: string, path: string) => {
-    const value = picks(path, data);
+    const value = picks(path, ...flatArray(data));
     return toString(value);
   });
 }
 
 export default {
   name: STRING_FORMATTER,
+  format: formatString,
   install() {
-    return stringFormatter;
-  }
-} as VueFormilyPlugin;
+    return this;
+  },
+  options: {}
+} as VueFormilyPlugin & {
+  format(format: string, data: Record<string, any> | Record<string, any>[]): string;
+};

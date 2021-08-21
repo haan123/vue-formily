@@ -1,6 +1,6 @@
 import { ElementData, ElementSchema } from './types';
-import { genHtmlName, genProps, getProp } from '../../helpers/elements';
-import { dumpProp, each, now, readonlyDumpProp, valueOrNull } from '../../utils';
+import { genHtmlName, getProp, genProps } from '../../helpers/elements';
+import { dumpProp, now, readonlyDumpProp, valueOrNull } from '../../utils';
 import { Objeto } from '../Objeto';
 
 function genElementAncestors(elem: Element): any[] | null {
@@ -17,16 +17,14 @@ function genElementAncestors(elem: Element): any[] | null {
 }
 
 export default abstract class Element extends Objeto {
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   static register() {}
-  // eslint-disable-next-line @typescript-eslint/no-empty-function
   static unregister() {}
 
   readonly parent!: Element | null;
   readonly model!: string;
   protected _d!: ElementData;
 
-  props: Record<string, any>;
+  props: Record<string, any> = {};
 
   shaked = false;
 
@@ -39,16 +37,16 @@ export default abstract class Element extends Objeto {
 
     readonlyDumpProp(data, 'schema', schema);
 
-    readonlyDumpProp(this, 'parent', valueOrNull(parent));
+    const { model, props = {}, on = {} } = schema;
 
-    dumpProp(this, 'model', schema.model || this.formId);
+    readonlyDumpProp(this, 'parent', valueOrNull(parent));
+    readonlyDumpProp(this, 'model', model || this.formId);
+
     dumpProp(data, 'ancestors', genElementAncestors(this));
 
-    this.props = genProps(schema.props, this);
+    this.addProps(props);
 
-    each(schema.on, (handler, name) => {
-      this.on(name, handler);
-    });
+    Object.keys(on).map(name => this.on(name, on[name]));
   }
 
   get validation() {
@@ -64,23 +62,19 @@ export default abstract class Element extends Objeto {
   }
 
   getVm() {
-    return this.getProp('_formy.vm', { up: true });
+    return this.getProps('_formy.vm', { up: true });
   }
 
-  getProp(path: string, options?: { up?: boolean }) {
+  getProps(path: string, options?: { up?: boolean }) {
     return getProp(this, path, options);
   }
 
-  removeProp(key: string) {
-    delete this.props[key];
-  }
-
-  addProp(key: string, value: any) {
-    this.props[key] = value;
+  addProps(props: Record<string, any>, ...args: any[]) {
+    genProps.call(this, this.props, props, ...args);
   }
 
   get formId(): string {
-    return this._d.schema.formId || now();
+    return this._d.schema.formId || '' + now();
   }
 
   get htmlName() {

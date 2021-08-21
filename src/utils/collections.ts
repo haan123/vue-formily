@@ -1,4 +1,4 @@
-import { isObject, isPlainObject, isString } from './assertions';
+import { isArray, isObject, isPlainObject, isString } from './assertions';
 
 export function merge(target: any, ...sources: any[]) {
   return sources.reduce((acc: any, source: any) => {
@@ -27,21 +27,6 @@ export function merge(target: any, ...sources: any[]) {
 
     return acc;
   }, target);
-}
-
-export function each(obj: any, fn: (propValue: any, propName: string, index: number) => void | boolean) {
-  if (isObject(obj)) {
-    const keys = Object.keys(obj);
-    const length = keys.length;
-
-    for (let i = 0; i < length; i++) {
-      const key = keys[i];
-
-      if (fn(obj[key], key, i) === false) {
-        break;
-      }
-    }
-  }
 }
 
 const rkey = /([^[\]]+)/g;
@@ -106,4 +91,8 @@ export function findIndex(arr: any[], fn: (...args: any[]) => boolean) {
   }
 
   return i;
+}
+
+export function flatArray(...args: any[]): any[] {
+  return args.reduce((arr, arg) => [...arr, ...(isArray(arg) ? flatArray(...arg) : [arg])], []);
 }

@@ -5,8 +5,10 @@ position: 21
 category: Api
 ---
 
-## Abstract Class Element
+## abstract Class Element
 <tree :items="[
+  { text: 'Evento', url: '/api/evento' },
+  { text: 'Objeto', url: '/api/objeto' },
   { text: 'Element' }
 ]"></tree>
 
@@ -19,21 +21,32 @@ Abstract class for other form elements.
 
 ## Constructor
 ```typescript
-Element(schema: ElementSchema, parent?: Element | null)
+Element(schema: ElementSchema, parent?: Element | null);
 ```
 
 **Parameters**
 - **schema** - the schema object of this element. 
 ```typescript
 interface ElementSchema {
-  formId: string;
-  // the model name of the element,
+  // If not provided, an id will be auto generated
+  formId?: string;
+  // The model name of the element,
   // used in Group as a property name in group's value,
   // if not provided. formId will be used.
   model?: string;
-  // used to generate the element properties
+  // Used to generate the element properties
   props?: Record<string, any>;
   on?: Record<string, EventHandler>;
+  // The options is using for this element if available.
+  // With plugin, the option key is the plugin `name`,
+  // e.g,
+  // { 
+  //    ...
+  //    options: {
+  //      localizer: {}
+  //    }
+  // }
+  options?: Record<string, any>;
 }
 ```
 - **parent** - the parent of this element.
@@ -41,16 +54,40 @@ interface ElementSchema {
 ## Properties
 | Prop | Type | Default | Description |
 | ---- | ---- | ---------------- | ----------- |
-| *static* **register** | `function` | | This function will be called one time |
-| **parent** <prop-infos readonly></prop-infos> | `Element \| null` | `null` | The parent of this element. |
-| **parent** <prop-infos readonly></prop-infos> | `Element \| null` | `null` | The parent of this element. |
+| **parent** <prop-infos readonly></prop-infos> | `Element \| null` | `null` | The parent element. |
+| **model** <prop-infos readonly></prop-infos> | `string` | | model name, used as a property name in `enum` type element, e.g, `{ [field1.model]: value, [field2.model]: value }` |
 | **formId** <prop-infos readonly></prop-infos> | `string` | | The unique id of this element in the form |
 | **htmlName** <prop-infos readonly></prop-infos> | `string` | | The global unique name of the element, which can be used as name in the html form. For radio buttons this name is not unique. |
-| **_uid** <prop-infos readonly></prop-infos> | `number` | | The global unique id of the element. |
-| **valid** <prop-infos readonly></prop-infos> | `boolean` | | Identifies if this element and all its children elements are valid. <alert> On first init, a form element is always `valid`. </alert> |
-| **props** <prop-infos readonly></prop-infos> | `Record<string, PropValue<any>> \| null` | `null` | These properties can be used to dynamically format the user interface. Currently, they are using for [Rule](/api/validation-rule). |
+| **valid** <prop-infos readonly></prop-infos> | `boolean` | `true` | Identifies if this element and all its children elements are valid. <alert> On first init, a form element is always `valid`. </alert> |
+| **props** | `Record<string, any> \| {}` | These properties can be used to dynamically format the user interface. |
+| **shaked** | `boolean`  | `false` | Indicate the field is shaked or not. |
+| **error** <prop-infos readonly></prop-infos> | `string \| null`  | `null` | The error message when this element is `shaked` and `invalidated`. |
+| **validation** <prop-infos readonly></prop-infos> | `Validation` | `Validation` | The [Validation](/api/validation) object. |
 
 ## Methods
+### static register
+This function will be called when registering the `Field` element with the `registerElement` method
+
+**Signatures**
+```typescript
+register(...args: any[]);
+```
+
+**Parameters**
+- **...args** - Any paramters
+
+<alert>
+  <b>vue-formily</b> will pass the <a href="/api/formily#constructor">VueFormilyOptions</a> as first argument when installing
+</alert>
+
+### static unregister
+This function will be called when registering the `Field` element with the `registerElement` method
+
+**Signatures**
+```typescript
+unregister(...args: any[]);
+```
+
 ### abstract isValid
 Identifies if this element and all its children elements are valid. On first init, a form element is always `valid`.
 
@@ -67,27 +104,71 @@ Returns the global unique name of this element, which can be used as name in the
 
 **Signatures**
 ```typescript
-abstract getHtmlName(): string | null;
+getHtmlName(): string;
 ```
 
 **Returns**
 - `string` - the global unique name of this element.
 
-### abstract _initialize
-This abstract method will run one time when constructuring this element. The `private data` also passed in this call.
+### getVm
+Returns the current Vue instance.
 
 **Signatures**
 ```typescript
-abstract _initialize(schema: ElementSchema, parent: any, data: WeakMap<Element, ElementData>, ...args: any[]): void;
+getVm(): Vue;
+```
+
+**Returns**
+- The Vue intance
+
+### shake
+Shake the element so that the `error message` can be shown.
+
+**Signatures**
+```typescript
+shake(): void;
+```
+
+### cleanUp
+Set `shaked` to `false` so that will clear the error message.
+
+**Signatures**
+```typescript
+cleanUp(): void;
+```
+
+### addProps
+Add new properties to the `props` property of the current element.
+
+**Signatures**
+```typescript
+addProps(props: Record<string, any>, ...args: any[]): void;
 ```
 
 **Parameters**
-- **schema** - the schema definition of this element.
-- **parent** - the parent of this element.
-- **data** - the parent of this element.
+- **props** - object of `key: value` pairs, the property's value can be any [primitive types](https://developer.mozilla.org/en-US/docs/Glossary/Primitive), `object` or `array`, if value is `function`, **vue-formily** will treat it as a getter, and when it's called the first argument is always the current element.
+- **...args** - any additional parametters want to pass to the property's getter
 
-**Returns**
-- `string` - the global unique name of this element.
+### getProps
+Add new properties to `props`
 
-## Related concepts
-- [PropValue]()
+**Signatures**
+```typescript
+getProps(path: string, options?: { up?: boolean }): any;
+```
+
+**Parameters**
+- **path** - path string to get the property, e.g, `a.b` or `a[b]`
+- **options**
+```typescript
+{
+  // move up to `parent` element to get property 
+  // if current element does not have one
+  up?: boolean
+}
+```
+
+## Inherited Methods
+### From class [Evento](/api/evento)
+<InheritedMethods name="evento"></InheritedMethods>
+

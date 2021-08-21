@@ -41,8 +41,10 @@ describe('Form', () => {
   });
 
   it('Should get vm succesfully', () => {
-    form.addProp('_formy', {
-      vm: 'Vue instance'
+    form.addProps({
+      _formy: {
+        vm: 'Vue instance'
+      }
     });
 
     expect(form.a.getVm()).toBe('Vue instance');

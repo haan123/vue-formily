@@ -5,20 +5,14 @@ import { required } from '@/rules';
 
 [Field, Group, Collection].forEach((F: any) => registerElement(F));
 
-describe('Group', () => {
+describe('Collection', () => {
   const schema: any = { formId: 'collection_test' };
 
   it('Throw error with invalid schema', () => {
     expect(function () {
       // eslint-disable-next-line no-new
       new Collection(schema);
-    }).toThrowError("invalid schema, 'group' is empty or missing");
-
-    expect(function () {
-      schema.group = {};
-      // eslint-disable-next-line no-new
-      new Collection(schema);
-    }).toThrowError("invalid schema.group, 'fields' is empty or missing");
+    }).toThrowError('[vue-formily] (formId: "collection_test") `group` must be an object');
   });
 
   it('Can add group', async () => {
@@ -58,6 +52,25 @@ describe('Group', () => {
     expect(collection.groups?.length).toBe(2);
     expect((collection.groups as any)[1].a).toBeInstanceOf(Field);
     expect((collection.groups as any)[1].a.value).toBe('test');
+  });
+
+  it('Can remove group', async () => {
+    const collection = new Collection(schema);
+
+    const group = collection.addGroup();
+
+    await group.setValue({
+      a: 'test'
+    });
+
+    collection.removeGroup(0);
+
+    collection.on('validated', () => {
+      expect(collection.groups?.length).toBe(0);
+      expect(collection.value).toBe(null);
+
+      collection.off('validated');
+    });
   });
 
   it('Can validate', async () => {

@@ -21,13 +21,14 @@ export interface VueFormilyOptions {
   localizer?: Localizer;
   stringFormatter?: (format: string, data: any, options?: Record<string, any>) => string;
   dateTimeFormatter?: (format: string, data: any, options?: CalendarOptions) => string;
-  plugins?: any[];
+  plugins?: VueFormilyPlugin[];
   elements?: any[];
 }
 
 export interface VueFormilyPlugin {
   name: string;
-  install(): any;
+  install(...args: any[]): any;
+  options?: Record<string, any>;
   [key: string]: any;
 }
 

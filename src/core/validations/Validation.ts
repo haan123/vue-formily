@@ -5,11 +5,6 @@ import { Objeto } from '../Objeto';
 
 type ValitionRuleSchema = Validator | RuleSchema;
 
-export type ExtValidation<K extends string> = Validation &
-  {
-    [key in K]: Rule;
-  };
-
 type Options = {
   from?: number;
 };
@@ -55,7 +50,7 @@ export default class Validation extends Objeto {
 
   addRule(ruleOrSchema: Rule | ValitionRuleSchema, { from }: Options = {}): Rule {
     const rule = new Rule(ruleOrSchema);
-    const currentRule = (this as ExtValidation<any>)[rule.name];
+    const currentRule = this[rule.name];
 
     if (currentRule) {
       this.removeRule(currentRule);

@@ -76,10 +76,22 @@ describe('VueFormily', () => {
     localVue.use(VueFormily, {
       plugins: [
         {
+          name: STRING_FORMATTER,
+          install() {
+            return {
+              format(format: any) {
+                return format;
+              }
+            };
+          }
+        },
+        {
           name: LOCALIZER,
           install() {
-            return function localizer(value: any) {
-              return `formatted ${value}`;
+            return {
+              translate(format: any, field: any) {
+                return `${format} ${field.value}`;
+              }
             };
           }
         }
@@ -100,15 +112,17 @@ describe('VueFormily', () => {
       fields: [
         {
           formId: 'a',
-          value: 'test'
+          value: 'test',
+          format: 'format'
         }
       ]
     } as FormSchema);
 
     form.on('validated', () => {
-      expect(form.a.formatted).toBe('formatted test');
+      expect(form.a.formatted).toBe('format test');
 
       unplug(LOCALIZER);
+      unplug(STRING_FORMATTER);
     });
   });
 
@@ -118,8 +132,10 @@ describe('VueFormily', () => {
         {
           name: STRING_FORMATTER,
           install() {
-            return function (format: any, field: any) {
-              return `${format} ${field.value}`;
+            return {
+              format(format: any, field: any) {
+                return `${format} ${field.value}`;
+              }
             };
           }
         }
@@ -160,9 +176,10 @@ describe('VueFormily', () => {
         {
           name: DATE_TIME_FORMATTER,
           install() {
-            return function (format: any, field: any) {
-              console.log(format)
-              return `${format} ${field.value.getFullYear()}`;
+            return {
+              format(format: any, field: any) {
+                return `${format} ${field.value.getFullYear()}`;
+              }
             };
           }
         }

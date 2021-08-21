@@ -1,7 +1,7 @@
 import { ValidationRuleSchema } from '../types';
 
-export const validator = (value: any, { min }: Record<string, number | Date>) => {
-  return +value >= +min;
+export const validator = (value: any, { min }: Record<string, number | Date> = {}) => {
+  return value !== null && +value >= +min;
 };
 
 const schema: ValidationRuleSchema = {

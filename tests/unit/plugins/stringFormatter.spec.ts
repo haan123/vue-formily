@@ -1,9 +1,9 @@
-import { stringFormatter } from '@/plugins/stringFormatter';
+import stringFormatter from '@/plugins/stringFormatter';
 
 describe('stringFormatter', () => {
   it('Should format object as bracket correctly', async () => {
     expect(
-      stringFormatter('{a[b]} {a[c][d]} {value} test', {
+      stringFormatter.format('{a[b]} {a[c][d]} {value} test', {
         value: 1,
         a: {
           b: 'test',
@@ -17,7 +17,7 @@ describe('stringFormatter', () => {
 
   it('Should format object as dot correctly', async () => {
     expect(
-      stringFormatter('{a.b} {a.c.d} {value} test', {
+      stringFormatter.format('{a.b} {a.c.d} {value} test', {
         value: 1,
         a: {
           b: 'test',
@@ -31,7 +31,7 @@ describe('stringFormatter', () => {
 
   it('Should format object as mixed dot and bracket correctly', async () => {
     expect(
-      stringFormatter('{a.b} {a.c[d]} {a.d[2]} {value} test', {
+      stringFormatter.format('{a.b} {a.c[d]} {a.d[2]} {value} test', {
         value: 1,
         a: {
           b: 'test',

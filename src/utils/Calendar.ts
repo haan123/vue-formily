@@ -89,7 +89,8 @@ export type CalendarOptions = {
   firstDayOfWeek?: number;
   // 1 -> 7
   minimalDaysInFirstWeek?: number;
-  timeZone?: any;
+  timeZone?: string | number;
+  locale?: string;
 };
 
 function extractTimeZoneOffset(timeZone: string): number {
@@ -129,6 +130,7 @@ export class Calendar {
   timestamp: number;
   minimalDaysInFirstWeek: number;
   firstDayOfWeek: number;
+  locale: string;
 
   protected _d!: any;
 
@@ -137,10 +139,11 @@ export class Calendar {
 
     this._d = {};
 
-    const { minimalDaysInFirstWeek = 4, firstDayOfWeek = Calendar.MONDAY } = options;
+    const { locale = 'en-US', minimalDaysInFirstWeek = 4, firstDayOfWeek = Calendar.MONDAY } = options;
 
     this.firstDayOfWeek = +firstDayOfWeek;
     this.minimalDaysInFirstWeek = +minimalDaysInFirstWeek;
+    this.locale = locale;
 
     this.setTimeZone(options.timeZone);
   }
@@ -253,8 +256,8 @@ export class Calendar {
     return map[utcDay === 0 ? 6 : utcDay - 1];
   }
 
-  getTimeZoneName({ format, locale = 'en-US' }: { format?: 'long' | 'short'; locale?: string } = {}) {
-    const { instance: date, timeZone } = this;
+  getTimeZoneName({ format }: { format?: 'long' | 'short' } = {}) {
+    const { instance: date, timeZone, locale } = this;
 
     const short = dtfFormat({ date, timeZone });
     const long = dtfFormat({ date, timeZone, locale, timeZoneName: format });

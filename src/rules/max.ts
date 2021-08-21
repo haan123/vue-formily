@@ -1,11 +1,7 @@
 import { ValidationRuleSchema } from '../types';
 
-export const validator = (value: any, { max }: Record<string, number | Date>) => {
-  if (value instanceof Date) {
-    return +value <= +max;
-  }
-
-  return value <= max;
+export const validator = (value: any, { max }: Record<string, number | Date> = {}) => {
+  return value !== null && +value <= +max;
 };
 
 const schema: ValidationRuleSchema = {

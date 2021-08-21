@@ -1,7 +1,25 @@
-import { DATE_TIME_FORMATTER } from '@/constants';
-import { isPlainObject } from '../utils';
+import { VueFormilyPlugin } from '../types';
+import { DATE_TIME_FORMATTER } from '../constants';
+import { isPlainObject, isUndefined, picks, toString } from '../utils';
 import { Calendar, CalendarOptions, parseTime } from '../utils/Calendar';
+import enUS from '../locale/en-US';
 
+export type Locale = {
+  code: string;
+  localize?: Record<string, any>;
+};
+export type DateTimeFormatterOptions = CalendarOptions & {
+  locales?: Locale[];
+};
+
+type DateTimeFormatterPlugin = VueFormilyPlugin & {
+  format(format: string, data: string | Record<string, any>, options?: CalendarOptions | undefined): string;
+};
+
+// - (\w)\1* matches any sequences of the same letter
+// - '' matches two quote characters in a row
+// - '(''|[^'])+('|$) matches anything surrounded by two quote characters ('),
+//   except a single quote symbol, which ends the sequence.
 const formattingTokensRegExp = /(\w)\1*|''|'(''|[^'])+('|$)|./g;
 const escapedStringRegExp = /^'([^]*?)'?$/;
 const doubleQuoteRegExp = /''/g;
@@ -43,10 +61,17 @@ function weekInMonth(cal: Calendar) {
   return Math.floor(remain > 0 ? 1 + remain / 7 + (remain % 7 !== 0 ? 1 : 0) : 1);
 }
 
+function localize(path: string, { locales = [], locale }: DateTimeFormatterOptions) {
+  const _locale = locales.find(loc => loc.code === locale) || enUS;
+  const value = picks(path, _locale.localize);
+
+  return !isUndefined(value) ? toString(value) : path;
+}
+
 export const formatters: Record<string, any> = {
   // Era designator, e.g, AD
   G(cal: Calendar, token: string) {
-    return `{era_${getLengthName(token.length)}[${cal.year < 0 ? 1 : 0}]}`;
+    return `era_${getLengthName(token.length)}[${cal.year < 0 ? 1 : 0}]`;
   },
   // Year, e.g, 2021; 21
   y(cal: Calendar, token: string) {
@@ -66,7 +91,7 @@ export const formatters: Record<string, any> = {
       return zeroPad(cal.month, 2);
     }
 
-    return `{month_${getLengthName(token.length - 2)}[${cal.month - 1}]}`;
+    return `month_${getLengthName(token.length - 2)}[${cal.month - 1}]`;
   },
   // Week in year, e.g, 27
   w(cal: Calendar, token: string) {
@@ -96,7 +121,7 @@ export const formatters: Record<string, any> = {
   },
   // Day name in week, e.g, Tuesday; Tue
   E(cal: Calendar, token: string) {
-    return `{weekday_${getLengthName(token.length)}[${cal.getDayOfWeek() - 1}]}`;
+    return `weekday_${getLengthName(token.length)}[${cal.getDayOfWeek() - 1}]`;
   },
   // Day number of week (1 = Monday, ..., 7 = Sunday)
   u(cal: Calendar, token: string) {
@@ -180,22 +205,33 @@ export const formatters: Record<string, any> = {
   }
 };
 
-export function dateTimeFormatter(format: string, data: string | Record<string, any>, options?: CalendarOptions) {
-  const value = isPlainObject(data) ? data.value : data;
+export function formatDateTime(
+  this: DateTimeFormatterPlugin,
+  format: string,
+  date: number | Date | { value: Date },
+  options?: DateTimeFormatterOptions
+) {
+  const _options = {
+    ...this.options,
+    ...options
+  } as DateTimeFormatterOptions;
+  const value = isPlainObject(date) && 'value' in date ? date.value : date;
 
-  return format.replace(formattingTokensRegExp, (token: string, formatType: string) => {
+  return format.replace(formattingTokensRegExp, (token: string) => {
     if (token === "''") {
       return "'";
     }
 
-    if (formatType === "'") {
+    const firstCharacter = token[0];
+
+    if (firstCharacter === "'") {
       return cleanEscapedString(token);
     }
 
-    const formatter = formatters[formatType];
+    const formatter = formatters[firstCharacter];
 
     if (formatter) {
-      return formatter(new Calendar(value, options), token);
+      return localize(formatter(new Calendar(value, options), token), _options);
     }
 
     return token;
@@ -204,7 +240,9 @@ export function dateTimeFormatter(format: string, data: string | Record<string, 
 
 export default {
   name: DATE_TIME_FORMATTER,
+  format: formatDateTime,
   install() {
-    return dateTimeFormatter;
-  }
-};
+    return this;
+  },
+  options: {} as DateTimeFormatterOptions
+} as DateTimeFormatterPlugin;

@@ -11,10 +11,41 @@ export const state = () => ({
     defaultDir: 'docs',
     defaultBranch: '',
     filled: false
+  },
+  classMethods: {
+    evento: [
+      { text: 'emit', url: '/api/evento#emit' },
+      { text: 'once', url: '/api/evento#once' },
+      { text: 'on', url: '/api/evento#on' },
+      { text: 'off', url: '/api/evento#off' }
+    ],
+    element: [
+      { text: 'register', url: '/api/element#static-register' },
+      { text: 'unregister', url: '/api/element#static-unregister' },
+      { text: 'isValid', url: '/api/element#abstract-isvalid' },
+      { text: 'getHtmlName', url: '/api/element#abstract-getHtmlName' },
+      { text: 'getVm', url: '/api/element#getVm' },
+      { text: 'shake', url: '/api/element#shake' },
+      { text: 'cleanUp', url: '/api/element#cleanUp' },
+      { text: 'addProps', url: '/api/element#addProps' },
+      { text: 'getProps', url: '/api/element#getProps' }
+    ],
+    group: [
+      { text: 'accept', url: '/api/group#static-accept' },
+      { text: 'create', url: '/api/group#static-create' },
+      { text: 'validate', url: '/api/group#validate' },
+      { text: 'setValue', url: '/api/group#setValue' },
+      { text: 'clear', url: '/api/group#clear' },
+      { text: 'reset', url: '/api/group#reset' },
+      { text: 'shake', url: '/api/group#shake' }
+    ]
   }
 });
 
 export const getters = {
+  classMethods(state) {
+    return state.classMethods;
+  },
   settings(state) {
     return state.settings;
   },

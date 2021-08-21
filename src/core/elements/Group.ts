@@ -1,15 +1,23 @@
 import { ElementData, GroupSchema } from './types';
 
-import { cascadeRules, normalizeRules, indentifySchema, invalidateSchemaValidation } from '../../helpers';
+import {
+  cascadeRules,
+  normalizeRules,
+  getSchemaAcceptance,
+  invalidateSchemaValidation,
+  acceptSchema
+} from '../../helpers';
 import { genFields } from '../../helpers/elements';
 import Element from './Element';
-import { isPlainObject, logMessage, readonlyDumpProp } from '../../utils';
+import { isArray, isPlainObject, logMessage, readonlyDumpProp } from '../../utils';
 import Validation from '../validations/Validation';
 
 type GroupData = ElementData & {
   value: Record<string, any> | null;
   pending: boolean;
 };
+
+const FORM_TYPE = 'group';
 
 async function onFieldChanged(this: Group, ...args: any[]) {
   const [field] = args;
@@ -31,26 +39,28 @@ async function onFieldChanged(this: Group, ...args: any[]) {
   this.emit('changed', this, ...args);
 }
 export default class Group extends Element {
-  static FORM_TYPE = 'group';
+  static FORM_TYPE = FORM_TYPE;
 
   static accept(schema: any) {
-    const { identified, sv } = indentifySchema(schema, Group.FORM_TYPE);
+    const { accepted, sv } = getSchemaAcceptance(schema, FORM_TYPE);
 
-    if (!identified) {
-      if (!Array.isArray(schema.fields) || !schema.fields.length) {
-        invalidateSchemaValidation(sv, "'fields' is empty or missing", { formId: schema.formId });
+    if (!accepted) {
+      const { fields, formId } = schema;
+
+      if (!isArray(fields)) {
+        invalidateSchemaValidation(sv, '`fields` must be an array.', { formId });
       }
 
       if (sv.valid) {
-        schema.__is__ = Group.FORM_TYPE;
+        acceptSchema(schema, FORM_TYPE);
       }
     }
 
     return sv;
   }
 
-  static create(schema: GroupSchema, ...args: any[]): Group {
-    return new Group(schema, ...args);
+  static create(schema: GroupSchema, parent?: Element | null): Group {
+    return new Group(schema, parent);
   }
 
   readonly formType!: string;
@@ -70,7 +80,7 @@ export default class Group extends Element {
       throw new Error(logMessage(`invalid schema, ${accepted.reason}`, accepted.infos));
     }
 
-    readonlyDumpProp(this, 'formType', Group.FORM_TYPE);
+    readonlyDumpProp(this, 'formType', FORM_TYPE);
     readonlyDumpProp(this, 'type', 'enum');
 
     if (schema.rules) {
@@ -107,7 +117,7 @@ export default class Group extends Element {
       Object.keys(obj).map(async model => {
         const field = this[model];
 
-        if (model) {
+        if (field) {
           await field.setValue(obj[model]);
         }
       })
@@ -151,7 +161,7 @@ export default class Group extends Element {
       );
     }
 
-    await this.validation.validate(this.value, {}, this);
+    await this.validation.validate(this.value, {}, this.props, this);
 
     if (!this.valid) {
       this._d.value = null;

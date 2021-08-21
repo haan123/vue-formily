@@ -1,11 +1,17 @@
 import { CollectionSchema, ElementData } from './types';
-
 import Element from './Element';
 import Group from './Group';
-import { cascadeRules, indentifySchema, invalidateSchemaValidation, normalizeRules } from '../../helpers';
-import { findIndex, logMessage, readonlyDumpProp } from '../../utils';
+import {
+  acceptSchema,
+  cascadeRules,
+  getSchemaAcceptance,
+  invalidateSchemaValidation,
+  normalizeRules
+} from '../../helpers';
+import { findIndex, isArray, isPlainObject, logMessage, readonlyDumpProp } from '../../utils';
 import { Validation } from '../validations';
 
+const FORM_TYPE = 'collection';
 export class CollectionItem extends Group {
   get index() {
     const { groups } = this.parent as any;
@@ -23,10 +29,8 @@ type CollectionData = ElementData & {
   pending: boolean;
 };
 
-async function onGroupValidate(this: Collection, ...args: any[]) {
+async function onGroupChanged(this: Collection, ...args: any[]) {
   const [group] = args;
-
-  this._d.pending = true;
 
   if (group.valid) {
     let value = this._d.value;
@@ -38,41 +42,40 @@ async function onGroupValidate(this: Collection, ...args: any[]) {
     value[group.index] = group.value;
   }
 
+  await onCollectionChanged.apply(this, args);
+}
+
+async function onCollectionChanged(this: Collection, ...args: any[]) {
+  this._d.pending = true;
+
   await this.validate({ cascade: false });
 
   this.emit('changed', this, ...args);
 }
 
 export default class Collection extends Element {
-  static FORM_TYPE = 'collection';
+  static FORM_TYPE = FORM_TYPE;
 
   static accept(schema: any) {
-    const { identified, sv } = indentifySchema(schema, Collection.FORM_TYPE);
+    const { accepted, sv } = getSchemaAcceptance(schema, FORM_TYPE);
 
-    if (!identified) {
-      if (schema.group === undefined) {
-        invalidateSchemaValidation(sv, "invalid schema, 'group' is empty or missing", { formId: schema.formId });
-      } else {
-        const accepted = Group.accept(schema.group);
+    if (!accepted) {
+      const { formId, group } = schema;
 
-        if (!accepted.valid) {
-          invalidateSchemaValidation(sv, `invalid schema.group, ${accepted.reason}`, {
-            ...accepted.infos,
-            formId: schema.formId
-          });
-        }
+      if (!isPlainObject(group)) {
+        invalidateSchemaValidation(sv, '`group` must be an object', { formId });
       }
 
       if (sv.valid) {
-        schema.__is__ = Collection.FORM_TYPE;
+        acceptSchema(schema, FORM_TYPE);
       }
     }
 
     return sv;
   }
 
-  static create(schema: any, ...args: any[]): Collection {
-    return new Collection(schema, ...args);
+  static create(schema: CollectionSchema, parent?: Element | null): Collection {
+    return new Collection(schema, parent);
   }
 
   readonly formType!: string;
@@ -91,7 +94,7 @@ export default class Collection extends Element {
       throw new Error(logMessage(accepted.reason, accepted.infos));
     }
 
-    readonlyDumpProp(this, 'formType', Collection.FORM_TYPE);
+    readonlyDumpProp(this, 'formType', FORM_TYPE);
     readonlyDumpProp(this, 'type', 'set');
 
     this._d.validation = new Validation(normalizeRules(schema.rules, this.type));
@@ -114,7 +117,7 @@ export default class Collection extends Element {
   }
 
   async setValue(value: any[], { from = 0, autoAdd = true }: { from?: number; autoAdd?: boolean } = {}) {
-    if (!Array.isArray(value)) {
+    if (!isArray(value)) {
       throw new Error(logMessage('Invalid value, Group value must be an object'));
     }
 
@@ -174,9 +177,26 @@ export default class Collection extends Element {
 
     this.groups.push(groupItem);
 
-    groupItem.on('changed:formy', (...args: any[]) => onGroupValidate.apply(this, args), { noOff: true });
+    groupItem.on('changed:formy', (...args: any[]) => onGroupChanged.apply(this, args), { noOff: true });
 
     return groupItem;
+  }
+
+  removeGroup(itemOrIndex: CollectionItem | number) {
+    const index = (itemOrIndex as CollectionItem).index || (itemOrIndex as number);
+    const group = this.groups && this.groups[index];
+
+    if (group) {
+      const value = this._d.value;
+
+      (this.groups as CollectionItem[]).splice(index, 1);
+
+      if (value) {
+        value.splice(index, 1);
+      }
+
+      onCollectionChanged.call(this, group);
+    }
   }
 
   async validate({ cascade = true }: { cascade?: boolean } = {}) {
@@ -186,7 +206,7 @@ export default class Collection extends Element {
       await Promise.all(this.groups.map(async (group: any) => await group.validate()));
     }
 
-    await this.validation.validate(this.value, {}, this);
+    await this.validation.validate(this.value, {}, this.props, this);
 
     if (!this.valid) {
       this._d.value = null;

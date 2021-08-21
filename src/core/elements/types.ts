@@ -3,10 +3,11 @@ import { EventHandler } from '../Evento';
 import { Validation } from '../validations';
 
 export interface ElementSchema {
-  formId: string;
+  formId?: string;
   model?: string;
   props?: Record<string, any>;
   on?: Record<string, EventHandler>;
+  options?: Record<string, any>;
 }
 
 export interface ElementData {
@@ -15,10 +16,8 @@ export interface ElementData {
   validation: Validation;
 }
 
-export type FieldSchemas = FieldSchema | GroupSchema | CollectionSchema;
-
 export interface GroupSchema extends ElementSchema {
-  fields: FieldSchemas[];
+  fields: (FieldSchema | GroupSchema | CollectionSchema)[];
   rules?: ValidationRuleSchema[];
 }
 
@@ -32,7 +31,7 @@ export type FormSchema = GroupSchema;
 export type FieldType = 'string' | 'number' | 'boolean' | 'date';
 export type FieldValue = string | number | boolean | Date | null;
 
-export type Format = string | ((value: FieldValue) => string);
+export type Format = string | ((field: any) => string);
 
 export interface FieldSchema extends ElementSchema {
   type?: FieldType;
@@ -42,6 +41,4 @@ export interface FieldSchema extends ElementSchema {
   value?: any;
   rules?: ValidationRuleSchema[];
   checkedValue?: any;
-  locale?: string;
-  formatOptions?: Record<string, any>;
 }

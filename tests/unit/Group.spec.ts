@@ -7,20 +7,14 @@ import flushPromises from 'flush-promises';
 
 [Field, Group, Collection].forEach((F: any) => registerElement(F));
 
-describe('Collection', () => {
+describe('Group', () => {
   const schema: any = { formId: 'group_test' };
 
   it('Throw error with undefined `fields`', () => {
     expect(function () {
       // eslint-disable-next-line no-new
       new Group(schema);
-    }).toThrowError("invalid schema, 'fields' is empty or missing");
-
-    expect(function () {
-      schema.fields = [];
-      // eslint-disable-next-line no-new
-      new Group(schema);
-    }).toThrowError("invalid schema, 'fields' is empty or missing");
+    }).toThrowError('[vue-formily] (formId: "group_test") invalid schema, `fields` must be an array.');
   });
 
   it('Can access field from index signature', () => {
@@ -31,15 +25,17 @@ describe('Collection', () => {
       }
     ];
 
-    schema.fields.push({
-      formId: 'a',
-      rules: [
-        {
-          ...required,
-          message: 'abc'
-        }
-      ]
-    } as FieldSchema);
+    schema.fields = [
+      {
+        formId: 'a',
+        rules: [
+          {
+            ...required,
+            message: 'abc'
+          }
+        ]
+      } as FieldSchema
+    ];
 
     const group = new Group(schema);
 
@@ -128,7 +124,7 @@ describe('Collection', () => {
   it('Can invalidate', async () => {
     const group = new Group(schema);
 
-    group.a.addProp('test', true);
+    group.a.addProps({ test: true });
 
     // set value to pass required rule
     await group.a.setValue('test');

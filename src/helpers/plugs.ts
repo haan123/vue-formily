@@ -1,9 +1,9 @@
 import { VueFormilyPlugin } from '../types';
 
-const _plugs: Record<string, any> = {};
+const _plugs: Record<string, VueFormilyPlugin> = {};
 
-export function plug(plugin: VueFormilyPlugin) {
-  _plugs[plugin.name] = plugin.install();
+export function plug(plugin: VueFormilyPlugin, ...args: any[]) {
+  _plugs[plugin.name] = plugin.install(...args);
 }
 
 export function unplug(name: string) {

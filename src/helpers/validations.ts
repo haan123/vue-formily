@@ -22,24 +22,29 @@ export function invalidateSchemaValidation(sv: SchemaValidation, reason?: string
   sv.infos = infos;
 }
 
-export function indentifySchema(schema: any, type: string) {
+export function getSchemaAcceptance(schema: any, type: string) {
+  const sv = { valid: false };
   const i: {
-    identified: boolean;
+    accepted: boolean;
     sv: SchemaValidation;
   } = {
-    identified: false,
-    sv: { valid: false }
+    accepted: false,
+    sv
   };
 
-  if ('__is__' in schema) {
-    i.identified = true;
+  if ('_is' in schema) {
+    i.accepted = true;
 
-    if (schema.__is__ === type) {
-      i.sv.valid = true;
+    if (schema._is === type) {
+      sv.valid = true;
     }
   } else {
-    i.sv.valid = true;
+    sv.valid = true;
   }
 
   return i;
+}
+
+export function acceptSchema(schema: any, type: string) {
+  schema._is = type;
 }

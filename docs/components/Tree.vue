@@ -8,6 +8,7 @@
 </template>
 
 <script>
+// pl-4 pl-5 pl-6 pl-7 pl-8
 export default {
   props: {
     items: {
@@ -23,7 +24,6 @@ export default {
   position: relative;
   margin-top: 20px;
   padding-left: 5px;
-  @apply text-gray-100;
 }
 
 .tree__item {
@@ -60,6 +60,18 @@ export default {
 
 .tree__item--1:before {
   width: 15px;
+}
+
+.tree__item--2:before {
+  width: 20px;
+}
+
+.tree__item--3:before {
+  width: 25px;
+}
+
+.tree__item--4:before {
+  width: 30px;
 }
 </style>
 

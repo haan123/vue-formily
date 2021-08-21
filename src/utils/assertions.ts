@@ -45,6 +45,6 @@ export function isCallable(fn: unknown): fn is (...args: any[]) => any {
   return typeof fn === 'function';
 }
 
-export function isNotEmptyString(value: any): value is string {
-  return typeof value === 'string' && value.trim().length > 0;
+export function isArray(value: any): value is [] {
+  return Array.isArray(value);
 }

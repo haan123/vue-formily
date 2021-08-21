@@ -17,16 +17,17 @@ export default class Formily {
 
   addForm(schema: FormSchema) {
     const { vm, options } = this;
+    const { rules, props = {} } = schema;
 
-    schema.rules = merge([], options.rules, schema.rules);
+    schema.rules = merge([], options.rules, rules);
+
+    props._formy = {
+      vm: () => this.vm
+    };
+
+    schema.props = props;
 
     const form = new Form(schema);
-
-    form.addProp('_formy', {
-      vm() {
-        return this.vm;
-      }
-    });
 
     vm.$set(this.vm[options.alias as string], form.formId, form);
 

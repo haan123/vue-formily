@@ -1,9 +1,8 @@
 import { Rule, Validation } from '@/core/validations';
 import { numeric, required } from '@/rules';
-import { ExtValidation } from '@/core/validations/Validation';
 
 describe('Validation', () => {
-  const validation = new Validation() as ExtValidation<'numeric' | 'required'>;
+  const validation = new Validation();
 
   it('Can add multiple rules', () => {
     validation.addRules([numeric, required]);

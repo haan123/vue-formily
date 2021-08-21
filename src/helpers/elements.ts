@@ -1,7 +1,8 @@
-import { Element } from '@/core/elements';
+import { LOCALIZER } from '../constants';
 import { ValidationRuleSchema } from '../types';
 
-import { each, isCallable, merge, logMessage, findIndex, isObject, def, isUndefined, picks } from '../utils';
+import { isCallable, merge, logMessage, findIndex, isUndefined, picks, isObject, def, isString } from '../utils';
+import { getPlug } from './plugs';
 
 const _Elements: any[] = [];
 
@@ -54,32 +55,14 @@ export function genFields(fields: any[], ...args: any[]) {
   });
 }
 
-export function genProps(properties: any = {}, context?: any, ...args: any[]) {
-  if (isObject(properties)) {
-    each(properties, (prop: any, key) => {
-      if (isObject(prop)) {
-        genProps(prop, context, ...args);
-      } else if (isCallable(prop)) {
-        def(properties, key, {
-          get() {
-            return prop.call(context, ...args);
-          }
-        });
-      }
-    });
-  }
-
-  return properties;
-}
-
 export function cascadeRules(parentRules: ValidationRuleSchema[], fields: any[]) {
   return parentRules
     ? fields.map(fieldSchema => {
         const { rules } = fieldSchema;
 
         if (rules) {
-          each(parentRules, (parentRule, key) => {
-            const index = findIndex(rules, (rule: any) => rule.key === key);
+          parentRules.forEach(parentRule => {
+            const index = findIndex(rules, (rule: any) => rule.name === parentRule.name);
             const rule = rules[index];
 
             if (isCallable(parentRule) || !parentRule.cascade || (rule && rule.inherit === false)) {
@@ -109,7 +92,7 @@ export function genHtmlName(Element: any, ancestors: any[] | null): string {
   return Element.type === 'set' ? `${htmlName}[]` : htmlName;
 }
 
-export function getProp(element: Element, path: string, options: { up?: boolean } = {}) {
+export function getProp(element: any, path: string, options: { up?: boolean } = {}) {
   let prop = picks(path, element.props);
   const parent = element.parent;
 
@@ -118,4 +101,24 @@ export function getProp(element: Element, path: string, options: { up?: boolean 
   }
 
   return prop;
+}
+
+export function genProps(this: any, source: Record<string, any>, properties: any, ...args: any[]) {
+  for (const key in properties) {
+    const prop = properties[key];
+
+    if (isObject(prop)) {
+      source[key] = genProps.call(this, {}, prop, ...args);
+    } else if (isCallable(prop)) {
+      def(source, key, {
+        get: () => prop.call(this, this, ...args)
+      });
+    } else {
+      const translater = getPlug(LOCALIZER);
+
+      source[key] = isString(prop) && translater ? translater.translate(prop, this, ...args) : prop;
+    }
+  }
+
+  return source;
 }

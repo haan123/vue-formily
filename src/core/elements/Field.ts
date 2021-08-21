@@ -1,29 +1,21 @@
-import { ElementData, FieldSchema, FieldType, FieldValue, Format } from './types';
+import { ElementData, FieldSchema, FieldType, FieldValue } from './types';
 
 import Element from './Element';
-import {
-  logMessage,
-  isCallable,
-  isUndefined,
-  toString,
-  noop,
-  isNumber,
-  isDateObject,
-  readonlyDumpProp
-} from '../../utils';
+import { logMessage, isCallable, isUndefined, toString, isNumber, isDateObject, readonlyDumpProp } from '../../utils';
 import Validation from '../validations/Validation';
-import { normalizeRules, indentifySchema, invalidateSchemaValidation, getPlug } from '../../helpers';
+import { normalizeRules, getSchemaAcceptance, invalidateSchemaValidation, getPlug, acceptSchema } from '../../helpers';
 import { DATE_TIME_FORMATTER, LOCALIZER, STRING_FORMATTER, NUMBER_FORMATTER } from '../../constants';
 
 type FieldData = ElementData & {
   error: string | null;
-  raw: any;
+  raw: string;
   typed: FieldValue;
   checkedValue: any;
   formatted: string | null;
   pending: boolean;
 };
 
+const FORM_TYPE = 'field';
 const typing: Record<
   string,
   {
@@ -58,50 +50,52 @@ const typing: Record<
   }
 };
 
-function formatter(field: Field, format?: Format, options?: Record<string, any>): string {
-  const { type, raw, value } = field;
-  const _formatter = getPlug(typing[type].formatter || '') || noop;
-  const localizer = getPlug(LOCALIZER) || noop;
-  let result = raw;
+function formatter(this: Field): string {
+  const { type, _d: data } = this;
+  const { format, options = {} } = data.schema;
+  const _FORMATER = typing[type].formatter as string;
+  const formatter = getPlug(_FORMATER);
+  const translater = getPlug(LOCALIZER);
+  let result = null;
 
-  if (format) {
-    result = _formatter(isCallable(format) ? format.call(field, value) : format, field, options);
+  if (format && formatter) {
+    const formatting = isCallable(format) ? format.call(this, this) : format;
+    const translated = translater ? translater.translate(formatting, this, options) : formatting;
+
+    result = formatter.format(translated, this, options[_FORMATER]);
   }
 
-  return localizer(result, field, options);
+  return result;
 }
 
 export default class Field extends Element {
-  static FORM_TYPE = 'field';
+  static FORM_TYPE = FORM_TYPE;
   static FIELD_TYPE_STRING = 'string';
   static FIELD_TYPE_NUMBER = 'number';
   static FIELD_TYPE_BOOLEAN = 'boolean';
   static FIELD_TYPE_DATE = 'date';
 
   static accept(schema: any) {
-    const type: FieldType = schema.type
-      ? (Field as any)[`FIELD_TYPE_${schema.type.toUpperCase()}`]
-      : Field.FIELD_TYPE_STRING;
+    const { type: schemaType, formId } = schema;
+    const type: FieldType = schemaType ? (Field as any)[`FIELD_TYPE_${schemaType.toUpperCase()}`] : 'string';
 
-    const { identified, sv } = indentifySchema(schema, type);
+    const { accepted, sv } = getSchemaAcceptance(schema, type);
 
-    if (!identified) {
+    if (!accepted) {
       if (!type) {
-        invalidateSchemaValidation(sv, `type '${schema.type}' is not supported`, {
-          formId: schema.formId
-        });
+        invalidateSchemaValidation(sv, 'Invalid `type`', { formId });
       }
 
       if (sv.valid) {
-        schema.__is__ = schema.type = type;
+        acceptSchema(schema, type);
       }
     }
 
     return sv;
   }
 
-  static create(schema: FieldSchema, ...args: any[]): Field {
-    return new Field(schema, ...args);
+  static create(schema: FieldSchema, parent?: Element | null): Field {
+    return new Field(schema, parent);
   }
 
   readonly formType!: string;
@@ -122,8 +116,8 @@ export default class Field extends Element {
 
     const { type, rules, inputType = 'text', default: defu } = schema;
 
-    readonlyDumpProp(this, 'formType', Field.FORM_TYPE);
-    readonlyDumpProp(this, 'type', type);
+    readonlyDumpProp(this, 'formType', FORM_TYPE);
+    readonlyDumpProp(this, 'type', type || 'string');
     readonlyDumpProp(this, 'inputType', inputType);
 
     this._d.validation = new Validation(normalizeRules(rules, this.type));
@@ -224,17 +218,16 @@ export default class Field extends Element {
     const raw = this.raw;
     const typi = typing[this.type];
     const data = this._d;
-    const { format, formatOptions } = data.schema;
 
     data.pending = true;
 
     this.emit('validate', this);
 
     const typed = typi.cast(raw);
-    const { valid } = await this.validation.validate(typed, {}, this);
+    const { valid } = await this.validation.validate(typed, {}, this.props, this);
 
     data.typed = typed !== null && valid ? typed : null;
-    data.formatted = formatter(this, format, formatOptions);
+    data.formatted = formatter.call(this);
     data.pending = false;
 
     this.emit('validated', this);
